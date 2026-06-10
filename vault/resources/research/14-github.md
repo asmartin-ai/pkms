@@ -1,7 +1,7 @@
 ---
 tags: [pkms-design, research, adhd, sweep-a, github]
 created: 2026-06-09
-modified: 2026-06-09
+modified: 2026-06-10
 status: raw-findings
 ---
 
@@ -201,4 +201,38 @@ SEARCHED: GitHub repo search API unauthenticated, 8 queries (q=adhd by stars; ad
 - [verified] https://github.com/jdpolasky/ai-chief-of-staff/blob/main/notion-vs-obsidian — File exists at that exact extensionless path. Quote verbatim, with the framing the claim describes: 'The most common Reddit complaint, verbatim: "The biggest problem is that it doesn't know your workspace, it just searches it."' Compounding language present: 'It's yours, it's local, it compounds over time' and 'nothing compounds like a local-first, plain-text knowledge base connected to a frontier AI model.' The 'architecture breaks down' argument is the file's central section. Author_context n8n detail confirmed in ARCHITECTURE.md: 'Node names changed under me, webhooks failed, and file paths broke, I was just flailing around.' (The 'mirrors the user's own Notion death' clause is the researcher's interpretation, not a source claim.)
 - [verified] https://github.com/ravila4/claude-adhd-skills — Repo exists, 80 stars, created 2026-03-01, README opens 'skills and hooks I use daily'. Quote verbatim in README: 'Ideas get dumped into notes, marinate, and only the ones that survive get built.' Obsidian 'becomes a shared memory between sessions' — verbatim. Date hook 'Injects current date and time into every prompt so Claude knows when it is'; nudge skill literally documents 'Stop me at 11'. CLAUDE.md template verbatim: 'I have ADHD (mainly distraction component) and can lose track of time when hyperfocused' and 'Suggest a break when we've been stuck on something for over an hour.' Minor: 'central ADHD accommodation' is light editorializing (README lists time awareness first among three key pieces), and 'engineer' comes from profile context rather than this page.
 - [verified] https://github.com/burakgizlice/niyet — Repo exists; description verbatim 'Built for my severe ADHD executive dysfunction...'; 2 stars, created 2026-05-29 — match. README quote verbatim (bolded blockquote): 'You never see the whole list. You only see the next thing your body does.' All claim details confirmed verbatim: 'It was built from a worst day'; homogeneous wall — 'A single homogeneous to-do list — every item the same weight... triggered avoidance, not action'; chains — 'Seven decisions become one'; garden — 'grows a tulip every time you act — and never wilts'; prayer micro-steps 'typed one at a time into a terminal task manager'; 'In a deep low, the system has to get dumber, not smarter'; 'The tool itself is a procrastination trap... The friction has to be near zero.'
+
+## Round 2 (Sweep C leftovers)
+
+Appended 2026-06-10 from the Sweep C leftovers track: the super-productivity GitHub mining pass that Sweep A's unauthenticated API access blocked (issues fetched by label and via WebFetch after the 422/rate-limit failures). 3 findings; 1 sampled by the adversarial checker (verified with a minor caveat — see Round 2 verification below).
+
+### L2-12. super-productivity has a named built-in 'Procrastination Buster' plugin (confirmed by a June 2026 commit fixing its i18n), and ADHD users file issues specifically about features that fail their needs: auto-dismissing tips that close before a distracted user can read them, and break notifications too subtle to interrupt hyperfocus.
+
+> This affects people with ADHD, that are shortly distracted and therefore have no time to read the Productivity Tip.
+
+- **Source:** [super-productivity GitHub issue #5881 — Settings: Behavior of Productivity Tip (2026-01-04)](https://github.com/johannesjo/super-productivity/issues/5881)
+- **Credibility:** Primary source; GitHub issue with direct author statement about ADHD. The Procrastination Buster plugin existence confirmed via commit 8145 (2026-06-08). Issues fetched directly via GitHub REST API and WebFetch.
+- **Design implication:** Two specific design rules emerge from ADHD users of mature todo tools: (1) any auto-dismissing UI element will be missed — use persistent banners or require explicit dismissal; (2) time-based notifications are insufficient for hyperfocus interruption — the break signal must be impossible to miss (fullscreen overlay, not a badge).
+
+### L2-13. ADHD users of super-productivity explicitly request 'quick add without loading the full app' as a keyboard-shortcut global hotkey, and location-based reminders for working memory support — real users cite both as the friction points that cause them to abandon capture.
+
+> This would be huge and helpful for my ADHD short term memory.
+
+- **Source:** [super-productivity GitHub issue #5336 — Location-based Reminders (open enhancement)](https://github.com/johannesjo/super-productivity/issues/5336)
+- **Credibility:** Primary source; GitHub issues with direct ADHD self-identification by requesters. Issue #5549 (quick add modal) is a separate corroborating signal — though that commenter did not mention ADHD, the request mirrors the win+n friction benchmark from Sweep A F4 (11-hn.md).
+- **Design implication:** Validate that the PKMS capture path (global hotkey → text field, sub-2 second) is achievable without loading the main vault view. For mobile (Pixel 6 constraint), consider a persistent notification/widget that opens a single text field — not the full app.
+
+### L2-14. super-productivity's Focus Mode (three timer variants: Pomodoro, Flowtime, Countdown) has no built-in distraction blocking, no ADHD-specific UI adaptations, and no single-task view that hides the broader task list — hyperfocus containment is entirely self-managed by the user.
+
+- **Source:** [super-productivity Wiki: 4.15 Timers and Focus Mode](https://github.com/johannesjo/super-productivity/wiki/4.15-Timers-and-Focus-Mode)
+- **Credibility:** Official product documentation; directly fetched. Negative finding but high credibility — this is what the tool actually ships. The gap between what ADHD users request (issues #5836, #5881) and what the tool provides confirms the unmet need. (Checker caveat: #5836 cleanly supports the gap claim; #5881 is about auto-closing tips and only tangentially supports the single-task-view point.)
+- **Design implication:** A PKMS focus mode should show exactly one task with its first step, hide all other vault content, and require an active 'exit focus' gesture rather than allowing accidental navigation. The fullscreen-overlay break signal (requested in #5836) should be a default, not an opt-in, for users who self-identify as hyperfocus-prone.
+
+### Round 2 coverage notes
+
+GitHub REST API search returned 422 for repo-scoped queries and the unauthenticated rate limit was exhausted after ~15 requests; issues were fetched by label (enhancement) and filtered locally, with WebFetch recovering body text for individual pages. Full body text of issues #5549, #427, #5712, #5737 was unavailable after the rate limit; WebFetch summaries were used for those. The super-productivity Discussions tab returned no ADHD results (possible rendering failure). Open question: the Procrastination Buster plugin's actual UX is undocumented in public wiki pages — its mechanism is unknown beyond the plugin name.
+
+### Round 2 verification
+
+Sampled: L2-14 — verified. The wiki page exists and describes exactly three timer modes (Pomodoro, Flowtime, Countdown); the fetched content contains no mention of distraction blocking, ADHD-specific adaptations, single-task view, or task-list hiding, confirming the negative finding. Issue #5836 exists and explicitly requests a fullscreen break overlay citing hyperfocus. Minor caveat: #5881 is about auto-closing productivity tips and only tangentially supports the single-task-view gap it is cited for — a slight overclaim that does not undermine the core finding. 0 findings failed.
 

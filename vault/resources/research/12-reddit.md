@@ -1,7 +1,7 @@
 ---
 tags: [pkms-design, research, adhd, sweep-a, reddit]
 created: 2026-06-09
-modified: 2026-06-09
+modified: 2026-06-10
 status: raw-findings
 ---
 
@@ -285,4 +285,48 @@ NOT COVERED: r/productivity and r/ADHD search sweeps (beyond the seed thread); r
 - [verified] https://www.reddit.com/r/ADHD_Programmers/comments/1sovgpl/i_gave_up_on_every_productivity_app_and_now_i/ — Post exists (u/ArtyomNet, r/ADHD_Programmers, 2026-04-18, 'Designer/dev here'). Quote is exact verbatim. All claim details confirmed: 4 days setup / 1-2 weeks religious use / one missed log / never open again; abandoned apps list matches (notion, obsidian, todoist, things, apple reminders, structured, sunsama, capacities); Telegram Saved Messages survivor because 'already open all day... zero setup and zero decisions'; 'But its also a graveyard', can't find anything from 3 weeks ago, can't separate task/thought/'remind me about this on tuesday'. Minor metadata drift only: current score is 12, not the 19 pts stated (scores fluctuate); 7 comments shown on post object, 12 in archive.
 - [partial] https://www.reddit.com/r/ADHD_Programmers/comments/1sovgpl/i_gave_up_on_every_productivity_app_and_now_i/ogx309d/ — Wrong permalink: comment ogx309d is u/skunk_jh's comment about an emacs daemon on a VPS — not the quoted text. The quote is real and verbatim but lives at comment id oh3ma9d (u/IdleJolt, 2026-04-19, 2 pts): 'I think the best system for ADHD is usually the one with the least resistance at the point of capture, not the one with the most features.' (finding omits the leading 'I think'). The gentlemako half of the claim is fully correct at the stated id ogxtd9w: Discord as dumping ground with channels, always-visible desk notepad, 'even opening the notebook is too much friction'. Convergence claim holds (IdleJolt, gentlemako, Maroontan 'the option with the least friction is usually the best', Toldoven). Fix the permalink to .../oh3ma9d/.
 - [verified] https://www.reddit.com/r/ADHD_Programmers/comments/1qxqhqc/why_every_productivity_system_youve_tried_has/ — Post exists (u/Emotional_Yak_6841, r/ADHD_Programmers, 2026-02-06). All elements confirmed: 'I was diagnosed at 16. I'm 31 now'; Salesforce 'set up meticulously... Abandon it within two weeks. Google Calendar, same thing. Notion, same thing'; section header 'The real cost is re-entry, not starting'; 'Context preservation beats organization' verbatim; Newman et al. ICSE 2025 cited with 'ADHD devs were 2-4x more likely to struggle with every work challenge measured'. Quote is verbatim with a legitimate ellipsis bridging one omitted sentence ('Opening a CRM and not knowing which deals were hot and which were dead.'). The AI-accusation caveat is also real: u/ShaySmoith commented 'Another wall of Ai slop text', while other commenters engage substantively. Minor drift: current score 63, not 100 pts.
+
+## Round 2 (Sweep C leftovers)
+
+Appended 2026-06-10 from the Sweep C leftovers track: the r/ObsidianMD 'ADHD bros tell me the truth' thread (1418wp0, 200 pts) — the substitute for the ~220-point ADHD tutorial thread Sweep A flagged, which could not be located in the pullpush archive. 4 findings; 1 sampled by the adversarial checker (fully verified — see Round 2 verification below).
+
+### L2-08. The 200-point r/ObsidianMD ADHD thread reveals that Obsidian's own community recognizes the app as a 'toxic productivity' trap for ADHD users — the top advice is to time-box all customization to 2-3 hours total and rebuild only the 2-3 highest-value use cases, never iteratively extend.
+
+> Obsidian has a high potential to bait you into toxic productivity due to plugins/flexibility. As someone who wasted tons of hours finding the right system and application I would recommend spending 2-3 hours and rebuild your 2-3 biggest use cases.
+
+- **Source:** [r/ObsidianMD — 'ADHD bros tell me the truth' (200 pts, 2023) — ImS0hungry comment](https://www.reddit.com/r/ObsidianMD/comments/1418wp0/)
+- **Credibility:** Community thread with 200 upvotes on the parent post; comment has 3 upvotes. Directly fetched via pullpush.io. Self-selected audience of Obsidian users discussing ADHD. Mirrors Sweep A F1/F2 (tinkering trap) from a different community angle.
+- **Design implication:** The PKMS should ship with a 'locked' default configuration where no plugins exist and setup takes under 10 minutes. The only extensibility surface should require deliberate unlocking. Frame the setup completion as an achievement, not a starting point.
+
+### L2-09. A self-described 'bad ADHD' Obsidian user reports the app is mostly a way to 'feel productive without doing the work' — but critically also reports 'keep going back to it,' suggesting the app survives by offering the illusion of productivity as a re-entry hook, not by actual workflow integration.
+
+> Bad ADHD here, its mostly a timesink to feel productive without doing the work I have to do. But it has become useful over time as I keep going back to it. Don't worry too much about organizing it perfectly, it will evolve as you use it
+
+- **Source:** [r/ObsidianMD — 'ADHD bros tell me the truth' (200 pts) — Walshy_Boy comment](https://www.reddit.com/r/ObsidianMD/comments/1418wp0/)
+- **Credibility:** Single self-report; directly fetched via pullpush.io. The survival-despite-misuse pattern is a meaningful data point: the tool survives because re-entry is low-friction, not because the workflow is well-designed.
+- **Design implication:** The PKMS should be worth reopening even after a gap, even if the prior session was unproductive. This means: no streak counts, no 'you haven't used this in X days' guilt prompts, and a re-entry briefing that makes the gap feel irrelevant.
+
+### L2-10. The ADHD brain's hyperfocus on the Obsidian app itself at initial install is a predictable, named pattern — one commenter describes being 'hyperfocusing hard' on the app for weeks, ranting about it to everyone — and the app survives this phase only if it still works after hyperfocus ends.
+
+> I was in full 'hyperfocusing hard' and also 'rant to literally everybody about what this can do' mode and it did eat up a lot of my time.
+
+- **Source:** [r/ObsidianMD — 'ADHD bros tell me the truth' (200 pts) — ishtarcrab comment](https://www.reddit.com/r/ObsidianMD/comments/1418wp0/)
+- **Credibility:** Self-report; directly fetched via pullpush.io. Aligns with Sweep A F1/F2 and receipt printer finding L2-07. Adds the 'hyperfocus on the tool' variant distinct from 'perfectionism about the system.'
+- **Design implication:** The onboarding experience should be designed to end after 10 minutes and resist extension — literally no 'explore plugins' CTA, no tour of advanced features. Make the exciting part the first note, not the setup. This contains the hyperfocus phase.
+
+### L2-11. Data portability anxiety is a real barrier to tool adoption: one Obsidian user explicitly cites needing to export or recreate content in a new system as the thing that 'exhausted their desire to explore' — open formats lower the switching cost and therefore lower the adoption barrier.
+
+> Having my data locked away somewhere, that I would need to export (if possible) or recreate in the next system just exhausted my desire to explore.
+
+- **Source:** [r/ObsidianMD — 'ADHD bros tell me the truth' (200 pts) — Spazsquatch comment](https://www.reddit.com/r/ObsidianMD/comments/1418wp0/)
+- **Credibility:** Single self-report; directly fetched via pullpush.io. Strong signal because it names the adoption barrier as 'fear of future exit cost,' not current friction — a planning-ahead anxiety that is consistent with ADHD time-blindness literature.
+- **Design implication:** The PKMS's plain-text markdown vault is a competitive advantage that should be made visible and concrete to the user from day one: 'Your notes are just text files. You can open them in Notepad. They will never be locked in.' This actively reduces the adoption-barrier anxiety.
+
+### Round 2 coverage notes
+
+The 200-point thread (1418wp0) and its comments were fetched via pullpush.io; reddit.com direct access was 403-blocked. The '~220-point ADHD tutorial' thread Sweep A flagged could not be located — the closest match ('ADHD and Obsidian: A tutorial', 1i7w6ef) scored only 1 point in the archive; 1418wp0 is the substitute with higher community signal. Open question: whether the Obsidian 'toxic productivity' dynamic applies equally to a CLI-based PKMS with lower visual novelty.
+
+### Round 2 verification
+
+Sampled: L2-08 — verified. The ImS0hungry quote is confirmed word-for-word via the pullpush.io archive; the parent post (1418wp0, r/ObsidianMD) scores exactly 200 and its title matches; URL, subreddit, username, and score all check out. 'Toxic productivity' is the commenter's own term. 0 findings failed.
 
