@@ -87,7 +87,7 @@ Theory frame for all of it: ADHD is a performance disorder, not a knowledge diso
 
 ## Contested / open questions (carry into Phase 3)
 
-- **Gamification durability for an adult engineer** — evidence is pediatric, modest (g≈0.28), and hints at age-decay ([[16-academic]] MO10); completions/progress-bars survive while points/streaks decay ([[13-youtube]] F4). Lean on intrinsic loop, decorate lightly.
+- **Gamification durability for an adult engineer** — evidence is pediatric and modest (g≈0.28), with no long-term follow-up; the moderator analysis found no significant age association, so adult durability is simply untested ([[16-academic]] MO10, corrected 2026-06-10); completions/progress-bars survive while points/streaks decay ([[13-youtube]] F4). Lean on intrinsic loop, decorate lightly.
 - **Interest-based nervous system & RSD** — clinically resonant, formally unvalidated ([[16-academic]] MO6, MO7). Use as heuristics to test against the user's own reactions, not laws.
 - **Self-imposed urgency gets rejected** ("you made that up", [[13-youtube]] F3) vs. near-in-time accountability demonstrably saved by the user ([[17-hoarder-mining]] CH7) — the line between fake deadlines and real consequence-proximity needs a Phase 3 decision.
 - **PWA-only vs PWA+sync** for the phone: does the user need offline whole-vault read, or capture-offline + read-over-tailnet ([[20-mobile-sync]] open questions)?
