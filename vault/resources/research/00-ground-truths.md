@@ -31,6 +31,10 @@ and fix anything in Parts A/C that's wrong. Everything else is my job.
   relate to them under a life-management umbrella, but it gets built standalone first.
 - **Token budget is real.** Research and build are paced for Max x20 usage windows
   (~5-hour spacing between heavy sittings).
+- **The agent executes the build.** Anti-perfectionism rules ("ship ugly," "don't let it
+  become a meta-project") apply only to work the user executes themselves. Agent-built
+  systems should be polished, deeply tailored, even overengineered — what must stay
+  lightweight is the user's side: decisions batched and small, reviews digestible.
 
 ---
 
