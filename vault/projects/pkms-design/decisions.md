@@ -28,6 +28,8 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 💡 **Provisional rec: A**, with B's PWA reserved for the phone-facing slice only. C ruled out by the tinkering evidence unless your reactions say otherwise.
 
+*Refinement from [[22-kenja-resource-dump]] (KD2): "cap the customization surface" splits in two — structural/schema knobs stay at zero, but ship a small bounded set of salience controls (density, quiet level, how much the today-view shows). Personalization-as-decluttering is an ADHD need; personalization-as-tinkering is the trap.*
+
 🔓 Unblocks: G2, G5, G9, build-slice ordering.
 
 **Your call:**
@@ -83,7 +85,7 @@ Sub-decisions:
 1. **Fields:** ⏱ size, ▶ first action, ✓ done-when on every task — adopt as schema, with "needs a first step" as a surfaced state. *(rec: yes, it's your own surviving convention)*
 2. **Decay policy:** tasks untouched N days fade from active view into amnesty (visible-aging marks first). **Pick N** (bujo monthly suggests ~30; HN evidence suggests 7–14 for daily-level items). *(rec: 14 days to fade, 30 to amnesty-archive, never delete)*
 3. **States:** open / done / stuck (auto-subdivide) / not-now (back of queue) / paused (with written reactivation condition) / iceboxed. *(rec: adopt all six; paused & icebox are your existing patterns)*
-4. **Urgency mechanics — the [[31-theme-tasks]] #8 tension:** self-imposed deadlines get rejected ([[13-youtube]] F3) but your own saves say low-consequence environments produce nothing ([[17-hoarder-mining]] CH7). Options: (a) no deadline features at all, interest-routing only; (b) externalized commitments only (a task can reference a real-world consequence/person/date); (c) lightweight body-double/agent-session accountability ([[17-hoarder-mining]] CH13). *(rec: b + c, never synthetic countdowns — but this one genuinely needs your reaction)*
+4. **Urgency mechanics — the [[31-theme-tasks]] #8 tension:** self-imposed deadlines get rejected ([[13-youtube]] F3) but your own saves say low-consequence environments produce nothing ([[17-hoarder-mining]] CH7). Options: (a) no deadline features at all, interest-routing only; (b) externalized commitments only (a task can reference a real-world consequence/person/date); (c) lightweight body-double/agent-session accountability ([[17-hoarder-mining]] CH13). New data point ([[22-kenja-resource-dump]] KD10/KD11): nag-until-done reminder apps are genuinely popular in the ADHD community despite the notification-habituation evidence — persistent re-notification may work for *single self-chosen commitments* while ambient surfaces stay rationed; a possible (d). *(rec: b + c, never synthetic countdowns — but this one genuinely needs your reaction)*
 
 🔓 Unblocks: `pkms tasks` redesign, daily-note template.
 
