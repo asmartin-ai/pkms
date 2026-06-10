@@ -35,6 +35,7 @@ scripts/       # One-off maintenance scripts
 - Frontmatter (YAML) carries metadata: `tags`, `created`, `modified`, `status`
 - Tasks are `- [ ] task text` lines; done = `- [x]`
 - The `.index/` directory is gitignored — rebuild with `pkms index`
+- Generated artifacts (reading bundles, exports) go in `exports/`, never in `vault/` — the FTS index must not see duplicate content. Throwaway experiments live in `spike/`.
 
 ## Dev setup
 
