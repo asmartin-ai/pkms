@@ -38,11 +38,7 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
                  content=excluded.content, indexed_at=excluded.indexed_at""",
             (rel, title, str(meta.get("created", "")), str(meta.get("modified", "")), tags, content, _now()),
         )
-        row_id = conn.execute("SELECT id FROM notes WHERE path=?", (rel,)).fetchone()[0]
-
-        # FTS sync
-        conn.execute("DELETE FROM notes_fts WHERE rowid=?", (row_id,))
-        conn.execute("INSERT INTO notes_fts(rowid, path, title, content) VALUES (?,?,?,?)", (row_id, rel, title, content))
+        # FTS stays in sync via triggers on the notes table (see db.SCHEMA)
 
         # Links
         conn.execute("DELETE FROM links WHERE source=?", (rel,))

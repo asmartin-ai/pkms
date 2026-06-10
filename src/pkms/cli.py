@@ -12,8 +12,21 @@ from rich.table import Table
 app = typer.Typer(help="Personal Knowledge Management System")
 console = Console()
 
-VAULT = Path(__file__).resolve().parents[3] / "vault"
-INDEX = Path(__file__).resolve().parents[3] / ".index"
+def _project_root() -> Path:
+    """Locate the PKMS root: $PKMS_HOME if set, else nearest ancestor of cwd containing vault/."""
+    env = os.environ.get("PKMS_HOME")
+    if env:
+        return Path(env)
+    cwd = Path.cwd()
+    for candidate in (cwd, *cwd.parents):
+        if (candidate / "vault").is_dir():
+            return candidate
+    raise SystemExit("No vault/ found in current directory or its parents. Set PKMS_HOME or cd into the PKMS project.")
+
+
+_ROOT = _project_root()
+VAULT = _ROOT / "vault"
+INDEX = _ROOT / ".index"
 
 
 @app.command()

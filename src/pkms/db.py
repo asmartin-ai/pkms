@@ -23,6 +23,25 @@ CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
     content_rowid='id'
 );
 
+-- External-content FTS5 tables must be kept in sync via triggers;
+-- direct DELETE/UPDATE on notes_fts corrupts the index.
+CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
+    INSERT INTO notes_fts(rowid, path, title, content)
+    VALUES (new.id, new.path, new.title, new.content);
+END;
+
+CREATE TRIGGER IF NOT EXISTS notes_ad AFTER DELETE ON notes BEGIN
+    INSERT INTO notes_fts(notes_fts, rowid, path, title, content)
+    VALUES ('delete', old.id, old.path, old.title, old.content);
+END;
+
+CREATE TRIGGER IF NOT EXISTS notes_au AFTER UPDATE ON notes BEGIN
+    INSERT INTO notes_fts(notes_fts, rowid, path, title, content)
+    VALUES ('delete', old.id, old.path, old.title, old.content);
+    INSERT INTO notes_fts(rowid, path, title, content)
+    VALUES (new.id, new.path, new.title, new.content);
+END;
+
 CREATE TABLE IF NOT EXISTS links (
     id          INTEGER PRIMARY KEY,
     source      TEXT NOT NULL,             -- relative path
