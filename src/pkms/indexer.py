@@ -19,9 +19,11 @@ def _now() -> str:
 def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> dict:
     conn = connect(index_dir)
     stats = {"notes": 0, "links": 0, "tasks": 0}
+    seen: set[str] = set()
 
     for md_path in sorted(vault_root.rglob("*.md")):
         rel = str(md_path.relative_to(vault_root))
+        seen.add(rel)
         post = frontmatter.load(md_path)
         content = post.content
         meta = post.metadata
@@ -58,6 +60,15 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
         stats["notes"] += 1
         if verbose:
             print(f"  indexed {rel}")
+
+    # Drop rows for notes deleted/renamed since the last index run
+    for row in conn.execute("SELECT path FROM notes").fetchall():
+        if row["path"] not in seen:
+            conn.execute("DELETE FROM notes WHERE path=?", (row["path"],))
+            conn.execute("DELETE FROM links WHERE source=?", (row["path"],))
+            conn.execute("DELETE FROM tasks WHERE note_path=?", (row["path"],))
+            if verbose:
+                print(f"  removed {row['path']}")
 
     conn.commit()
     conn.close()
