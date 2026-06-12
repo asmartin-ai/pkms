@@ -10,7 +10,7 @@ status: complete
 
 > **PHASE 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency — no fake urgency; 34#7 sync — predictive partial synced folder). Reactions live verbatim in the theme notes and are folded into [[decisions]].
 >
-> ▶ **NEXT (Phase 3, ≤10 min):** open [[decisions]] and answer the G1 elaboration — one sentence each on your two bare ❌s ([[36-theme-anti-perfectionism]] #1 cap-customization, #2 named-context-anchoring). That's the only reaction the gates can't interpret without you.
+> ▶ **NEXT (Phase 3, small sittings):** open [[decisions]] and close gates top to bottom under "Your call" — G1 interface shape first ("go with rec" counts). The 36 #1/#2 ❌s were elaborated and resolved on 2026-06-12; no reaction remains uninterpreted.
 
 ## Final reaction map
 
@@ -22,7 +22,7 @@ status: complete
 | 4 | [[35-theme-llm-organizer]] | ✅ all 8 — cleanest sweep; agent architecture fully confirmed |
 | 5 | [[32-theme-retrieval]] | ✅ all 8 — subtle resurfacing, relevance-weighted cards |
 | 6 | [[34-theme-mobile]] | ✅ core; G10 answered (#7); sync ❓s clarified, feed G10 design |
-| 7 | [[36-theme-anti-perfectionism]] | ✅ 6 of 8 — **#1/#2 bare ❌ need one sentence each (G1)** |
+| 7 | [[36-theme-anti-perfectionism]] | ✅ 6 of 8 — #1/#2 ❌ elaborated & resolved at G1 (agent-as-customization-interface; anchoring → heuristic) |
 | 8 | [[37-theme-self-knowledge]] | ✅ 5 of 7 — caveat: don't over-read job-search-2026 signals (#5/#6) |
 
 ## Done-when

@@ -8,7 +8,7 @@ status: reaction-backed-gates-open
 
 # PKMS Design Decisions (Phase 3)
 
-> **Status: FULLY REACTION-BACKED — Phase 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency: settled; 34#7 sync: partial synced folder). Every gate below now carries "*Reactions*" annotations. **The one item still needing your words before gates close: your bare ❌ on [[36-theme-anti-perfectionism]] #1 and #2 (see G1).** Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
+> **Status: FULLY REACTION-BACKED — Phase 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency: settled; 34#7 sync: partial predictive sync) and the 36#1/#2 ❌s elaborated and resolved at G1 (agent-as-customization-interface; context-anchoring → heuristic). Every gate below carries "*Reactions*" annotations; no reaction remains uninterpreted. Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
 
 Legend per gate: ❓ the question · 📚 bearing research · options with trade-offs · 💡 provisional recommendation · 🔓 what closing it unblocks.
 
@@ -30,11 +30,13 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 *Refinement from [[22-kenja-resource-dump]] (KD2): "cap the customization surface" splits in two — structural/schema knobs stay at zero, but ship a small bounded set of salience controls (density, quiet level, how much the today-view shows). Personalization-as-decluttering is an ADHD need; personalization-as-tinkering is the trap.*
 
-*Reactions 2026-06-12 ([[36-theme-anti-perfectionism]]):* you ❌'d both #1 (cap the customization surface) and #2 (anchor every feature to a named context) — **with no comment, against two of the most-evidenced findings in the corpus.** Before this gate closes, one sentence each on what the ❌ means: (a) "I want more knobs than the rec allows"? "I reject ship-opinionated"? Or "the KD2 split already covers me"? (b) For #2: is there a general-PKM surface you actively want, or did the framing just feel restrictive? Your reactions elsewhere (35 all-✅ on opinionated agent grammar, 36#3 ✅ on view-layer-as-novelty-outlet) suggest the disagreement may be narrower than the bare ❌ reads.
+*Reactions 2026-06-12 ([[36-theme-anti-perfectionism]] #1/#2 ❌, elaborated same day):* **RESOLVED — the guardrail relocates rather than disappears.**
+- **Customization (#1):** "It's MY system — I'll tinker" + "ship opinionated, but evolve freely" are *both* true. Adopted stance: the app surface ships opinionated and finished-feeling with **zero settings sprawl — the agent is the customization interface.** Change happens by telling Claude, which keeps the documented trap (unbounded in-app fiddling surfaces) closed while keeping full builder agency. This squares the research: the corpus's tinkering deaths are settings-screen/plugin-ecosystem deaths, not builder-evolves-his-tool deaths. KD2's salience-knobs stay as the small bounded exception.
+- **Context anchoring (#2):** all four readings true — demoted from cut-rule to **scoping heuristic**: features still *start* from a named context when prioritizing slices, but general capability (search, linking, browsing) is legitimate, an **exploratory knowledge-garden surface is in-scope** (wandering needs no justification), and nothing hard-codes today's contexts (they will churn).
 
 🔓 Unblocks: G2, G5, G9, build-slice ordering.
 
-**Your call (incl. the two ❌ elaborations above):**
+**Your call (interface shape A/B/C still yours to close — rec remains A):**
 
 ---
 
