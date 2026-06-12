@@ -2,13 +2,13 @@
 title: PKMS design decisions — Phase 3 gates
 tags: [pkms-design, decisions, adhd]
 created: 2026-06-10
-modified: 2026-06-10
-status: draft-provisional
+modified: 2026-06-11
+status: draft-partially-reacted
 ---
 
 # PKMS Design Decisions (Phase 3)
 
-> **Status: PROVISIONAL SKELETON.** Drafted 2026-06-10 from the full Phase 1 research, *before* your Phase 2 reactions. Every recommendation below may move once you've marked ✅/❌/❓ in the theme notes ([[05-reading-queue]]). Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
+> **Status: PARTIALLY REACTION-BACKED.** Drafted 2026-06-10 from the full Phase 1 research; updated 2026-06-11 with your reactions to themes 30/31/32 (capture, tasks, retrieval) — G2/G4/G5 now carry "*Reactions*" annotations and G4 was materially reworked (decay → reshape-then-stash; urgency settled). Themes 33–37 still pending ([[05-reading-queue]] — next: 33). Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
 
 Legend per gate: ❓ the question · 📚 bearing research · options with trade-offs · 💡 provisional recommendation · 🔓 what closing it unblocks.
 
@@ -51,6 +51,8 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 💡 **Provisional rec:** all captures land as separate timestamped markdown files in `vault/inbox/`; the agent (not you) folds them into daily notes/structure. Desktop hotkey + phone tile are slice 1.
 
+*Reactions 2026-06-11 ([[30-theme-capture]]):* core spec confirmed — <2s zero-decision bar ✅, one-inbox-many-ramps ✅, machine-side dedupe/tagging ✅, no re-open shame ✅. Two refinements: (a) #3 ❓ — the *capture* ramp stays feed-free, but Kenja notes scroll-distraction sometimes helps digest the backlog → a feed-adjacent resurfacing surface is a feature, not a violation (feeds G5/G6, see the scroll-lacing idea there). (b) #6 ✅-begrudging — persistence friction accepted, but presentation must make "nothing is ever thrown away without my control" visible, or ADHD loss-aversion fights the mechanism.
+
 🔓 Unblocks: first usable vertical slice; the spike test feeds this gate.
 
 **Your call:**
@@ -81,15 +83,17 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 📚 [[31-theme-tasks]] wholesale; opposite decay for notes vs tasks ([[11-hn]] F5); one-next-action with invisible backlog ([[14-github]] F6); ⏱▶✓ is your proven convention ([[21-job-search-distill]] JS1); Done/Stuck/Not-now grammar ([[19-seed-links]] SD12).
 
-Sub-decisions:
-1. **Fields:** ⏱ size, ▶ first action, ✓ done-when on every task — adopt as schema, with "needs a first step" as a surfaced state. *(rec: yes, it's your own surviving convention)*
-2. **Decay policy:** tasks untouched N days fade from active view into amnesty (visible-aging marks first). **Pick N** (bujo monthly suggests ~30; HN evidence suggests 7–14 for daily-level items). *(rec: 14 days to fade, 30 to amnesty-archive, never delete)*
-3. **States:** open / done / stuck (auto-subdivide) / not-now (back of queue) / paused (with written reactivation condition) / iceboxed. *(rec: adopt all six; paused & icebox are your existing patterns)*
-4. **Urgency mechanics — the [[31-theme-tasks]] #8 tension:** self-imposed deadlines get rejected ([[13-youtube]] F3) but your own saves say low-consequence environments produce nothing ([[17-hoarder-mining]] CH7). Options: (a) no deadline features at all, interest-routing only; (b) externalized commitments only (a task can reference a real-world consequence/person/date); (c) lightweight body-double/agent-session accountability ([[17-hoarder-mining]] CH13). New data point ([[22-kenja-resource-dump]] KD10/KD11): nag-until-done reminder apps are genuinely popular in the ADHD community despite the notification-habituation evidence — persistent re-notification may work for *single self-chosen commitments* while ambient surfaces stay rationed; a possible (d). *(rec: b + c, never synthetic countdowns — but this one genuinely needs your reaction)*
+Sub-decisions *(reworked 2026-06-11 from your [[31-theme-tasks]] reactions)*:
+1. **Fields:** ⏱ size, ▶ first action, ✓ done-when on every task — adopt as schema, with "needs a first step" as a surfaced state. *(rec: yes, it's your own surviving convention — your ❓ "don't fully understand" got a plain-language clarification in [[31-theme-tasks]] #3; re-react there)*
+2. **Decay policy — REWORKED after your ❌ on #1.** Plain fade-to-amnesty rejected: "letting it decay just builds guilt — tasks need to be reshaped to be more approachable." New rec: stale tasks get **reshaped before they fade** — at ~14 days untouched the agent re-offers the task with a smaller ▶ first step and a "still want this? (smaller / not-now / stash)" choice; only after that does it sink to the searchable stash. Nothing is ever deleted, and the stash must be visibly recoverable (same loss-aversion caveat as G2). **Pick N for the reshape trigger** *(rec: 14 days)*.
+3. **States:** open / done / stuck (auto-subdivide) / not-now (back of queue) / paused (with written reactivation condition) / iceboxed. *(rec: adopt all six; #4 grammar got your ✅, paused got a clarification in [[31-theme-tasks]] #5)*
+4. **Urgency mechanics — SETTLED 2026-06-11.** Your #8 reaction: "✅ Hard agree" with no fake urgency primitives. Adopted: **(b) externalized commitments + (c) lightweight agent/body-double accountability; no synthetic deadlines, no countdowns, and option (d) nag-until-done is dropped.**
+5. **Backlog visibility (new, from your #2 ❓):** not invisible — *deemphasized*. The backlog stays one click away and never renders as a wall by default; one-next-action remains the default view, especially under deadline pressure ("the principle matters most when I have tasks that need to get done").
+6. **Done-log (your #7 ✅):** first-class, retroactive entries welcome — "even retroactively adding tasks and marking it as done kept me going." Build it into slice planning.
 
 🔓 Unblocks: `pkms tasks` redesign, daily-note template.
 
-**Your call (incl. N and sub-decision 4):**
+**Your call (sub-decision 2's N; re-react to #3/#5/#6 clarifications):**
 
 ---
 
@@ -104,6 +108,8 @@ Sub-decisions:
 - Sub-decision: **embedding layer** — local model via sqlite-vec/embeddings table now, or defer to a later slice and start with FTS + links only. *(rec: defer to slice 2–3; FTS + backlinks + recency heuristics first, embeddings when resurfacing quality demands it)*
 
 💡 **Provisional rec: A**, rendered in terminal at session start and as the PWA home screen.
+
+*Reactions 2026-06-11 ([[32-theme-retrieval]] — all 8 ✅):* recognition-over-recall, event-based cues, re-entry breadcrumbs, visible-aging-then-amnesty, OCR-at-ingest all confirmed (OCR was "Hard Agree" — promote it to an early slice). Three design constraints from your comments: (a) curious-question resurfacing must stay **subtle** — you predict auto-dismiss habituation if it nags (#3); (b) "surprise me"/related cards should be **relevance-weighted, not random** — "if it hits uninteresting things, i might stop using it" (#4); (c) **scroll-lacing idea (yours, from [[31-theme-tasks]] #1):** lace resurfaced old ideas into your existing content-hoarder scrolling habit — resurfacing inside a feed you already open voluntarily. Strong candidate for the G6 integration; piggybacks on a proven behavior instead of building a new surface.
 
 🔓 Unblocks: daily-note template, indexer queries, PWA home.
 
