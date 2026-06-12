@@ -141,6 +141,12 @@ def today():
         console.print()
 
 
+def _print_promoted(result: dict):
+    rel = result["note"].relative_to(VAULT)
+    console.print(f"[green]promoted ✓[/green] vault/{rel}  [dim]· queued · ~{result['minutes']} min read[/dim]")
+    console.print("[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]")
+
+
 @app.command()
 def promote(query: str):
     """Promote a hoarded Reddit thread (URL/id, or search terms to pick from) into the vault."""
@@ -157,11 +163,18 @@ def promote(query: str):
         console.print("[bold]which one?[/bold]")
         for i, c in enumerate(cands, 1):
             bits = [b for b in (f"r/{c['subreddit']}" if c["subreddit"] else "",
-                                f"saved {c['saved']}" if c["saved"] else "",
-                                c["id"]) if b]
-            console.print(f"  [cyan]{i}.[/cyan] {_esc(c['title'][:80])}")
-            console.print(f"     [dim]{' · '.join(bits)}[/dim]")
-        console.print("\n[dim]promote one: pkms promote <id>[/dim]")
+                                f"saved {c['saved']}" if c["saved"] else "") if b]
+            tail = f"  [dim]{' · '.join(bits)}[/dim]" if bits else ""
+            console.print(f"  [cyan]{i}.[/cyan] {_esc(c['title'][:80])}{tail}")
+        try:
+            choice = typer.prompt("\npromote which? (number · Enter to skip)",
+                                  default="", show_default=False).strip()
+        except (typer.Abort, EOFError):  # no input available — skipping is free
+            return
+        if not choice.isdigit() or not 1 <= int(choice) <= len(cands):
+            return  # skipping costs nothing
+        # t3_ prefix forces the id path even for the rare all-letter id
+        _print_promoted(_promote(f"t3_{cands[int(choice) - 1]['id']}", VAULT))
         return
 
     if "missing" in result:
@@ -169,9 +182,7 @@ def promote(query: str):
                       "Save it in content-hoarder first — fresh-URL fetch is on the build plan (F2).")
         return
 
-    rel = result["note"].relative_to(VAULT)
-    console.print(f"[green]promoted ✓[/green] vault/{rel}  [dim]· queued · ~{result['minutes']} min read[/dim]")
-    console.print("[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]")
+    _print_promoted(result)
 
 
 @app.command()

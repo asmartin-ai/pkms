@@ -187,3 +187,39 @@ def test_today_queue_empties_when_marked_read(hoarder_db, tmp_path, index_dir):
     path.write_text(path.read_text(encoding="utf-8").replace("reading: queued", "reading: done"),
                     encoding="utf-8")
     assert today_view(vault, index_dir)["next_read"] is None
+
+
+# --- interactive selection menu (CLI) ---
+
+@pytest.fixture
+def cli_promote(hoarder_db, tmp_path, monkeypatch):
+    import pkms.cli as cli
+    import pkms.promote as promote_mod
+    from typer.testing import CliRunner
+    vault = tmp_path / "vault"
+    monkeypatch.setattr(cli, "VAULT", vault)
+    monkeypatch.setattr(promote_mod, "HOARDER_DB", hoarder_db)
+    return CliRunner(), cli.app, vault
+
+
+def test_menu_number_promotes_in_place(cli_promote):
+    runner, app, vault = cli_promote
+    result = runner.invoke(app, ["promote", "retain"], input="1\n")
+    assert result.exit_code == 0
+    assert "which one?" in result.output and "promoted" in result.output
+    assert list((vault / "resources" / "reading").glob("*.md"))
+
+
+def test_menu_enter_skips_for_free(cli_promote):
+    runner, app, vault = cli_promote
+    result = runner.invoke(app, ["promote", "retain"], input="\n")
+    assert result.exit_code == 0
+    assert "promoted" not in result.output
+    assert not (vault / "resources" / "reading").exists()
+
+
+def test_menu_junk_input_also_skips(cli_promote):
+    runner, app, vault = cli_promote
+    result = runner.invoke(app, ["promote", "retain"], input="99\n")
+    assert result.exit_code == 0
+    assert not (vault / "resources" / "reading").exists()
