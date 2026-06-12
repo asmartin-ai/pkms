@@ -277,3 +277,8 @@ dashboard, triage spin-off coordination with content-hoarder Epic 22).
 - **Predictive partial sync (G10)** — reactivate when there is real usage to predict
   from (post-dogfood); design is sketched in [[20-mobile-sync]] + G10.
 - **Keep ingestion via API** — only if F1 fails; reactivation = a viable API route appears.
+- **Rust (or Go) rewrite of hot paths** — potential perf improvement; the architecture
+  (plain files + regenerable SQLite) makes any component swappable without migration.
+  Reactivation condition: a *measured* slow path Kenja actually feels during dogfooding
+  (most likely candidate: CLI cold start). Not before — Python currently stands on no
+  perceptible hot path (capture is AHK/resident-server, search is FTS5/C).

@@ -1,0 +1,62 @@
+"""Assemble the minimal today-view (build-plan slice 1).
+
+Front door, not a dashboard: where you left off (breadcrumb), what's new
+(inbox as progress, never debt), and one next action per note (never a wall).
+Copy rules: no backlog counts, no overdue framing, empty state reads as a win
+(design language §3/§6).
+"""
+
+from datetime import date
+from pathlib import Path
+
+from .capture import inbox_count
+
+MAX_NOTES_SHOWN = 8
+
+
+def _breadcrumb(vault: Path, today_stem: str) -> dict | None:
+    """Tail of the most recent daily note before today — where you left off."""
+    daily = vault / "daily"
+    if not daily.is_dir():
+        return None
+    prior = sorted(p for p in daily.glob("*.md") if p.stem != today_stem)
+    if not prior:
+        return None
+    last = prior[-1]
+    lines = last.read_text(encoding="utf-8").splitlines()
+    if lines and lines[0].strip() == "---":  # drop frontmatter
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                lines = lines[i + 1:]
+                break
+    body = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+    return {"name": last.stem, "lines": body[-3:]}
+
+
+def _next_actions(index_dir: Path) -> list[dict]:
+    """First open task per note, projects first. Inbox captures are excluded —
+    their tasks surface after folding, not before."""
+    if not (index_dir / "pkms.db").exists():
+        return []
+    from .db import connect
+    conn = connect(index_dir)
+    rows = conn.execute(
+        """SELECT note_path, text, MIN(line) FROM tasks
+           WHERE done=0 AND note_path NOT LIKE 'inbox%'
+           GROUP BY note_path
+           ORDER BY CASE WHEN note_path LIKE 'projects%' THEN 0 ELSE 1 END, note_path""",
+    ).fetchall()
+    conn.close()
+    return [{"note": r["note_path"], "text": r["text"]} for r in rows]
+
+
+def today_view(vault: Path, index_dir: Path) -> dict:
+    today_stem = date.today().isoformat()
+    actions = _next_actions(index_dir)
+    return {
+        "date": today_stem,
+        "breadcrumb": _breadcrumb(vault, today_stem),
+        "inbox_new": inbox_count(vault),
+        "next_actions": actions[:MAX_NOTES_SHOWN],
+        "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),
+    }
