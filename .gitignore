@@ -26,5 +26,6 @@ desktop.ini
 # Secrets
 .env
 *.env.local
+.secrets/
 
 spike/inbox-test/
