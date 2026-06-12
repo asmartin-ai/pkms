@@ -99,26 +99,40 @@ def today():
     """The front door: where you left off, what's new, one next action per note."""
     from .today import today_view
     view = today_view(VAULT, INDEX)
-    console.print(f"[bold]{view['date']}[/bold]\n")
+    day = date.fromisoformat(view["date"])
+    console.print()
+    console.rule(f"[bold]{day:%A} · {day:%B %d}[/bold]", style="dim")
+    console.print()
 
     crumb = view["breadcrumb"]
     if crumb and crumb["lines"]:
-        console.print(f"[dim]last time ({crumb['name']}):[/dim]")
+        console.print(f"  [dim]last time · {crumb['name']}[/dim]")
         for line in crumb["lines"]:
-            console.print(f"  [italic]{line}[/italic]")
+            console.print(f"  [italic dim]{line}[/italic dim]")
         console.print()
 
     if view["inbox_new"]:
-        console.print(f"[cyan]{view['inbox_new']} new to fold in[/cyan] — captured, safe.\n")
+        console.print(f"  [cyan]●[/cyan] [bold]{view['inbox_new']} new to fold in[/bold]"
+                      f" [dim]— captured, safe[/dim]")
     else:
-        console.print("[green]inbox clear ✓[/green]\n")
+        console.print("  [green]✓[/green] inbox clear")
+    console.print()
 
     if view["next_actions"]:
-        console.print("[bold]next actions[/bold]")
+        from rich.markup import escape
+
+        def fit(s: str, w: int) -> str:
+            return s if len(s) <= w else s[: w - 1] + "…"
+
+        title_w = 24
+        text_w = max(20, console.width - title_w - 6)
+        console.print("  [bold]next actions[/bold]")
         for a in view["next_actions"]:
-            console.print(f"  [cyan]{a['note']}[/cyan] — {a['text']}")
+            title = escape(fit(a["title"], title_w).ljust(title_w))
+            console.print(f"  [cyan]{title}[/cyan]  {escape(fit(a['text'], text_w))}")
         if view["more_notes"]:
-            console.print("  [dim]rest of the backlog: pkms tasks[/dim]")
+            console.print("  [dim]everything else: pkms tasks[/dim]")
+        console.print()
 
 
 @app.command()
