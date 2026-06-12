@@ -237,7 +237,7 @@ Sub-decisions:
 
 ✓ Phase 3 done-when: every box checked → I turn this into a vertical-slice build plan, each slice ending in something you can actually use.
 
-**ALL GATES CLOSED 2026-06-12.** Pre-Phase-4 prerequisite (Kenja, same day): stand up the **shared ADHD design language** between PKMS and content-hoarder before implementation — see [[adhd-design-language-repo]].
+**ALL GATES CLOSED 2026-06-12.** Pre-Phase-4 prerequisite (Kenja, same day): stand up the **shared ADHD design language** between PKMS and content-hoarder before implementation — see [[adhd-design-language-repo]]. **Phase 4 plan written same day → [[build-plan]]** (8 vertical slices, capture first, `pkms promote` flagship second).
 
 **Icebox** (paused, with reactivation conditions):
 - **Voice capture ramp** — reactivate when core capture slices are stable and a real need appears (interim: Pixel Recorder transcript → share into a ramp).
