@@ -2,42 +2,33 @@
 title: Reading queue — Phase 2
 tags: [pkms-design, research, adhd, reading-queue]
 created: 2026-06-10
-modified: 2026-06-11
-status: active
+modified: 2026-06-12
+status: complete
 ---
 
 # 05 — Reading Queue (Phase 2)
 
-Phase 1 research is **complete**: ~160 verified findings, synthesized. Your job now is reactions, not reading everything. Mark ✅ resonates / ❌ not me / ❓ unsure inline in each theme note (every principle has a **React:** slot). Partial passes count; one mark per theme is the done-when.
+> **PHASE 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency — no fake urgency; 34#7 sync — predictive partial synced folder). Reactions live verbatim in the theme notes and are folded into [[decisions]].
+>
+> ▶ **NEXT (Phase 3, ≤10 min):** open [[decisions]] and answer the G1 elaboration — one sentence each on your two bare ❌s ([[36-theme-anti-perfectionism]] #1 cap-customization, #2 named-context-anchoring). That's the only reaction the gates can't interpret without you.
 
-▶ **NEXT SITTING (≤10 min): react to [[33-theme-inbox-pipeline]] — 8 principles, your B11 win scenario.** You asked to be reminded of exactly this on 2026-06-11. Mark it in `exports/phase2-reading-bundle.md` like last time; Claude transfers.
+## Final reaction map
 
-## Progress (3 of 8 themes reacted, 2026-06-11)
-
-| # | Note | ⏱ | Status |
-|---|------|----|--------|
-| 1 | [[30-theme-capture]] | ~8 min | ✅ reacted — all 7 |
-| 2 | [[31-theme-tasks]] | ~10 min | ✅ reacted — all 8; #3/#5/#6 got clarifications, re-react whenever. **#8 urgency tension: settled (hard agree, no fake urgency).** |
-| 3 | [[33-theme-inbox-pipeline]] | ~10 min | ▶ **NEXT** |
-| 4 | [[35-theme-llm-organizer]] | ~10 min | ☐ |
-| 5 | [[32-theme-retrieval]] | ~10 min | ✅ reacted — all 8 |
-| 6 | [[34-theme-mobile]] | ~8 min | ☐ — contains the remaining flagged decision (#7, PWA-only vs sync) |
-| 7 | [[36-theme-anti-perfectionism]] | ~8 min | ☐ |
-
-## Self-knowledge (after the build themes)
-
-| # | Note | ⏱ | Status |
-|---|------|----|--------|
-| 8 | [[37-theme-self-knowledge]] | ~8 min | ☐ — lowest priority |
-
-## Optional deep dives (only if a reaction needs evidence)
-
-[[10-synthesis]] (~25 min, the full linked dump) → then the raw notes [[11-hn]]–[[21-job-search-distill]] (~10–20 min each). Never required: every theme principle links back to its sources.
+| # | Note | Result |
+|---|------|--------|
+| 1 | [[30-theme-capture]] | ✅ all 7 — capture spec confirmed; feed-adjacent digest welcome (#3 ❓) |
+| 2 | [[31-theme-tasks]] | ✅ all 8 (three ❓→✅ after clarifications); decay reworked (#1 ❌); urgency settled (#8) |
+| 3 | [[33-theme-inbox-pipeline]] | ✅ mostly — per-item-review pushback (#2 ❌), promote-or-purge gate ❓ |
+| 4 | [[35-theme-llm-organizer]] | ✅ all 8 — cleanest sweep; agent architecture fully confirmed |
+| 5 | [[32-theme-retrieval]] | ✅ all 8 — subtle resurfacing, relevance-weighted cards |
+| 6 | [[34-theme-mobile]] | ✅ core; G10 answered (#7); sync ❓s clarified, feed G10 design |
+| 7 | [[36-theme-anti-perfectionism]] | ✅ 6 of 8 — **#1/#2 bare ❌ need one sentence each (G1)** |
+| 8 | [[37-theme-self-knowledge]] | ✅ 5 of 7 — caveat: don't over-read job-search-2026 signals (#5/#6) |
 
 ## Done-when
 
-- [ ] Every theme note (30–37) has at least one reaction mark. *(30, 31, 32 done)*
+- [x] Every theme note (30–37) has at least one reaction mark. *(2026-06-12)*
 - [x] Flagged decision 31 #8 (urgency) reacted — ✅ hard agree, settled 2026-06-11.
-- [ ] Flagged decision 34 #7 (mobile sync) reacted.
+- [x] Flagged decision 34 #7 (mobile sync) reacted — ✅ partial predictive sync, 2026-06-12.
 
-Then Phase 3 (decision doc + build plan) can start. Reactions so far are already folded into [[decisions]] (G2/G4/G5 updated 2026-06-11).
+Phase 3 is open: [[decisions]] — gates ordered by what they block, answer inline under "Your call".
