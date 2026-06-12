@@ -63,6 +63,28 @@ def _next_actions(index_dir: Path) -> list[dict]:
     ]
 
 
+def _next_read(vault: Path) -> dict | None:
+    """ONE queued promoted thread, oldest first — recognition, never a pile.
+    Reads frontmatter from disk: the reading state lives in the notes themselves."""
+    reading = vault / "resources" / "reading"
+    if not reading.is_dir():
+        return None
+    import frontmatter
+    queued = []
+    for p in sorted(reading.glob("*.md")):
+        meta = frontmatter.load(p).metadata
+        if meta.get("reading") == "queued":
+            queued.append({
+                "title": str(meta.get("title") or p.stem),
+                "minutes": meta.get("reading_minutes"),
+                "promoted": str(meta.get("promoted", "")),
+            })
+    if not queued:
+        return None
+    queued.sort(key=lambda q: q["promoted"])
+    return queued[0]
+
+
 def today_view(vault: Path, index_dir: Path) -> dict:
     today_stem = date.today().isoformat()
     actions = _next_actions(index_dir)
@@ -70,6 +92,7 @@ def today_view(vault: Path, index_dir: Path) -> dict:
         "date": today_stem,
         "breadcrumb": _breadcrumb(vault, today_stem),
         "inbox_new": inbox_count(vault),
+        "next_read": _next_read(vault),
         "next_actions": actions[:MAX_NOTES_SHOWN],
         "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),
     }
