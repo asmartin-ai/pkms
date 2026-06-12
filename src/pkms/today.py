@@ -6,12 +6,20 @@ Copy rules: no backlog counts, no overdue framing, empty state reads as a win
 (design language §3/§6).
 """
 
+import re
 from datetime import date
 from pathlib import Path
 
 from .capture import inbox_count
 
 MAX_NOTES_SHOWN = 8
+
+_WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
+
+
+def _display_text(text: str) -> str:
+    """Task text for humans: [[target|label]] renders as its label, [[target]] as target."""
+    return _WIKILINK_RE.sub(lambda m: m.group(2) or m.group(1), text).strip()
 
 
 def _breadcrumb(vault: Path, today_stem: str) -> dict | None:
@@ -41,13 +49,18 @@ def _next_actions(index_dir: Path) -> list[dict]:
     from .db import connect
     conn = connect(index_dir)
     rows = conn.execute(
-        """SELECT note_path, text, MIN(line) FROM tasks
-           WHERE done=0 AND note_path NOT LIKE 'inbox%'
-           GROUP BY note_path
-           ORDER BY CASE WHEN note_path LIKE 'projects%' THEN 0 ELSE 1 END, note_path""",
+        """SELECT t.note_path, n.title, t.text, MIN(t.line) FROM tasks t
+           LEFT JOIN notes n ON n.path = t.note_path
+           WHERE t.done=0 AND t.note_path NOT LIKE 'inbox%'
+           GROUP BY t.note_path
+           ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
     ).fetchall()
     conn.close()
-    return [{"note": r["note_path"], "text": r["text"]} for r in rows]
+    return [
+        {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem,
+         "text": _display_text(r["text"])}
+        for r in rows
+    ]
 
 
 def today_view(vault: Path, index_dir: Path) -> dict:
