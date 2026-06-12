@@ -3,12 +3,14 @@ title: PKMS design decisions — Phase 3 gates
 tags: [pkms-design, decisions, adhd]
 created: 2026-06-10
 modified: 2026-06-12
-status: reaction-backed-gates-open
+status: gates-closed
 ---
 
 # PKMS Design Decisions (Phase 3)
 
-> **Status: FULLY REACTION-BACKED — Phase 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency: settled; 34#7 sync: partial predictive sync) and the 36#1/#2 ❌s elaborated and resolved at G1 (agent-as-customization-interface; context-anchoring → heuristic). Every gate below carries "*Reactions*" annotations; no reaction remains uninterpreted. Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
+> **Status: ALL 10 GATES CLOSED (2026-06-12) — Phase 3 COMPLETE.** Kenja closed every gate in one sitting: G1/G3/G4/G5/G6/G8/G9/G10 per rec (G4 N=14d), G2 with an expanded ramp set (hotkey, Obsidian, Keep-via-API, email-in, Discord bot, phone POST; voice iceboxed), G7 link-now/dashboard-later. Next: shared design language (pre-req), then the Phase 4 vertical-slice build plan.
+>
+> *(Prior status, for the record:)* **FULLY REACTION-BACKED — Phase 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency: settled; 34#7 sync: partial predictive sync) and the 36#1/#2 ❌s elaborated and resolved at G1 (agent-as-customization-interface; context-anchoring → heuristic). Every gate below carries "*Reactions*" annotations; no reaction remains uninterpreted. Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
 
 Legend per gate: ❓ the question · 📚 bearing research · options with trade-offs · 💡 provisional recommendation · 🔓 what closing it unblocks.
 
@@ -38,6 +40,8 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 **Your call (interface shape A/B/C still yours to close — rec remains A):**
 
+> ✅ **CLOSED 2026-06-12: A.** Ambient hybrid adopted as written — terminal autostart + global capture hotkey + Obsidian as reader/editor on desktop; tailnet PWA + HTTP-Shortcuts capture on the Pixel 6; PKMS itself is CLI + background indexer + agent layer. Agent-as-customization-interface stance stands; KD2 salience knobs are the bounded exception.
+
 ---
 
 ## G2 — Capture flow *(blocks build slice 1)*
@@ -61,6 +65,17 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 **Your call:**
 
+> ✅ **CLOSED 2026-06-12: multiple ramps, one inbox.** Adopted ramp set (all land in `vault/inbox/` as separate timestamped markdown files; the agent folds them in):
+> 1. **Global hotkey** (desktop, anywhere) — slice-1 primary.
+> 2. **New Obsidian note** (desktop, already-in-vault) — zero extra infra; inbox folder is a valid landing zone from inside Obsidian too.
+> 3. **Google Keep via API** — keep dumping into Keep; PKMS ingests periodically. *(Feasibility flag for Phase 4: the official Keep API is Workspace-only; personal-account access likely goes through the unofficial `gkeepapi` route — verify before slicing.)*
+> 4. **Email-in** — a watched address as the from-work ramp.
+> 5. **Discord bot** — fast dump matching the surviving Discord habit.
+> 6. **Pixel 6:** proposed solution adopted — HTTP Shortcuts tile → POST `/capture` over tailnet.
+>
+> **Voice input: SHELVED → Icebox.** Reactivation condition: core capture slices stable and a real need shows up (Pixel Recorder share-a-transcript remains the zero-build interim).
+> **Side doors: agreed** — content-hoarder + periodic ingestion stay valid; don't fight existing habits.
+
 ---
 
 ## G3 — Organization scheme
@@ -78,6 +93,8 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 🔓 Unblocks: indexer/linker behavior, agent filing rules.
 
 **Your call:**
+
+> ✅ **CLOSED 2026-06-12: A (per rec).** Daily-note/inbox-first; agent files into the existing layout; filing is cosmetic and automated; nothing depends on location.
 
 ---
 
@@ -99,6 +116,8 @@ Sub-decisions *(reworked 2026-06-11 from your [[31-theme-tasks]] reactions; #1/#
 
 **Your call (only sub-decision 2's N remains — rec is 14 days):**
 
+> ✅ **CLOSED 2026-06-12: per rec — N = 14 days** for the reshape trigger. All six sub-decisions now settled (fields ⏱▶✓, reshape-then-stash, six states, no fake urgency, deemphasized backlog, first-class done-log).
+
 ---
 
 ## G5 — Retrieval & resurfacing UX
@@ -119,6 +138,8 @@ Sub-decisions *(reworked 2026-06-11 from your [[31-theme-tasks]] reactions; #1/#
 
 **Your call:**
 
+> ✅ **CLOSED 2026-06-12: A (per rec).** Today-view front door (terminal at session start + PWA home); embeddings deferred to slice 2–3; the three reaction constraints (subtle, relevance-weighted, scroll-lacing candidate) carry into the build.
+
 ---
 
 ## G6 — content-hoarder integration
@@ -138,6 +159,8 @@ Sub-decisions:
 
 **Your call:**
 
+> ✅ **CLOSED 2026-06-12: per rec.** Pull read-only from the hoarder DB; sibling capture service; `pkms promote` is the flagship early slice; optional debt-free review affordance, never a counted queue. *(Related: content-hoarder backlog now holds a triage-spin-off idea — separate triage app over the hoarder DB that can lace in other content, e.g. Anki cards and PKMS resurfacing. That is the natural home for the scroll-lacing candidate from G5.)*
+
 ---
 
 ## G7 — job-search-2026 relationship
@@ -152,6 +175,8 @@ Sub-decisions:
 
 **Your call:**
 
+> ✅ **CLOSED 2026-06-12: link this phase, dashboard later.** The vault links out to career ops (a project note, per rec). **Future direction recorded:** integrate career ops *into* the PKMS as a dashboard surface — related notes and tasks living inside the PKMS. That upgrades the post-Phase-5 umbrella item from "maybe" to a planned direction, still gated on the PKMS surviving Phase 5.
+
 ---
 
 ## G8 — Review cadence & note-rot policy
@@ -163,6 +188,8 @@ Sub-decisions:
 💡 **Provisional rec:** no mandatory ritual, ever. Micro-review is woven into existing moments: today-view shows 1–3 resurfaced items; opening a project note shows its stale loops; the agent's session-start briefing includes one "still interested?" question max. Notes never expire (only tasks do); untouched notes just sink from default views and remain searchable.
 
 **Your call:**
+
+> ✅ **CLOSED 2026-06-12: per rec.** No mandatory ritual; ambient micro-review; notes never expire.
 
 ---
 
@@ -184,6 +211,8 @@ Sub-decisions:
 
 **Your call:**
 
+> ✅ **CLOSED 2026-06-12: per rec.** Keep the Python/Typer/SQLite scaffold; Claude Code skills as the agent layer; present-then-ask grammar with adjustable salience bounds.
+
 ---
 
 ## G10 — Mobile sync *(ANSWERED 2026-06-12 — direction set, details to design)*
@@ -198,10 +227,19 @@ Sub-decisions:
 
 **Your call (sequencing only — direction is set):**
 
+> ✅ **CLOSED 2026-06-12: per rec.** PWA + capture in slice 1; predictive partial sync as its own later slice once there's real usage to predict from.
+
 ---
 
 ## Closing checklist
 
-- [ ] G1 interface · [ ] G2 capture · [ ] G3 organization · [ ] G4 tasks (+N, +urgency) · [ ] G5 retrieval · [ ] G6 hoarder · [ ] G7 job-search · [ ] G8 review/rot · [ ] G9 stack/LLM · [ ] G10 sync
+- [x] G1 interface · [x] G2 capture · [x] G3 organization · [x] G4 tasks (+N, +urgency) · [x] G5 retrieval · [x] G6 hoarder · [x] G7 job-search · [x] G8 review/rot · [x] G9 stack/LLM · [x] G10 sync
 
 ✓ Phase 3 done-when: every box checked → I turn this into a vertical-slice build plan, each slice ending in something you can actually use.
+
+**ALL GATES CLOSED 2026-06-12.** Pre-Phase-4 prerequisite (Kenja, same day): stand up the **shared ADHD design language** between PKMS and content-hoarder before implementation — see [[adhd-design-language-repo]].
+
+**Icebox** (paused, with reactivation conditions):
+- **Voice capture ramp** — reactivate when core capture slices are stable and a real need appears (interim: Pixel Recorder transcript → share into a ramp).
+- **Discord-bot PKMS mirror as resurfacing channel** — reactivate at G5-resurfacing build time as a candidate ambient surface.
+- **Career-ops dashboard inside PKMS** — reactivate post-Phase-5 (umbrella gate).

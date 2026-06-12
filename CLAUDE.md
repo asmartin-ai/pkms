@@ -4,6 +4,11 @@
 
 Hybrid PKMS: markdown files in `vault/` are the source of truth; SQLite database in `.index/pkms.db` is a derived, regenerable index for fast search and backlink tracking.
 
+**Design language:** before designing any surface, flow, copy, or automation, read
+`K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` — the shared ADHD design language
+(single source of truth with content-hoarder; reference by path, never copy; rules for
+editing it are in that repo's README).
+
 ## Vault structure
 
 ```
