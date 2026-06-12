@@ -23,21 +23,30 @@ def _display_text(text: str) -> str:
 
 
 def _breadcrumb(vault: Path, today_stem: str) -> dict | None:
-    """Tail of the most recent daily note before today — where you left off."""
+    """Where you left off: the newest daily note with breadcrumb-section content.
+    Today's own note counts — same-day re-entry is the common case (§7).
+    Legacy notes without the section fall back to their tail."""
     daily = vault / "daily"
     if not daily.is_dir():
         return None
-    prior = sorted(p for p in daily.glob("*.md") if p.stem != today_stem)
+    from .daily import BREADCRUMB_HEADING, section_lines
+    notes = sorted(daily.glob("*.md"), reverse=True)
+    for p in notes:
+        lines = section_lines(p.read_text(encoding="utf-8"), BREADCRUMB_HEADING)
+        if lines:
+            return {"name": p.stem, "lines": lines[:4]}
+    prior = [p for p in notes if p.stem != today_stem]
     if not prior:
         return None
-    last = prior[-1]
+    last = prior[0]
     lines = last.read_text(encoding="utf-8").splitlines()
     if lines and lines[0].strip() == "---":  # drop frontmatter
         for i in range(1, len(lines)):
             if lines[i].strip() == "---":
                 lines = lines[i + 1:]
                 break
-    body = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+    body = [ln.strip() for ln in lines
+            if ln.strip() and not ln.strip().startswith(("#", "<!--"))]
     return {"name": last.stem, "lines": body[-3:]}
 
 

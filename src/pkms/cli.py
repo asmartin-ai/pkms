@@ -140,6 +140,10 @@ def today():
             console.print("  [dim]everything else: pkms tasks[/dim]")
         console.print()
 
+    # the briefing ends with an invitation, never an assignment (§3)
+    console.print("  [dim]start with whatever pulls you — the rest keeps.[/dim]")
+    console.print()
+
 
 def _print_promoted(result: dict):
     rel = result["note"].relative_to(VAULT)
@@ -198,15 +202,17 @@ def serve(
 
 
 @app.command()
-def daily():
-    """Open or create today's daily note."""
-    today = date.today().isoformat()
-    path = VAULT / "daily" / f"{today}.md"
-    if not path.exists():
-        path.write_text(f"---\ntitle: {today}\ncreated: {today}\ntags: [daily]\n---\n\n# {today}\n\n")
-        console.print(f"[green]Created[/green] {path}")
-    editor = os.environ.get("EDITOR", "notepad")
-    subprocess.Popen([editor, str(path)])
+def daily(
+    open_editor: bool = typer.Option(True, "--open/--no-open",
+                                     help="Open in $EDITOR (--no-open: just ensure it exists)"),
+):
+    """Open or create today's daily note (breadcrumb + folded-today slots built in)."""
+    from .daily import ensure_daily
+    path, created = ensure_daily(VAULT)
+    console.print(f"[green]Created[/green] {path}" if created else f"{path}")
+    if open_editor:
+        editor = os.environ.get("EDITOR", "notepad")
+        subprocess.Popen([editor, str(path)])
 
 
 @app.command()
