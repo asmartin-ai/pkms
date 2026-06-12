@@ -1,5 +1,7 @@
 # Phase 2 Reading Bundle
 
+> ▶ **NEXT SITTING: react to # 33 — Inbox pipeline (your B11 win scenario), ~10 min.** You asked to be reminded (2026-06-11). 30/31/32 are done and already filed in the vault + folded into the decisions doc. Three clarifications were added under your ❓s in #31 — re-react whenever.
+
 Generated 2026-06-10 from the PKMS vault. Read top to bottom; mark reactions (✅ resonates / ❌ not me / ❓ unsure) however is easiest — phone notes, paper, whatever — and transfer them into the vault theme notes (or just tell Claude your marks and it will file them). One mark per theme is the done-when.
 
 
@@ -50,19 +52,19 @@ Then Phase 3 (decision doc + build plan) can start.
 **Why this matters for the build:** capture is the one behavior you've proven you'll do for years ([[17-hoarder-mining]] CH10). Everything else in the system feeds off it. Mark each principle: ✅ resonates / ❌ not me / ❓ unsure.
 
 1. **The bar is <2 seconds, zero decisions, cursor already in a textbox.** win+n, Drafts-opens-blank, "<2s thought-to-saved". Anything that asks "where does this go?" loses the thought ([[11-hn]] F4, [[19-seed-links]] SD1, [[14-github]] F8).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes, i like being able to rapidly input thoughts.
 2. **What you're buying at save time is the security feeling, not future reading.** "Saved, not lost, I can move on without guilt" — so the save confirmation must be instant, and the system owns "later" ([[19-seed-links]] SD8, [[11-hn]] F3).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes for the most part. This implies I dont revist things but I definitely do. One of the reoccuring issues driving this is that sometimes I dont have the mental energy to invest in an intellectual discussion.
 3. **The capture surface must never open a feed or load the full app** — paper's killer feature is no notifications; Obsidian-on-Android startup already fails the bar ([[13-youtube]] F18, [[20-mobile-sync]] MS-06).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❓ - I dont fully agree with this. I think speed is paramount, yes. However sometimes that distraction when im scrolling is what helps me actually digest the backlog.
 4. **Duplicates are fine. Dedupe, filing, tagging, naming are all the machine's job, later** ([[11-hn]] F3, [[15-barkley]] BK12, [[12-reddit]] F13).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes as long as machine is doing the dedupe and organizing and tagging.
 5. **Every context gets its own ramp into ONE inbox** — desktop hotkey, phone widget, voice-deferred — because behavior doesn't transfer between settings ([[15-barkley]] BK3, [[20-mobile-sync]] MS-08/MS-14).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes. The whole point of the content hoarder system is to aggregate Reddit, Hacker News, youtube, and more.
 6. **Friction belongs at persistence, not capture.** Capture free; *staying in the active view* costs a small re-commit (bujo migration). This is the anti-backlog mechanism ([[11-hn]] F6, L2-03).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Begrudingly yes. I think this is the best solution. We just need to be careful about how its presented or my ADHD instincts will be wary about "throwing things away" or losing something i saved without my control.
 7. **Capture pays off even if never reopened** (offloading frees working memory) — the system never measures or shames re-open rates ([[19-seed-links]] SD9).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes.
 
 Full evidence: [[10-synthesis]] → RQ3.
 
@@ -75,21 +77,24 @@ Full evidence: [[10-synthesis]] → RQ3.
 **Why this matters for the build:** task initiation is your #1 struggle, and the task surface is where most ADHD systems die. Mark each: ✅ / ❌ / ❓.
 
 1. **Notes and tasks get opposite decay policies.** Old ideas are gold; old undone tasks are poison. Knowledge persists forever; tasks expire with amnesty unless re-committed ([[11-hn]] F5, F6).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❌ - Old ideas can be stashed indefinitely and pop up when I search. I kind of like the concept of lacing in old ideas with my scrolling habits in content hoarder. I think that could be really powerful. For the most part undone tasks are a poison of sorts, but that means that they need to be reshaped to be more approachable. Not doing the tasks and letting it decay just builds guilt.
 2. **One next action; the backlog is invisible by default.** "You never see the whole list, only the next thing your body does." Never enumerate all steps — it makes projects feel infinite ([[14-github]] F6, [[13-youtube]] F7).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❓ — I dont mind seeing the backlog too much, just dont make it obvious. I think the principle matters most when I have tasks that need to get done. This is where this could be very helpful.
 3. **⏱ size / ▶ first action / ✓ done-when on every task** — your own most-used convention, applied universally under real pressure ([[21-job-search-distill]] JS1). Plus: store the ▶ first step AT capture time; items without one get surfaced as "needs a first step", not "overdue" ([[14-github]] F7, [[11-hn]] L2-06).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❓ - I dont fully understand.
+   > **Clarification (Claude):** Every task carries three tiny fields: ⏱ how big ("10 min"), ▶ the literal first physical action ("open cli.py and find the search function"), ✓ what finished looks like ("tests pass") — exactly how your job-search-2026 TODO.md already works, just applied everywhere. The new part: the system attaches the ▶ first step at capture time, and a task that never got one shows up later as "needs a first step" (a 30-second decision) instead of "overdue" (guilt). Research claim: a task without a concrete first action is unstartable, so missing-first-step is the problem to surface — not lateness.
 4. **Done/Stuck/Not-now is the whole interaction grammar.** Stuck = auto-subdivide; Not-now = guilt-free deferral to the back ([[19-seed-links]] SD12).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes
 5. **Paused is first-class, with a written reactivation condition** — your APPLY-ENGINE-PAUSED pattern, generalized ([[21-job-search-distill]] JS9, [[13-youtube]] F12).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❓ — I dont fully understand.
+   > **Clarification (Claude):** "Paused" = a task/project put to sleep *with a written wake-up condition* ("resume when the API rework ships"). While paused it vanishes from active views — no aging, no guilt — and gets re-offered only when the condition comes true or you go looking. You invented this: job-search-2026's `APPLY-ENGINE-PAUSED` note. This just makes it an official state instead of a hand-written hack.
 6. **Decision gates are modeled separately from tasks and surfaced first** ([[21-job-search-distill]] JS2); tiny unblocks get batched into one sitting (JS13).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ❓
+   > **Clarification (Claude):** A decision gate is an unmade decision other work silently waits on ("PWA-only or sync?"). Store it as its own item type and show it *first* — an open decision blocks everything downstream while looking like just another to-do. Your job-search TODO already does this with gate items at the top. Second half: when several <5-min unblock items pile up, batch them into one sitting — one activation cost, several closures.
 7. **A done-log (including retroactive entries) is a first-class affordance** — logging finished trivia is a proven re-initiation trick ([[11-hn]] F7, [[12-reddit]] F14, JS5).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Yes. Being able to mark tasks as done in my bujo felt great. Even retroactively adding tasks and marking it as done kept me going.
 8. **No fake urgency primitives.** Self-imposed deadlines and pomodoro bells get rejected by the brain that made them; what works is real consequence-proximity and interest-routing ([[13-youtube]] F3, [[17-hoarder-mining]] CH7). *(Tension worth your reaction — see [[10-synthesis]] contested list.)*
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Hard agree.
 
 Full evidence: [[10-synthesis]] → RQ5.
 
@@ -102,21 +107,21 @@ Full evidence: [[10-synthesis]] → RQ5.
 **Why this matters for the build:** write-only graveyards are the default outcome of every note system studied; resurfacing is what makes the vault not-decoration. Also the strongest *academic* result of the whole program. Mark each: ✅ / ❌ / ❓.
 
 1. **Your encoding is the weak link; your retrieval machinery is intact. So the system shows candidates — you recognize, you don't recall.** A blank search box demands exactly what ADHD is worst at ([[16-academic]] RT3, RT4).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Agree.
 2. **Cues fire on events/contexts, never on clocks.** Time-based prospective memory is severely impaired; event-based is intact. Open a project → see its open loops. No "review Friday 9am" ([[16-academic]] RT2, SC9).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - I think I agree.
 3. **Resurfacing is machine-initiated and phrased as a curious question** ("Still interested in X?"), never a count badge or red dot ([[14-github]] F9, F10).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - This could be good, but might get annoying and build a bad habit of me auto dismissing it. Be careful with this and keep it subtle.
 4. **An ambient related-notes pane (local embeddings) is the cheapest serendipity** — zero user actions, connections appear while you write ([[18-landscape]] LS6); a bounded "surprise me" card converts rediscovery-joy into the retention loop ([[19-seed-links]] SD10).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Could be good. Might be better if algorithm driven. If its too random and it hits uninteresting things, i might stop using it.
 5. **Notifications are a depleting currency** — acceptance drops ~30% per repeat; one ambient surface, varied form, never the same nag twice ([[16-academic]] SC8, [[19-seed-links]] SD5).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - I think I agree.
 6. **Re-entry beats organization.** Breadcrumbs at the breakpoint ("next: wire up the parser"), context replay ("you saved this while working on X"), HANDOFF-style first actions ([[16-academic]] RT9, RT10; [[12-reddit]] F6; [[21-job-search-distill]] JS4).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Agree.
 7. **Visible aging, then silent amnesty.** Staleness shows ambiently for a while, then items sink — no overdue counters, ever; review debt must be structurally impossible ([[11-hn]] F8, F14; [[16-academic]] RT6).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Agree
 8. **Screenshots get OCR'd at ingest** or they're permanently unsearchable — your meme-screenshot habit is the live specimen ([[19-seed-links]] SD7).
-   **React:** ✅ / ❌ / ❓ —
+   **React:** ✅ - Hard Agree.
 
 Full evidence: [[10-synthesis]] → RQ4.
 
