@@ -58,6 +58,22 @@ def test_today_view_without_index_degrades_gracefully(vault, index_dir):
     assert view["next_actions"] == []
 
 
+def test_next_actions_use_titles_and_strip_wikilinks(vault, index_dir):
+    write_note(
+        vault / "projects" / "zeta.md",
+        """\
+        - [ ] read [[11-hn]] and [[12-reddit|the reddit note]] tonight
+        """,
+        title="Zeta Project",
+    )
+    index_vault(vault, index_dir)
+    actions = today_view(vault, index_dir)["next_actions"]
+    zeta = next(a for a in actions if a["note"] == "projects\\zeta.md")
+    assert zeta["title"] == "Zeta Project"
+    assert zeta["text"] == "read 11-hn and the reddit note tonight"
+    assert "[[" not in zeta["text"]
+
+
 # --- CLI rendering & copy rules (design language §3) ---
 
 def _cli_project(vault, index_dir, monkeypatch):
