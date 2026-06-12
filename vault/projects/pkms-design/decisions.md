@@ -2,13 +2,13 @@
 title: PKMS design decisions — Phase 3 gates
 tags: [pkms-design, decisions, adhd]
 created: 2026-06-10
-modified: 2026-06-11
-status: draft-partially-reacted
+modified: 2026-06-12
+status: reaction-backed-gates-open
 ---
 
 # PKMS Design Decisions (Phase 3)
 
-> **Status: PARTIALLY REACTION-BACKED.** Drafted 2026-06-10 from the full Phase 1 research; updated 2026-06-11 with your reactions to themes 30/31/32 (capture, tasks, retrieval) — G2/G4/G5 now carry "*Reactions*" annotations and G4 was materially reworked (decay → reshape-then-stash; urgency settled). Themes 33–37 still pending ([[05-reading-queue]] — next: 33). Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
+> **Status: FULLY REACTION-BACKED — Phase 2 COMPLETE (2026-06-12).** All 8 themes reacted; both flagged decisions answered (31#8 urgency: settled; 34#7 sync: partial synced folder). Every gate below now carries "*Reactions*" annotations. **The one item still needing your words before gates close: your bare ❌ on [[36-theme-anti-perfectionism]] #1 and #2 (see G1).** Gates are ordered by what they block — close them top to bottom. Answer inline under "**Your call:**" (a sentence is enough; "go with rec" counts).
 
 Legend per gate: ❓ the question · 📚 bearing research · options with trade-offs · 💡 provisional recommendation · 🔓 what closing it unblocks.
 
@@ -30,9 +30,11 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 *Refinement from [[22-kenja-resource-dump]] (KD2): "cap the customization surface" splits in two — structural/schema knobs stay at zero, but ship a small bounded set of salience controls (density, quiet level, how much the today-view shows). Personalization-as-decluttering is an ADHD need; personalization-as-tinkering is the trap.*
 
+*Reactions 2026-06-12 ([[36-theme-anti-perfectionism]]):* you ❌'d both #1 (cap the customization surface) and #2 (anchor every feature to a named context) — **with no comment, against two of the most-evidenced findings in the corpus.** Before this gate closes, one sentence each on what the ❌ means: (a) "I want more knobs than the rec allows"? "I reject ship-opinionated"? Or "the KD2 split already covers me"? (b) For #2: is there a general-PKM surface you actively want, or did the framing just feel restrictive? Your reactions elsewhere (35 all-✅ on opinionated agent grammar, 36#3 ✅ on view-layer-as-novelty-outlet) suggest the disagreement may be narrower than the bare ❌ reads.
+
 🔓 Unblocks: G2, G5, G9, build-slice ordering.
 
-**Your call:**
+**Your call (incl. the two ❌ elaborations above):**
 
 ---
 
@@ -83,17 +85,17 @@ Legend per gate: ❓ the question · 📚 bearing research · options with trade
 
 📚 [[31-theme-tasks]] wholesale; opposite decay for notes vs tasks ([[11-hn]] F5); one-next-action with invisible backlog ([[14-github]] F6); ⏱▶✓ is your proven convention ([[21-job-search-distill]] JS1); Done/Stuck/Not-now grammar ([[19-seed-links]] SD12).
 
-Sub-decisions *(reworked 2026-06-11 from your [[31-theme-tasks]] reactions)*:
-1. **Fields:** ⏱ size, ▶ first action, ✓ done-when on every task — adopt as schema, with "needs a first step" as a surfaced state. *(rec: yes, it's your own surviving convention — your ❓ "don't fully understand" got a plain-language clarification in [[31-theme-tasks]] #3; re-react there)*
+Sub-decisions *(reworked 2026-06-11 from your [[31-theme-tasks]] reactions; #1/#3/#5/#6 re-reacts landed 2026-06-12)*:
+1. **Fields:** ⏱ size, ▶ first action, ✓ done-when on every task, "needs a first step" as a surfaced state — **CONFIRMED** (your ❓ flipped to "✅ AGREE" after the clarification).
 2. **Decay policy — REWORKED after your ❌ on #1.** Plain fade-to-amnesty rejected: "letting it decay just builds guilt — tasks need to be reshaped to be more approachable." New rec: stale tasks get **reshaped before they fade** — at ~14 days untouched the agent re-offers the task with a smaller ▶ first step and a "still want this? (smaller / not-now / stash)" choice; only after that does it sink to the searchable stash. Nothing is ever deleted, and the stash must be visibly recoverable (same loss-aversion caveat as G2). **Pick N for the reshape trigger** *(rec: 14 days)*.
-3. **States:** open / done / stuck (auto-subdivide) / not-now (back of queue) / paused (with written reactivation condition) / iceboxed. *(rec: adopt all six; #4 grammar got your ✅, paused got a clarification in [[31-theme-tasks]] #5)*
+3. **States:** open / done / stuck (auto-subdivide) / not-now (back of queue) / paused (with written reactivation condition) / iceboxed — **CONFIRMED** (Done/Stuck/Not-now ✅; paused and decision-gates flipped to ✅ after clarifications).
 4. **Urgency mechanics — SETTLED 2026-06-11.** Your #8 reaction: "✅ Hard agree" with no fake urgency primitives. Adopted: **(b) externalized commitments + (c) lightweight agent/body-double accountability; no synthetic deadlines, no countdowns, and option (d) nag-until-done is dropped.**
 5. **Backlog visibility (new, from your #2 ❓):** not invisible — *deemphasized*. The backlog stays one click away and never renders as a wall by default; one-next-action remains the default view, especially under deadline pressure ("the principle matters most when I have tasks that need to get done").
 6. **Done-log (your #7 ✅):** first-class, retroactive entries welcome — "even retroactively adding tasks and marking it as done kept me going." Build it into slice planning.
 
 🔓 Unblocks: `pkms tasks` redesign, daily-note template.
 
-**Your call (sub-decision 2's N; re-react to #3/#5/#6 clarifications):**
+**Your call (only sub-decision 2's N remains — rec is 14 days):**
 
 ---
 
@@ -128,6 +130,8 @@ Sub-decisions:
 2. **Capture endpoint location:** inside hoarder's Flask app vs sibling service on the same tailnet host. *(rec: sibling service — the spike tests this shape; revisit after the hoarder chat weighs in on [[40-handoff-content-hoarder]])*
 3. **Win-scenario slice:** `pkms promote <reddit-url-or-search>` renders post+comment-tree to a vault note + queues it on the deep-reading surface. *(rec: this is the flagship early slice — it's your B11 moment)*
 
+*Reactions 2026-06-12 ([[33-theme-inbox-pipeline]]):* promote pipeline ✅, source prefilter ✅, local archive as system of record ✅, deep-reading surface and megapost extraction soft-✅. Two adjustments: (a) #2 ❌ — you believe per-item review *will* happen (the 97.55% figure notwithstanding) but want promote-on-demand built anyway → build promote-on-demand as the primary path and keep an *optional, debt-free* review affordance (e.g. triage laced into hoarder scrolling, per your G5 idea) — but never a counted review queue, so both stories survive contact with reality. (b) #1 ❓ on the explicit promote-or-purge gate — softened to: promotion is explicit, purging is not a user-facing verb (consistent with your G2/G4 loss-aversion caveats; nothing is ever visibly thrown away).
+
 🔓 Unblocks: the win-scenario build slice; coordination with the content-hoarder session.
 
 **Your call:**
@@ -141,6 +145,8 @@ Sub-decisions:
 📚 The hoard can't feed it (CH12); it already works standalone ([[21-job-search-distill]]); umbrella architecture is iceboxed until the PKMS survives Phase 5 (program plan).
 
 💡 **Provisional rec:** stays fully separate this phase. The PKMS adopts its conventions (⏱▶✓, HANDOFF, ledger, icebox) rather than its content; a vault project note links out to it. Revisit at the umbrella gate post-Phase 5.
+
+*Reactions 2026-06-12:* ✅ "Generally agree" ([[33-theme-inbox-pipeline]] #8) with one future hook — learning material produced by career ops may eventually migrate into the vault. Noted as a post-Phase-5 umbrella item, not a current coupling. Standing caveat from [[37-theme-self-knowledge]] #5/#6: don't over-read job-search-2026 signals — the repo just hasn't had attention lately; its *conventions* remain validated, its *activity patterns* are not evidence.
 
 **Your call:**
 
@@ -170,21 +176,25 @@ Sub-decisions:
 | Agent layer | Claude Code over the vault (skills/commands like `/triage`, `/resume`, `/promote`) vs custom LLM app vs API pipeline scripts | **Claude Code skills first** — zero new infra, matches how you already work; graduate hot paths to scripted API calls only if cost/latency demands. |
 | Agent grammar | — | Present-then-ask, one question max, options-not-blank-prompts, one-next-action outputs, shame-free copy rules encoded in skill prompts ([[35-theme-llm-organizer]]). |
 
+*Reactions 2026-06-12 ([[35-theme-llm-organizer]] — all 8 ✅, the cleanest sweep of Phase 2):* LLM-as-organizer architecture, human-dumps/LLM-structures division of labor, AI-as-regenerable-layer, present-then-ask grammar, loop-closing accountability, briefing-package idiom — all confirmed. Only caveat: #7 bounded-output got "✅ with some potential caveats" — keep the bounds adjustable salience-side (ties to the KD2 refinement in G1).
+
 🔓 Unblocks: Phase 4 plan entirely.
 
 **Your call:**
 
 ---
 
-## G10 — Mobile sync *(can stay open through early slices)*
+## G10 — Mobile sync *(ANSWERED 2026-06-12 — direction set, details to design)*
 
 ❓ PWA-only phone access, or also sync vault files to the phone?
 
 📚 [[34-theme-mobile]] #7 — your reaction feeds this directly. PWA-only: zero sync risk, needs tailnet up for reading. +Syncthing fork: offline whole-vault read/edit via Markor, but real 2026 maintainer-risk and conflict-litter to manage ([[20-mobile-sync]] MS-02–MS-04).
 
-💡 **Provisional rec:** start PWA-only (capture works offline via HTTP Shortcuts queuing); add Syncthing later only if you actually miss offline reading in practice. Evidence over speculation.
+**Your answer (34#7 ✅):** *"Synced folder for a portion of the vault would be nice. Predicting which parts of the vault im likely to need would be incredible. Im a bit limited by space on my phone… being able to access and triage stuff on planes would be really nice."*
 
-**Your call:**
+💡 **Adopted direction: PWA + predictive partial sync.** A bounded, machine-chosen slice of the vault (active projects, today-view material, queued deep-reading, recent captures) syncs to the phone read-mostly; the agent predicts the slice — which is exactly the recognition-over-recall machinery (G5) applied to offline packing. Capture stays append-only POST (offline-queued), so sync is never load-bearing for correctness (clarification under [[34-theme-mobile]] #4 — your ❓ there is compatible with this design; your PC-off concern in #5 is real and the partial replica is the answer to it). Sequencing rec: PWA + capture first (slice 1), predictive sync slice once there's real usage to predict from. Also recorded from #1: the **Discord-bot mirror** idea (PKMS → private notes Discord) as a candidate ambient surface — fits your surviving Discord-dump habit; park it as a possible G5 resurfacing channel, not slice-1 scope.
+
+**Your call (sequencing only — direction is set):**
 
 ---
 
