@@ -84,6 +84,56 @@ def tasks(done: bool = typer.Option(False, "--done", help="Show completed tasks 
 
 
 @app.command()
+def capture(
+    text: str,
+    source: str = typer.Option("cli", "--source", "-s", help="Which ramp this came from"),
+):
+    """Dump a thought into vault/inbox/ — no filing, no decisions."""
+    from .capture import write_capture
+    path = write_capture(text, VAULT, source=source)
+    console.print(f"[green]saved ✓[/green] inbox/{path.name}")
+
+
+@app.command()
+def today():
+    """The front door: where you left off, what's new, one next action per note."""
+    from .today import today_view
+    view = today_view(VAULT, INDEX)
+    console.print(f"[bold]{view['date']}[/bold]\n")
+
+    crumb = view["breadcrumb"]
+    if crumb and crumb["lines"]:
+        console.print(f"[dim]last time ({crumb['name']}):[/dim]")
+        for line in crumb["lines"]:
+            console.print(f"  [italic]{line}[/italic]")
+        console.print()
+
+    if view["inbox_new"]:
+        console.print(f"[cyan]{view['inbox_new']} new to fold in[/cyan] — captured, safe.\n")
+    else:
+        console.print("[green]inbox clear ✓[/green]\n")
+
+    if view["next_actions"]:
+        console.print("[bold]next actions[/bold]")
+        for a in view["next_actions"]:
+            console.print(f"  [cyan]{a['note']}[/cyan] — {a['text']}")
+        if view["more_notes"]:
+            console.print("  [dim]rest of the backlog: pkms tasks[/dim]")
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host"),
+    port: int = typer.Option(8765, "--port", "-p"),
+    token: str = typer.Option("", "--token", envvar="PKMS_CAPTURE_TOKEN",
+                              help="Capture token; default reads/creates .secrets/capture-token"),
+):
+    """Run the capture endpoint (token always required; resident on the tailnet)."""
+    from .capture_service import run
+    run(VAULT, _ROOT, host=host, port=port, token=token or None)
+
+
+@app.command()
 def daily():
     """Open or create today's daily note."""
     today = date.today().isoformat()
@@ -111,3 +161,7 @@ def new(title: str, folder: str = typer.Option("", "--folder", "-f", help="Subfo
         console.print(f"[green]Created[/green] {path}")
     editor = os.environ.get("EDITOR", "notepad")
     subprocess.Popen([editor, str(path)])
+
+
+if __name__ == "__main__":  # enables `pythonw -m pkms.cli serve` from the startup shortcut
+    app()
