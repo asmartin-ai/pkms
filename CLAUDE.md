@@ -50,13 +50,23 @@ python -m venv .venv
 pip install -e ".[dev]"
 ```
 
-## Common commands (once built)
+## Common commands
+
+`pkms` works globally in any shell (shim at `bin\pkms.cmd`, on the user PATH; it sets
+`PKMS_HOME` so cwd doesn't matter).
 
 ```
-pkms index          # Rebuild full index from vault
-pkms new [title]    # Create a new note
-pkms search <query> # Full-text search
+pkms capture "text"   # Dump a thought into vault/inbox/ (zero decisions)
+pkms today            # Front door: breadcrumb, inbox-as-progress, next actions
+pkms serve            # Capture endpoint :8765 (token in .secrets/, gitignored;
+                      #   runs resident via the "PKMS capture service" startup shortcut)
+pkms index            # Rebuild full index from vault
+pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
-pkms tasks          # List open tasks
-pkms daily          # Open/create today's daily note
+pkms tasks            # List open tasks
+pkms new [title]      # Create a new note
+pkms daily            # Open/create today's daily note
 ```
+
+Desktop capture: **Win+N** anywhere (scripts/pkms-capture.ahk, resident via startup
+shortcut). Phone capture: docs/pixel-capture-setup.md.
