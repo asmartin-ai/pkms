@@ -215,10 +215,11 @@ def write_note(note: str, title: str, vault: Path) -> Path:
     return path
 
 
-def promote(query: str, vault: Path, db_path: Path = HOARDER_DB) -> dict:
+def promote(query: str, vault: Path, db_path: Path | None = None) -> dict:
     """URL/id → {'note': Path, 'minutes': int} · search terms → {'candidates': [...]}.
-    Unhoarded id → {'missing': id}."""
-    conn = connect_hoarder(db_path)
+    Unhoarded id → {'missing': id}. db_path resolves at call time so tests can
+    point HOARDER_DB elsewhere."""
+    conn = connect_hoarder(db_path or HOARDER_DB)
     try:
         post_id = extract_post_id(query)
         if post_id is None:

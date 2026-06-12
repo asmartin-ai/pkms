@@ -277,6 +277,11 @@ dashboard, triage spin-off coordination with content-hoarder Epic 22).
 - **Predictive partial sync (G10)** — reactivate when there is real usage to predict
   from (post-dogfood); design is sketched in [[20-mobile-sync]] + G10.
 - **Keep ingestion via API** — only if F1 fails; reactivation = a viable API route appears.
+- **Claude-CLI-style interactive terminal UI** (Kenja, 2026-06-12) — a richer
+  full-screen TUI for the today-view/triage surfaces (candidate tech: Textual — same
+  Python stack; honors G1's zero-settings rule). Reactivation condition: after slices
+  5–6 ship, when the task-model and resurfacing surfaces it would render actually
+  exist. Until then, incremental readability passes on the plain CLI are the channel.
 - **Rust (or Go) rewrite of hot paths** — potential perf improvement; the architecture
   (plain files + regenerable SQLite) makes any component swappable without migration.
   Reactivation condition: a *measured* slow path Kenja actually feels during dogfooding
