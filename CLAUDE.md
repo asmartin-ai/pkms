@@ -68,8 +68,24 @@ pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
 pkms tasks            # List open tasks
 pkms new [title]      # Create a new note
-pkms daily            # Open/create today's daily note
+pkms daily            # Open/create today's daily note (--no-open: ensure only — agent use)
 ```
 
 Desktop capture: **Win+N** anywhere (scripts/pkms-capture.ahk, resident via startup
 shortcut). Phone capture: docs/pixel-capture-setup.md.
+
+## Agent layer (slice 3)
+
+- **/fold** (`.claude/skills/fold/`): folds `vault/inbox/` captures into the vault —
+  proposal first, ONE pick-list question, applies on approval. **/resume**
+  (`.claude/skills/resume/`): reads back the breadcrumb at session start; writes it at
+  session end ("wrapping up" triggers write mode).
+- Daily notes carry stable section anchors (`## breadcrumb`, `## folded today`,
+  `## notes` — `src/pkms/daily.py`): agents edit section *content*, never the headings.
+  Today-view reads the newest non-empty `## breadcrumb` (today's note included).
+- Shame-free copy rules live **inside the skill prompts** — when editing a skill, keep
+  the constraint blocks; they are design-language bindings (§3/§9, G8's one-question
+  budget), not style suggestions.
+- Session-start briefing: the PowerShell profile runs `pkms today` in interactive
+  shells only (guarded against `-NonInteractive`, so agent/tool shells never see it;
+  `$env:PKMS_NO_BRIEFING=1` silences it).

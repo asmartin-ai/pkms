@@ -28,4 +28,7 @@ desktop.ini
 *.env.local
 .secrets/
 
+# Claude Code machine-local permissions (skills/ stays tracked)
+.claude/settings.local.json
+
 spike/inbox-test/

@@ -36,6 +36,31 @@ def test_breadcrumb_skips_frontmatter_and_headings(vault, index_dir):
     assert all("---" not in ln and not ln.startswith("#") for ln in crumb["lines"])
 
 
+def test_breadcrumb_prefers_section_content_including_today(vault, index_dir):
+    from datetime import date
+    from pkms.daily import ensure_daily
+    path, _ = ensure_daily(vault)  # today's own note — same-day re-entry counts
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace(
+            "<!-- where you left off — /resume keeps this current -->",
+            "stopped at the fold skill\n▶ run /fold on the inbox",
+        ),
+        encoding="utf-8",
+    )
+    crumb = today_view(vault, index_dir)["breadcrumb"]
+    assert crumb["name"] == date.today().isoformat()
+    assert crumb["lines"] == ["stopped at the fold skill", "▶ run /fold on the inbox"]
+
+
+def test_breadcrumb_empty_section_falls_back_to_legacy_tail(vault, index_dir):
+    from pkms.daily import ensure_daily
+    ensure_daily(vault)  # fresh template: breadcrumb slot holds only a comment
+    crumb = today_view(vault, index_dir)["breadcrumb"]
+    assert crumb["name"] == "2026-06-01"  # fixture's legacy note, by its tail
+    assert "Plain daily note, no frontmatter at all." in crumb["lines"]
+
+
 def test_one_next_action_per_note_projects_first(vault, index_dir):
     index_vault(vault, index_dir)
     actions = today_view(vault, index_dir)["next_actions"]
@@ -95,6 +120,13 @@ def test_today_empty_inbox_reads_as_a_win(vault, index_dir, monkeypatch):
     _cli_project(vault, index_dir, monkeypatch)
     out = runner.invoke(cli.app, ["today"]).output
     assert "inbox clear" in out
+
+
+def test_today_ends_with_invitation_not_assignment(vault, index_dir, monkeypatch):
+    _cli_project(vault, index_dir, monkeypatch)
+    out = runner.invoke(cli.app, ["today"]).output
+    assert "start with whatever pulls you" in out
+    assert out.rstrip().endswith("the rest keeps.")
 
 
 def test_capture_command_confirms_instantly(vault, index_dir, monkeypatch):
