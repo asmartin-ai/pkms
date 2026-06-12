@@ -40,6 +40,9 @@ scripts/       # One-off maintenance scripts
 - Frontmatter (YAML) carries metadata: `tags`, `created`, `modified`, `status`
 - Tasks are `- [ ] task text` lines; done = `- [x]`
 - The `.index/` directory is gitignored — rebuild with `pkms index`
+- **User-visible state lives in note frontmatter, never only in the index** (e.g.
+  `reading: queued` on promoted notes). The SQLite index is a derived, regenerable
+  view — task states (slice 5) and any future state must follow the same rule.
 - Generated artifacts (reading bundles, exports) go in `exports/`, never in `vault/` — the FTS index must not see duplicate content. Throwaway experiments live in `spike/`.
 
 ## Dev setup
