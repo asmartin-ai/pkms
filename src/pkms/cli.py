@@ -116,6 +116,12 @@ def today():
                       f" [dim]— captured, safe[/dim]")
     else:
         console.print("  [green]✓[/green] inbox clear")
+
+    nxt = view["next_read"]
+    if nxt:
+        mins = f" [dim]· ~{nxt['minutes']} min[/dim]" if nxt.get("minutes") else ""
+        from rich.markup import escape as _esc
+        console.print(f"  [magenta]▸[/magenta] up next to read: [italic]{_esc(nxt['title'])}[/italic]{mins}")
     console.print()
 
     if view["next_actions"]:
@@ -133,6 +139,39 @@ def today():
         if view["more_notes"]:
             console.print("  [dim]everything else: pkms tasks[/dim]")
         console.print()
+
+
+@app.command()
+def promote(query: str):
+    """Promote a hoarded Reddit thread (URL/id, or search terms to pick from) into the vault."""
+    from .promote import promote as _promote
+    result = _promote(query, VAULT)
+
+    if "candidates" in result:
+        cands = result["candidates"]
+        if not cands:
+            console.print("[yellow]Nothing hydrated matches.[/yellow] "
+                          "Try other words, or paste the thread URL.")
+            return
+        from rich.markup import escape as _esc
+        console.print("[bold]which one?[/bold]")
+        for i, c in enumerate(cands, 1):
+            bits = [b for b in (f"r/{c['subreddit']}" if c["subreddit"] else "",
+                                f"saved {c['saved']}" if c["saved"] else "",
+                                c["id"]) if b]
+            console.print(f"  [cyan]{i}.[/cyan] {_esc(c['title'][:80])}")
+            console.print(f"     [dim]{' · '.join(bits)}[/dim]")
+        console.print("\n[dim]promote one: pkms promote <id>[/dim]")
+        return
+
+    if "missing" in result:
+        console.print(f"[yellow]Not in the hoard yet[/yellow] (id {result['missing']}). "
+                      "Save it in content-hoarder first — fresh-URL fetch is on the build plan (F2).")
+        return
+
+    rel = result["note"].relative_to(VAULT)
+    console.print(f"[green]promoted ✓[/green] vault/{rel}  [dim]· queued · ~{result['minutes']} min read[/dim]")
+    console.print("[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]")
 
 
 @app.command()
