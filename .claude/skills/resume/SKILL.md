@@ -17,8 +17,15 @@ modes; pick by context, never ask which.
    Never enumerate everything; the backlog stays one command away (`pkms tasks`).
 3. End with an invitation, not an assignment ("whenever you're ready", not "you
    should"). You may include **at most one** "still interested in X?" question (G8)
-   and only when something specific is actually pending (e.g. a queued read) —
-   zero is fine and usual.
+   and only when something specific is actually pending — zero is fine and usual.
+   The strongest candidate for that one question is a **reshape offer**: check
+   `pkms tasks --stale` (tasks untouched 14+ days); if any, pick ONE and offer it
+   with a *smaller* ▶ first action you write yourself, as a pick:
+   **smaller** (apply the new ▶ — edit the task line) / **not-now** (flip marker
+   to `[~]`) / **stash** (flip to `[i]`). Editing the line resets its clock
+   automatically. Never present more than one, never mention how many are stale,
+   never use the word "overdue". A reshape offer and a still-interested question
+   share the same budget of one.
 4. If there is no breadcrumb anywhere: that is a fresh start, not a failure — say so
    in one line and offer the today-view as the door.
 

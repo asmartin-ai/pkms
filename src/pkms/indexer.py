@@ -49,11 +49,20 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
             stats["links"] += 1
 
         # Tasks
+        today = datetime.now().date().isoformat()
         conn.execute("DELETE FROM tasks WHERE note_path=?", (rel,))
         for t in extract_tasks(content):
             conn.execute(
-                "INSERT OR IGNORE INTO tasks (note_path, line, text, done) VALUES (?,?,?,?)",
-                (rel, t["line"], t["text"], int(t["done"])),
+                """INSERT OR IGNORE INTO tasks
+                   (note_path, line, text, done, state, size, first_action, done_when, hash)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (rel, t["line"], t["text"], int(t["done"]), t["state"],
+                 t["size"], t["first_action"], t["done_when"], t["hash"]),
+            )
+            # reshape clock: keeps its original date while the line is unchanged
+            conn.execute(
+                "INSERT OR IGNORE INTO task_seen (note_path, hash, first_seen) VALUES (?,?,?)",
+                (rel, t["hash"], today),
             )
             stats["tasks"] += 1
 
@@ -69,6 +78,13 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
             conn.execute("DELETE FROM tasks WHERE note_path=?", (row["path"],))
             if verbose:
                 print(f"  removed {row['path']}")
+
+    # Reshape clocks for lines that no longer exist (edited, done, removed)
+    conn.execute(
+        """DELETE FROM task_seen WHERE NOT EXISTS
+           (SELECT 1 FROM tasks t
+            WHERE t.note_path = task_seen.note_path AND t.hash = task_seen.hash)"""
+    )
 
     conn.commit()
     conn.close()

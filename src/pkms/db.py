@@ -50,20 +50,44 @@ CREATE TABLE IF NOT EXISTS links (
 );
 
 CREATE TABLE IF NOT EXISTS tasks (
-    id          INTEGER PRIMARY KEY,
-    note_path   TEXT NOT NULL,
-    line        INTEGER NOT NULL,
-    text        TEXT NOT NULL,
-    done        INTEGER NOT NULL DEFAULT 0,
+    id           INTEGER PRIMARY KEY,
+    note_path    TEXT NOT NULL,
+    line         INTEGER NOT NULL,
+    text         TEXT NOT NULL,             -- cleaned: metadata tokens stripped
+    done         INTEGER NOT NULL DEFAULT 0,
+    state        TEXT NOT NULL DEFAULT 'open',
+    size         TEXT,                      -- ⏱
+    first_action TEXT,                      -- ▶
+    done_when    TEXT,                      -- ✓
+    hash         TEXT,                      -- line identity, joins task_seen
     UNIQUE(note_path, line)
 );
+
+-- Reshape clock (slice 5). Survives reindexes: INSERT OR IGNORE keeps the
+-- original first_seen while a line is unchanged; an edited line gets a new
+-- hash and a fresh clock (human touch strips machine marks, §4).
+CREATE TABLE IF NOT EXISTS task_seen (
+    note_path   TEXT NOT NULL,
+    hash        TEXT NOT NULL,
+    first_seen  TEXT NOT NULL,              -- ISO date this exact line appeared
+    PRIMARY KEY (note_path, hash)
+);
 """
+
+SCHEMA_VERSION = 2
 
 
 def connect(index_dir: Path) -> sqlite3.Connection:
     index_dir.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(index_dir / "pkms.db")
     conn.row_factory = sqlite3.Row
+    # The index is a derived view: a pre-slice-5 tasks table is rebuilt, not
+    # migrated in place — `pkms index` repopulates it from the vault.
+    if conn.execute("PRAGMA user_version").fetchone()[0] < SCHEMA_VERSION:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()}
+        if cols and "state" not in cols:
+            conn.execute("DROP TABLE tasks")
+        conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
     conn.executescript(SCHEMA)
     conn.commit()
     return conn
