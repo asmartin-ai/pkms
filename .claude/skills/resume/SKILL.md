@@ -25,7 +25,8 @@ modes; pick by context, never ask which.
    to `[~]`) / **stash** (flip to `[i]`). Editing the line resets its clock
    automatically. Never present more than one, never mention how many are stale,
    never use the word "overdue". A reshape offer and a still-interested question
-   share the same budget of one.
+   share the same budget of one — and if the today-view already showed its
+   resurfacing card (the `?` line), that WAS the question: add nothing.
 4. If there is no breadcrumb anywhere: that is a fresh start, not a failure — say so
    in one line and offer the today-view as the door.
 

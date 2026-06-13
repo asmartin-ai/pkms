@@ -72,6 +72,8 @@ pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
 pkms tasks            # One next action per note (--all backlog · --stash · --stale · --done)
 pkms did "thing"      # Log a done thing into today's note (retroactive welcome)
+pkms resurface        # Up to 3 curious questions from the vault, each with a why
+                      #   (--not-now <stem>: rest 30d · --let-go <stem>: stop asking forever)
 pkms new [title]      # Create a new note
 pkms daily            # Open/create today's daily note (--no-open: ensure only — agent use)
 pkms ingest keep      # Pull new Google Keep notes; images OCR'd at ingest
