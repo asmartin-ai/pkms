@@ -106,6 +106,21 @@ def _next_read(vault: Path) -> dict | None:
     return queued[0]
 
 
+def _resurface_card(vault: Path, index_dir: Path) -> dict | None:
+    """AT MOST ONE candidate — the today-view is the single rationed ambient
+    surface (§5). Showing it starts the card's rest window."""
+    if not (index_dir / "pkms.db").exists():
+        return None
+    from .db import connect
+    from .resurface import candidates, filter_never, mark_offered
+    conn = connect(index_dir)
+    cands = filter_never(vault, candidates(conn, k=3))[:1]
+    if cands:
+        mark_offered(conn, [c["path"] for c in cands])
+    conn.close()
+    return cands[0] if cands else None
+
+
 def today_view(vault: Path, index_dir: Path) -> dict:
     today_stem = date.today().isoformat()
     actions = _next_actions(index_dir)
@@ -115,6 +130,7 @@ def today_view(vault: Path, index_dir: Path) -> dict:
         "inbox_new": inbox_count(vault),
         "done_today": _done_today(vault, today_stem),
         "next_read": _next_read(vault),
+        "resurface": _resurface_card(vault, index_dir),
         "next_actions": actions[:MAX_NOTES_SHOWN],
         "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),
     }

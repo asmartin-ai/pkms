@@ -175,6 +175,46 @@ def tasks(
 
 
 @app.command()
+def resurface(
+    not_now: str = typer.Option("", "--not-now", help="Rest a note (by stem/path) for 30 days — silent"),
+    let_go: str = typer.Option("", "--let-go", help="Stop asking about a note forever (reversible: delete its 'resurface: never' line)"),
+):
+    """Up to three curious questions from the vault — each says why it came up."""
+    from rich.markup import escape
+    from .db import connect
+    from .resurface import candidates, dismiss, filter_never
+    from .resurface import let_go as _let_go
+    from .search import resolve_note
+
+    if not_now or let_go:
+        target = resolve_note(not_now or let_go, INDEX)
+        if not target:
+            console.print(f"[yellow]couldn't find[/yellow] {escape(not_now or let_go)} — try the path shown by pkms resurface")
+            raise typer.Exit(1)
+        if not_now:
+            conn = connect(INDEX)
+            dismiss(conn, target)
+            conn.close()
+            console.print(f"[dim]rested — it won't come up for a month.[/dim]")
+        else:
+            _let_go(VAULT, target)
+            console.print(f"[dim]let go — it stays in the vault, the asking stops. "
+                          f"(undo: remove 'resurface: never' from its frontmatter)[/dim]")
+        return
+
+    conn = connect(INDEX)
+    cands = filter_never(VAULT, candidates(conn, k=3))
+    conn.close()
+    if not cands:
+        console.print("[dim]nothing to wonder about today — the vault is settled.[/dim]")
+        return
+    for c in cands:
+        console.print(f"  [yellow]?[/yellow] {escape(c['question'])}")
+        console.print(f"    [dim]{escape(c['why'])} · {escape(c['path'])}[/dim]")
+    console.print("  [dim]open one, or --not-now / --let-go a stem — both are free.[/dim]")
+
+
+@app.command()
 def did(thing: str):
     """Log a done thing — counts today; retroactive entries welcome."""
     from .daily import append_did
@@ -225,6 +265,12 @@ def today():
         mins = f" [dim]· ~{nxt['minutes']} min[/dim]" if nxt.get("minutes") else ""
         from rich.markup import escape as _esc
         console.print(f"  [magenta]▸[/magenta] up next to read: [italic]{_esc(nxt['title'])}[/italic]{mins}")
+
+    card = view["resurface"]
+    if card:  # the one rationed curious question (§5) — why-line included (§9)
+        from rich.markup import escape as _esc
+        console.print(f"  [yellow]?[/yellow] {_esc(card['question'])}"
+                      f"  [dim]{_esc(card['why'])} · pkms resurface[/dim]")
     console.print()
 
     if view["next_actions"]:
