@@ -51,25 +51,37 @@ def _breadcrumb(vault: Path, today_stem: str) -> dict | None:
 
 
 def _next_actions(index_dir: Path) -> list[dict]:
-    """First open task per note, projects first. Inbox captures are excluded —
-    their tasks surface after folding, not before."""
+    """First OPEN task per note, projects first — stuck/not-now/paused/iceboxed
+    are not next actions (§6). Inbox captures are excluded — their tasks
+    surface after folding, not before."""
     if not (index_dir / "pkms.db").exists():
         return []
     from .db import connect
     conn = connect(index_dir)
     rows = conn.execute(
-        """SELECT t.note_path, n.title, t.text, MIN(t.line) FROM tasks t
+        """SELECT t.note_path, n.title, t.text, t.size, t.first_action, MIN(t.line) FROM tasks t
            LEFT JOIN notes n ON n.path = t.note_path
-           WHERE t.done=0 AND t.note_path NOT LIKE 'inbox%'
+           WHERE t.state='open' AND t.note_path NOT LIKE 'inbox%'
            GROUP BY t.note_path
            ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
     ).fetchall()
     conn.close()
     return [
         {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem,
-         "text": _display_text(r["text"])}
+         "text": _display_text(r["text"]), "size": r["size"],
+         "first_action": r["first_action"]}
         for r in rows
     ]
+
+
+def _done_today(vault: Path, today_stem: str) -> int:
+    """Win pebbles: done tasks in today's note (disk, not index — state lives
+    in files). Wins reset without debt; 0 renders as nothing, never a gap."""
+    path = vault / "daily" / f"{today_stem}.md"
+    if not path.exists():
+        return 0
+    from .tasks import extract_tasks
+    return sum(1 for t in extract_tasks(path.read_text(encoding="utf-8")) if t["done"])
 
 
 def _next_read(vault: Path) -> dict | None:
@@ -101,6 +113,7 @@ def today_view(vault: Path, index_dir: Path) -> dict:
         "date": today_stem,
         "breadcrumb": _breadcrumb(vault, today_stem),
         "inbox_new": inbox_count(vault),
+        "done_today": _done_today(vault, today_stem),
         "next_read": _next_read(vault),
         "next_actions": actions[:MAX_NOTES_SHOWN],
         "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),

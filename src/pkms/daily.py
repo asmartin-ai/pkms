@@ -11,6 +11,7 @@ from pathlib import Path
 
 BREADCRUMB_HEADING = "## breadcrumb"
 FOLDED_HEADING = "## folded today"
+DID_HEADING = "## did"
 
 _TEMPLATE = """\
 ---
@@ -26,6 +27,9 @@ tags: [daily]
 
 ## folded today
 <!-- what got filed where — /fold logs each one -->
+
+## did
+<!-- pkms did "thing" lands here — retroactive entries welcome -->
 
 ## notes
 
@@ -44,6 +48,34 @@ def ensure_daily(vault: Path, day: date | None = None) -> tuple[Path, bool]:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(_TEMPLATE.format(day=(day or date.today()).isoformat()), encoding="utf-8")
     return path, True
+
+
+def append_did(vault: Path, thing: str, day: date | None = None) -> Path:
+    """Log a done thing in the day's note (§6 done-log: first-class, retroactive
+    welcome). Inserts the `## did` section into pre-slice-5 notes as needed."""
+    path, _ = ensure_daily(vault, day)
+    text = path.read_text(encoding="utf-8")
+    entry = f"- [x] {thing.strip()}"
+    lines = text.splitlines()
+    try:
+        at = next(i for i, ln in enumerate(lines) if ln.strip().lower() == DID_HEADING)
+        # append after the section's last content line (skip template comment)
+        end = at + 1
+        for j in range(at + 1, len(lines)):
+            s = lines[j].strip()
+            if s.startswith("## "):
+                break
+            if s:
+                end = j + 1
+        lines.insert(end, entry)
+    except StopIteration:  # older note without the section
+        try:
+            notes_at = next(i for i, ln in enumerate(lines) if ln.strip().lower() == "## notes")
+            lines[notes_at:notes_at] = [DID_HEADING, entry, ""]
+        except StopIteration:
+            lines += ["", DID_HEADING, entry]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
 
 
 def section_lines(text: str, heading: str) -> list[str]:

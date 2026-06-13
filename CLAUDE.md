@@ -38,7 +38,11 @@ scripts/       # One-off maintenance scripts
 
 - Notes use `[[wikilink]]` syntax for internal links
 - Frontmatter (YAML) carries metadata: `tags`, `created`, `modified`, `status`
-- Tasks are `- [ ] task text` lines; done = `- [x]`
+- Tasks are `- [ ] task text` lines with optional `⏱size ▶first action ✓done-when`
+  metadata in any order. States by marker: `[ ]` open · `[x]` done · `[?]` stuck ·
+  `[~]` not-now · `[p]` paused (text carries its reactivation condition) ·
+  `[i]` iceboxed. The reshape clock (14d, `task_seen` in the index) resets on any
+  edit to the line — flipping a marker counts as a human touch.
 - The `.index/` directory is gitignored — rebuild with `pkms index`
 - **User-visible state lives in note frontmatter, never only in the index** (e.g.
   `reading: queued` on promoted notes). The SQLite index is a derived, regenerable
@@ -66,7 +70,8 @@ pkms serve            # Capture endpoint :8765 (token in .secrets/, gitignored;
 pkms index            # Rebuild full index from vault
 pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
-pkms tasks            # List open tasks
+pkms tasks            # One next action per note (--all backlog · --stash · --stale · --done)
+pkms did "thing"      # Log a done thing into today's note (retroactive welcome)
 pkms new [title]      # Create a new note
 pkms daily            # Open/create today's daily note (--no-open: ensure only — agent use)
 pkms ingest keep      # Pull new Google Keep notes; images OCR'd at ingest

@@ -60,6 +60,65 @@ def test_reindex_removes_deleted_notes(vault, index_dir):
     conn.close()
 
 
+def test_reshape_clock_survives_reindex_and_resets_on_edit(vault, index_dir):
+    index_vault(vault, index_dir)
+    conn = connect(index_dir)
+    row = conn.execute(
+        "SELECT ts.hash h, ts.first_seen FROM task_seen ts JOIN tasks t "
+        "ON t.note_path=ts.note_path AND t.hash=ts.hash WHERE t.text='open task one'",
+    ).fetchone()
+    # backdate the clock; a reindex with the line unchanged must keep the date
+    conn.execute("UPDATE task_seen SET first_seen='2026-05-01' WHERE hash=?", (row["h"],))
+    conn.commit()
+    conn.close()
+    index_vault(vault, index_dir)
+    conn = connect(index_dir)
+    assert conn.execute(
+        "SELECT first_seen FROM task_seen WHERE hash=?", (row["h"],)
+    ).fetchone()["first_seen"] == "2026-05-01"
+    conn.close()
+
+    # edit the line: old clock pruned, fresh clock starts (human touch, §4)
+    alpha = vault / "projects" / "alpha.md"
+    alpha.write_text(
+        alpha.read_text(encoding="utf-8").replace("open task one", "open task one, reshaped"),
+        encoding="utf-8",
+    )
+    index_vault(vault, index_dir)
+    conn = connect(index_dir)
+    assert conn.execute(
+        "SELECT count(*) c FROM task_seen WHERE hash=?", (row["h"],)
+    ).fetchone()["c"] == 0  # stale clock pruned with its line
+    fresh = conn.execute(
+        "SELECT ts.first_seen FROM task_seen ts JOIN tasks t "
+        "ON t.note_path=ts.note_path AND t.hash=ts.hash "
+        "WHERE t.text='open task one, reshaped'",
+    ).fetchone()
+    assert fresh["first_seen"] != "2026-05-01"
+    conn.close()
+
+
+def test_task_metadata_lands_in_index(vault, index_dir):
+    from conftest import write_note
+    write_note(
+        vault / "projects" / "meta.md",
+        """\
+        - [ ] shaped task ⏱25m ▶ open the file ✓ tests green
+        - [i] iced task
+        """,
+        title="Meta",
+    )
+    index_vault(vault, index_dir)
+    conn = connect(index_dir)
+    shaped = conn.execute("SELECT * FROM tasks WHERE text='shaped task'").fetchone()
+    assert (shaped["size"], shaped["first_action"], shaped["done_when"]) == \
+        ("25m", "open the file", "tests green")
+    assert shaped["state"] == "open"
+    iced = conn.execute("SELECT state FROM tasks WHERE text='iced task'").fetchone()
+    assert iced["state"] == "iceboxed"
+    conn.close()
+
+
 def test_reindex_picks_up_edits(vault, index_dir):
     index_vault(vault, index_dir)
     beta = vault / "resources" / "beta.md"
