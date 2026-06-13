@@ -12,6 +12,7 @@ build/
 *.db
 *.db-shm
 *.db-wal
+.index/
 
 # OS
 .DS_Store

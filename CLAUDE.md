@@ -69,6 +69,9 @@ pkms backlinks <note> # Show what links to a note
 pkms tasks            # List open tasks
 pkms new [title]      # Create a new note
 pkms daily            # Open/create today's daily note (--no-open: ensure only — agent use)
+pkms ingest keep      # Pull new Google Keep notes; images OCR'd at ingest
+                      #   (setup: docs/keep-setup.md; scheduled pull:
+                      #   scripts/register-keep-pull.ps1; ledger in .index/)
 ```
 
 Desktop capture: **Win+N** anywhere (scripts/pkms-capture.ahk, resident via startup
