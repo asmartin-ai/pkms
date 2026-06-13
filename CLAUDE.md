@@ -48,6 +48,11 @@ scripts/       # One-off maintenance scripts
   `reading: queued` on promoted notes). The SQLite index is a derived, regenerable
   view — task states (slice 5) and any future state must follow the same rule.
 - Generated artifacts (reading bundles, exports) go in `exports/`, never in `vault/` — the FTS index must not see duplicate content. Throwaway experiments live in `spike/`.
+- **Unattended/scheduled steps must not depend on an optional interactive service.**
+  Anything that runs on a timer or in the background (e.g. the Keep pull) picks a
+  self-contained engine over one that needs a server up: OCR-at-ingest uses
+  tesseract, not a local vision model, so a scheduled pull can't silently fail
+  when the LLM server is down (slice 4 decision).
 
 ## Dev setup
 
