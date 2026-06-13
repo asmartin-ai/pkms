@@ -71,7 +71,7 @@ def test_resolve_token_generates_then_reuses(tmp_path):
 
 @pytest.fixture
 def service(tmp_path):
-    server = make_server(tmp_path, "127.0.0.1", 0, "sekrit")
+    server = make_server(tmp_path, tmp_path / ".index", "127.0.0.1", 0, "sekrit")
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base = f"http://127.0.0.1:{server.server_address[1]}"
@@ -87,7 +87,7 @@ def _post(url, data, headers=None):
 
 def test_service_refuses_to_start_without_token(tmp_path):
     with pytest.raises(ValueError):
-        make_server(tmp_path, "127.0.0.1", 0, "")
+        make_server(tmp_path, tmp_path / ".index", "127.0.0.1", 0, "")
 
 
 def test_post_without_token_is_403_and_writes_nothing(service):
