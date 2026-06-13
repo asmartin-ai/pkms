@@ -38,6 +38,29 @@ def test_connect_is_idempotent(index_dir):
     conn.close()
 
 
+def test_pre_slice5_tasks_table_is_rebuilt_not_crashed(index_dir):
+    """A v1 index (no state column) must upgrade transparently on connect."""
+    import sqlite3
+    index_dir.mkdir(parents=True, exist_ok=True)
+    old = sqlite3.connect(index_dir / "pkms.db")
+    old.execute(
+        "CREATE TABLE tasks (id INTEGER PRIMARY KEY, note_path TEXT NOT NULL, "
+        "line INTEGER NOT NULL, text TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0, "
+        "UNIQUE(note_path, line))"
+    )
+    old.execute("INSERT INTO tasks (note_path, line, text) VALUES ('a.md', 1, 'old row')")
+    old.commit()
+    old.close()
+
+    conn = connect(index_dir)
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()}
+    assert {"state", "size", "first_action", "done_when", "hash"} <= cols
+    # rebuilt empty: pkms index repopulates from the vault (index = derived view)
+    assert conn.execute("SELECT count(*) c FROM tasks").fetchone()["c"] == 0
+    assert conn.execute("SELECT count(*) c FROM task_seen").fetchone()["c"] == 0
+    conn.close()
+
+
 def test_fts_tracks_insert_update_delete(index_dir):
     conn = connect(index_dir)
 

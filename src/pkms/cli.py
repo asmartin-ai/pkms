@@ -64,23 +64,122 @@ def backlinks(note: str):
         console.print(f"  [cyan]{s}[/cyan]")
 
 
+def _task_line(r, *, show_state: bool = False) -> str:
+    from rich.markup import escape
+    bits = [escape(r["text"])]
+    if r["size"]:
+        bits.append(f"[dim]⏱{escape(r['size'])}[/dim]")
+    if show_state and r["state"] != "open":
+        bits.append(f"[yellow]· {r['state']}[/yellow]")
+    return "  ".join(bits)
+
+
 @app.command()
-def tasks(done: bool = typer.Option(False, "--done", help="Show completed tasks instead")):
-    """List open (or completed) tasks across all notes."""
+def tasks(
+    all_: bool = typer.Option(False, "--all", help="The whole backlog, grouped by note"),
+    stash: bool = typer.Option(False, "--stash", help="Paused/iceboxed tasks — recoverable, always"),
+    stale: bool = typer.Option(False, "--stale", help="Reshape candidates (untouched 14d+) — briefing fodder"),
+    done: bool = typer.Option(False, "--done", help="Done tasks"),
+):
+    """One next action per note (default); everything else is one flag away."""
+    from rich.markup import escape
     from .db import connect
     conn = connect(INDEX)
+
+    if stale:
+        from .tasks import stale_tasks
+        rows = stale_tasks(conn)
+        conn.close()
+        if not rows:
+            console.print("[dim]nothing has sat long enough to reshape.[/dim]")
+            return
+        console.print("  [bold]been quiet a while[/bold] [dim]— the briefing offers at most one, reshaped smaller[/dim]")
+        for r in rows:
+            title = r["title"] or Path(r["note_path"]).stem
+            console.print(f"  [cyan]{escape(title)}[/cyan]  {escape(r['text'])}"
+                          f"  [dim]· untouched since {r['first_seen']}[/dim]")
+        return
+
+    if stash:
+        rows = conn.execute(
+            """SELECT t.note_path, n.title, t.text, t.size, t.state FROM tasks t
+               LEFT JOIN notes n ON n.path = t.note_path
+               WHERE t.state IN ('paused','iceboxed') ORDER BY t.note_path, t.line""",
+        ).fetchall()
+        conn.close()
+        if not rows:
+            console.print("[dim]the stash is empty.[/dim]")
+            return
+        console.print("  [bold]stashed[/bold] [dim]— nothing here is gone[/dim]")
+        for r in rows:
+            title = r["title"] or Path(r["note_path"]).stem
+            console.print(f"  [cyan]{escape(title)}[/cyan]  {_task_line(r, show_state=True)}")
+        console.print("  [dim]wake one: flip its marker back to [ ] in the note, or ask the agent[/dim]")
+        return
+
+    if done:
+        rows = conn.execute(
+            "SELECT note_path, line, text, size, state FROM tasks WHERE state='done' "
+            "ORDER BY note_path, line",
+        ).fetchall()
+        conn.close()
+        for r in rows:
+            console.print(f"  [green]✓[/green] [dim]{escape(r['note_path'])}[/dim]  {escape(r['text'])}")
+        if not rows:
+            console.print("[dim]no dones recorded yet — pkms did \"thing\" counts one.[/dim]")
+        return
+
+    if all_:
+        rows = conn.execute(
+            """SELECT t.note_path, n.title, t.text, t.size, t.first_action, t.state FROM tasks t
+               LEFT JOIN notes n ON n.path = t.note_path
+               WHERE t.state IN ('open','stuck','not-now') ORDER BY t.note_path, t.line""",
+        ).fetchall()
+        conn.close()
+        current = None
+        for r in rows:
+            if r["note_path"] != current:
+                current = r["note_path"]
+                console.print(f"\n  [cyan bold]{escape(r['title'] or Path(current).stem)}[/cyan bold]")
+            console.print(f"    {_task_line(r, show_state=True)}")
+        console.print()
+        return
+
+    # default: one next action per note — never a wall (§6)
     rows = conn.execute(
-        "SELECT note_path, line, text FROM tasks WHERE done=? ORDER BY note_path, line",
-        (int(done),),
+        """SELECT t.note_path, n.title, t.text, t.size, t.first_action, t.state, MIN(t.line)
+           FROM tasks t LEFT JOIN notes n ON n.path = t.note_path
+           WHERE t.state='open' AND t.note_path NOT LIKE 'inbox%'
+           GROUP BY t.note_path
+           ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
     ).fetchall()
+    extra = conn.execute(
+        "SELECT COUNT(*) FROM tasks WHERE state IN ('open','stuck','not-now')",
+    ).fetchone()[0] - len(rows)
+    stashed = conn.execute(
+        "SELECT COUNT(*) FROM tasks WHERE state IN ('paused','iceboxed')",
+    ).fetchone()[0]
     conn.close()
     if not rows:
-        console.print("[yellow]No tasks.[/yellow]")
+        console.print("[dim]no next actions on deck — capture something, or just enjoy it.[/dim]")
         return
-    t = Table("Note", "Line", "Task")
+    console.print("  [bold]next actions[/bold] [dim]— one per note[/dim]")
     for r in rows:
-        t.add_row(r["note_path"], str(r["line"]), r["text"])
-    console.print(t)
+        title = r["title"] or Path(r["note_path"]).stem
+        hint = "" if r["first_action"] else "  [dim]· could use a first step[/dim]"
+        console.print(f"  [cyan]{escape(title)}[/cyan]  {_task_line(r)}{hint}")
+    if extra > 0:
+        console.print("  [dim]the rest is one flag away: pkms tasks --all[/dim]")
+    if stashed:
+        console.print("  [dim]stashed safe: pkms tasks --stash[/dim]")
+
+
+@app.command()
+def did(thing: str):
+    """Log a done thing — counts today; retroactive entries welcome."""
+    from .daily import append_did
+    append_did(VAULT, thing)
+    console.print("[green]✓ counted[/green] [dim]— it shows in pkms today[/dim]")
 
 
 @app.command()
@@ -116,6 +215,10 @@ def today():
                       f" [dim]— captured, safe[/dim]")
     else:
         console.print("  [green]✓[/green] inbox clear")
+
+    if view["done_today"]:  # win pebbles: quiet, forward-only, reset without debt (§3)
+        pebbles = "·" * min(view["done_today"], 12)
+        console.print(f"  [green]{pebbles}[/green] [dim]{view['done_today']} done today[/dim]")
 
     nxt = view["next_read"]
     if nxt:
