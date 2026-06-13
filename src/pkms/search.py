@@ -30,6 +30,19 @@ def search(query: str, index_dir: Path, limit: int = 20) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def resolve_note(ref: str, index_dir: Path) -> str | None:
+    """Resolve a stem or path fragment to one indexed note path (shortest wins)."""
+    stem = Path(ref.strip().replace("\\", "/")).stem
+    conn = connect(index_dir)
+    row = conn.execute(
+        "SELECT path FROM notes WHERE path = ? OR path LIKE ? "
+        "ORDER BY LENGTH(path) LIMIT 1",
+        (ref, f"%{stem}.md"),
+    ).fetchone()
+    conn.close()
+    return row["path"] if row else None
+
+
 def backlinks(note_path: str, index_dir: Path) -> list[str]:
     stem = Path(note_path).stem
     conn = connect(index_dir)

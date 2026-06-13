@@ -28,7 +28,9 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
         content = post.content
         meta = post.metadata
 
-        title = meta.get("title") or md_path.stem
+        # str(): YAML parses date-like titles into date objects, which sqlite's
+        # (deprecated) default adapter would otherwise swallow silently
+        title = str(meta.get("title") or md_path.stem)
         tags = json.dumps(meta.get("tags") or [])
 
         conn.execute(
