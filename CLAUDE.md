@@ -70,8 +70,10 @@ pip install -e ".[dev]"
 ```
 pkms capture "text"   # Dump a thought into vault/inbox/ (zero decisions)
 pkms today            # Front door: breadcrumb, inbox-as-progress, next actions
-pkms serve            # Capture endpoint :8765 (token in .secrets/, gitignored;
-                      #   runs resident via the "PKMS capture service" startup shortcut)
+pkms serve            # Web service :8765 — capture endpoint + desktop today-view
+                      #   at /?token=… (data via /api/today; token in .secrets/,
+                      #   gitignored). Runs resident via the "PKMS capture service"
+                      #   startup shortcut — restart it to pick up code changes.
 pkms index            # Rebuild full index from vault
 pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
