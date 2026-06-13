@@ -201,6 +201,25 @@ def serve(
     run(VAULT, _ROOT, host=host, port=port, token=token or None)
 
 
+ingest_app = typer.Typer(help="Pull side-door captures into the inbox")
+app.add_typer(ingest_app, name="ingest")
+
+
+@ingest_app.command("keep")
+def ingest_keep_cmd():
+    """Pull new Google Keep notes (images OCR'd at ingest) into vault/inbox/."""
+    from .keep_ingest import ingest_keep, render_report
+    try:
+        report = ingest_keep(VAULT, INDEX, _ROOT)
+    except Exception as e:  # auth/network: honest, no traceback wall
+        if type(e).__name__ == "LoginException":
+            console.print("[yellow]keep login failed[/yellow] — the master token may have "
+                          "expired; docs/keep-setup.md has the refresh steps")
+            raise typer.Exit(1)
+        raise
+    console.print(f"[dim]{render_report(report)}[/dim]")
+
+
 @app.command()
 def daily(
     open_editor: bool = typer.Option(True, "--open/--no-open",

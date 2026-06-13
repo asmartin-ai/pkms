@@ -10,8 +10,16 @@ from datetime import datetime
 from pathlib import Path
 
 
-def write_capture(text: str, vault: Path, *, source: str, now: datetime | None = None) -> Path:
-    """Write one capture file into vault/inbox/ and return its path."""
+def write_capture(
+    text: str,
+    vault: Path,
+    *,
+    source: str,
+    now: datetime | None = None,
+    extra: dict[str, str] | None = None,
+) -> Path:
+    """Write one capture file into vault/inbox/ and return its path.
+    `extra` adds flat frontmatter fields (e.g. keep_id for ingest ledgers)."""
     text = text.strip()
     if not text:
         raise ValueError("empty capture")
@@ -25,8 +33,10 @@ def write_capture(text: str, vault: Path, *, source: str, now: datetime | None =
     while path.exists():  # same-second collision: suffix, never overwrite
         n += 1
         path = inbox / f"{base}-{n}.md"
+    fm = [f"captured: {now:%Y-%m-%d %H:%M:%S}", f"source: {source}"]
+    fm += [f"{k}: {v}" for k, v in (extra or {}).items()]
     path.write_text(
-        f"---\ncaptured: {now:%Y-%m-%d %H:%M:%S}\nsource: {source}\n---\n\n{text}\n",
+        "---\n" + "\n".join(fm) + f"\n---\n\n{text}\n",
         encoding="utf-8",
     )
     return path
