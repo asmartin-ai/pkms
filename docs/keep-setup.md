@@ -12,7 +12,7 @@ Auth needs a **master token**, obtained once.
 
 The token dance needs an **OAuth token** first:
 
-1. Open a browser where you're logged into you@example.com and visit
+1. Open a browser where you're logged into your Google account and visit
    <https://accounts.google.com/EmbeddedSetup>
 2. Sign in. On the consent screen ("I agree"), agree — the page may then sit on
    a spinner; that's fine.

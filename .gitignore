@@ -33,3 +33,8 @@ desktop.ini
 .claude/settings.local.json
 
 spike/inbox-test/
+
+# Personal vault content — kept local, not published (app recreates dirs on demand)
+vault/daily/
+vault/inbox/
+vault/media/
