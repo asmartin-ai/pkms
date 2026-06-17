@@ -1,5 +1,7 @@
 """Wikilink extraction and resolution."""
 
+import os
+
 from pkms.linker import extract_links, resolve_link
 
 
@@ -25,6 +27,6 @@ def test_no_links():
 
 
 def test_resolve_exact_and_case_insensitive(vault):
-    assert str(resolve_link("beta", vault)) == "resources\\beta.md"
-    assert str(resolve_link("BETA", vault)) == "resources\\beta.md"
+    assert str(resolve_link("beta", vault)) == os.path.join("resources", "beta.md")
+    assert str(resolve_link("BETA", vault)) == os.path.join("resources", "beta.md")
     assert resolve_link("missing", vault) is None
