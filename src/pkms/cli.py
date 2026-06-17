@@ -195,11 +195,11 @@ def resurface(
             conn = connect(INDEX)
             dismiss(conn, target)
             conn.close()
-            console.print(f"[dim]rested — it won't come up for a month.[/dim]")
+            console.print("[dim]rested — it won't come up for a month.[/dim]")
         else:
             _let_go(VAULT, target)
-            console.print(f"[dim]let go — it stays in the vault, the asking stops. "
-                          f"(undo: remove 'resurface: never' from its frontmatter)[/dim]")
+            console.print("[dim]let go — it stays in the vault, the asking stops. "
+                          "(undo: remove 'resurface: never' from its frontmatter)[/dim]")
         return
 
     conn = connect(INDEX)
