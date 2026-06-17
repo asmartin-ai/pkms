@@ -2,13 +2,15 @@
 title: PKMS build plan — Phase 4 vertical slices
 tags: [pkms-design, build-plan, adhd]
 created: 2026-06-12
-modified: 2026-06-12
-status: ready
+modified: 2026-06-17
+status: in-progress
 ---
 
 # PKMS Build Plan (Phase 4)
 
-> **Status: READY — no slice started.** Derived from [[decisions]] (all 10 gates closed
+> **Status: IN PROGRESS (2026-06-17) — slices 1–6 shipped; slice 7 (Phone PWA) underway
+> (increment 1, the desktop today-view web app, landed); repo published to GitHub with CI.**
+> Derived from [[decisions]] (all 10 gates closed
 > 2026-06-12) and bound by the shared design language at
 > `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` (v post-CH-pass, commit `ce809e2`).
 > Each slice ends in something Kenja can actually use. Build sittings are Claude-executed
@@ -46,16 +48,18 @@ Unmade decisions block downstream work — surfaced here, none block slice 1.
 
 ## Slice map
 
-| # | Slice | You get | Sitting |
-|---|---|---|---|
-| 1 | Capture everywhere + minimal today-view | Dump a thought from couch or desktop in <2s | heavy |
-| 2 | `pkms promote` — the win scenario | A hoarded Reddit thread becomes a readable vault note, comments included | heavy |
-| 3 | Agent layer — fold, resume, briefing | Inbox folds itself; mornings start with a breadcrumb | heavy |
-| 4 | Keep ingest + OCR at ingest | Keep dumps (incl. images) land searchable | medium |
-| 5 | Task model — ⏱▶✓, states, reshape | One next action per project; stale tasks reshaped not rotted | heavy |
-| 6 | Resurfacing card | 1–3 curious questions a day, relevance-weighted, dismissable forever | medium-heavy |
-| 7 | Phone PWA | Today-view + reading queue + capture on the Pixel over tailnet | heavy |
-| 8 | Side-door batch — email-in + Discord bot | Capture from work and from Discord | medium |
+Status: ✓ shipped · ▸ in progress · ◦ not started.
+
+| # | Status | Slice | You get | Sitting |
+|---|---|---|---|---|
+| 1 | ✓ | Capture everywhere + minimal today-view | Dump a thought from couch or desktop in <2s | heavy |
+| 2 | ✓ | `pkms promote` — the win scenario | A hoarded Reddit thread becomes a readable vault note, comments included | heavy |
+| 3 | ✓ | Agent layer — fold, resume, briefing | Inbox folds itself; mornings start with a breadcrumb | heavy |
+| 4 | ✓ | Keep ingest + OCR at ingest | Keep dumps (incl. images) land searchable | medium |
+| 5 | ✓ | Task model — ⏱▶✓, states, reshape | One next action per project; stale tasks reshaped not rotted | heavy |
+| 6 | ✓ | Resurfacing card | 1–3 curious questions a day, relevance-weighted, dismissable forever | medium-heavy |
+| 7 | ▸ | Phone PWA | Today-view + reading queue + capture on the Pixel over tailnet | heavy |
+| 8 | ◦ | Side-door batch — email-in + Discord bot | Capture from work and from Discord | medium |
 
 After slice 8 → **Phase 5 dogfood gate**. Predictive partial sync (G10) stays gated on
 real usage to predict from; embeddings decision lives inside slice 6.
