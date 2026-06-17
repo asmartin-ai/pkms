@@ -289,7 +289,7 @@ when picked up.
   for raw saves — [[40-handoff-content-hoarder]]); must preserve the sacred zero-decision
   capture path (classification happens after the dump, never as a prompt at capture time).
 
-## Icebox (carried from Phase 3, unchanged)
+## Icebox (Phase 3 carries + later additions)
 
 - **Voice capture ramp** — reactivate when core capture is stable and a real need shows
   (interim: Pixel Recorder transcript → share into any ramp).
@@ -309,3 +309,13 @@ when picked up.
   Reactivation condition: a *measured* slow path Kenja actually feels during dogfooding
   (most likely candidate: CLI cold start). Not before — Python currently stands on no
   perceptible hot path (capture is AHK/resident-server, search is FTS5/C).
+- **Fable's blind take on the visual-home UI** (Kenja, 2026-06-17) — when the Fable 5
+  model is available again, have it produce its *own* design for the "see my notes"
+  visual surfaces (area tiles + recognition cards with thumbnails — the visual-home
+  direction now being built on branch `feat/visual-home`) **blind**: without seeing this
+  session's mockup, that branch's work, or the discussion that produced it — an
+  independent design to compare against, not a refinement of it. Why: parallel
+  independent takes let Kenja pick the best from a list (the agent-grammar strength, §9 /
+  judge-panel pattern) and surface framings the Opus 4.8 pass missed. Reactivation
+  condition: Fable 5 restored. Keep it blind — don't point Fable at the branch or mockup
+  until after it ships its own take, then diff the two.
