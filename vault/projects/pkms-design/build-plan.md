@@ -267,6 +267,28 @@ Dogfood period: the system runs Kenja's real days. Phase 5 evaluation criteria c
 do resurfacing picks land. Only after surviving Phase 5: umbrella items (career-ops
 dashboard, triage spin-off coordination with content-hoarder Epic 22).
 
+## Backlog (unscheduled ideas)
+
+Captured but not yet slotted into a slice or paused with a reactivation condition —
+candidates for the post-slice-8 roadmap, to be designed against the design language
+when picked up.
+
+- **Notifications & reminders** *(Kenja, 2026-06-16)* — time-/event-aware nudges from the
+  PKMS (due reshapes, surfaced reminders, capture follow-ups). Hard constraint from the
+  research: **ration aggressively** — alert acceptance drops ~30% per repeat, so one
+  ambient surface, varied form, silently-decaying queue, no accumulating debt and no
+  guilt/overdue framing ([[16-academic]] SC8/RT6, [[40-handoff-content-hoarder]] #9).
+  Open design questions: delivery channel (today-view card vs phone push vs Discord),
+  what earns a reminder, and how reminders relate to the reshape clock and `[p]` paused
+  reactivation conditions.
+- **Smart routing at capture** *(Kenja, 2026-06-16)* — capture classifies by content type
+  and routes to the right destination system instead of everything landing in
+  `vault/inbox/`. E.g. YouTube videos → content-hoarder; Obsidian-style notes → the
+  Obsidian vault (which content-hoarder already ingests); knowledge captures stay in the
+  PKMS vault. Coordination point with content-hoarder (the triage inbox / system of record
+  for raw saves — [[40-handoff-content-hoarder]]); must preserve the sacred zero-decision
+  capture path (classification happens after the dump, never as a prompt at capture time).
+
 ## Icebox (carried from Phase 3, unchanged)
 
 - **Voice capture ramp** — reactivate when core capture is stable and a real need shows
