@@ -1,6 +1,5 @@
 """Today-view: breadcrumb, inbox-as-progress copy, one action per note, no walls."""
 
-import os
 
 from typer.testing import CliRunner
 
@@ -70,7 +69,7 @@ def test_one_next_action_per_note_projects_first(vault, index_dir):
     assert len(notes) == len(set(notes))  # one per note
     assert notes[0].startswith("projects")
     texts = {a["note"]: a["text"] for a in actions}
-    assert texts[os.path.join("projects", "alpha.md")] == "open task one"  # first open, not the done one
+    assert texts["projects/alpha.md"] == "open task one"  # first open, not the done one
 
 
 def test_inbox_tasks_stay_out_of_next_actions(vault, index_dir):
@@ -95,7 +94,7 @@ def test_next_actions_use_titles_and_strip_wikilinks(vault, index_dir):
     )
     index_vault(vault, index_dir)
     actions = today_view(vault, index_dir)["next_actions"]
-    zeta = next(a for a in actions if a["note"] == os.path.join("projects", "zeta.md"))
+    zeta = next(a for a in actions if a["note"] == "projects/zeta.md")
     assert zeta["title"] == "Zeta Project"
     assert zeta["text"] == "read 11-hn and the reddit note tonight"
     assert "[[" not in zeta["text"]
