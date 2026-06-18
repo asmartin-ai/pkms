@@ -22,7 +22,7 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
     today = datetime.now().date().isoformat()
 
     for md_path in sorted(vault_root.rglob("*.md")):
-        rel = str(md_path.relative_to(vault_root))
+        rel = md_path.relative_to(vault_root).as_posix()
         seen.add(rel)
         post = frontmatter.load(md_path)
         content = post.content

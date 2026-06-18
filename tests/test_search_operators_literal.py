@@ -8,7 +8,6 @@ literal text. It goes green once `search()` sanitizes by default (raw FTS behind
 an explicit flag) — see vault/projects/pkms-design/sweep-findings-2026-06-17.md (B4).
 """
 
-import os
 
 from pkms.indexer import index_vault
 from pkms.search import search
@@ -33,8 +32,8 @@ def test_or_in_a_plain_query_is_literal_not_a_boolean_operator(tmp_path):
 
     paths = [r["path"] for r in search("foo OR bar", index_dir)]
 
-    both = os.path.join("resources", "both.md")
-    foo_only = os.path.join("resources", "foo_only.md")
+    both = "resources/both.md"
+    foo_only = "resources/foo_only.md"
     # the note literally containing "foo OR bar" must match…
     assert both in paths
     # …and the foo-only note must NOT match — `OR` is literal, not a boolean operator

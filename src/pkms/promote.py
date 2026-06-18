@@ -12,7 +12,7 @@ the system of record; save there first.
 import json
 import re
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 HOARDER_DB = Path(r"K:\Projects\content-hoarder\data\app.db")
@@ -97,7 +97,7 @@ def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list
 
 
 def _day(utc: int | None) -> str:
-    return datetime.fromtimestamp(utc).date().isoformat() if utc else ""
+    return datetime.fromtimestamp(utc, tz=timezone.utc).date().isoformat() if utc else ""
 
 
 def _comment_lines(node: dict, depth: int, lines: list[str], stats: dict) -> None:

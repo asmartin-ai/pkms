@@ -1,6 +1,5 @@
 """Full-text search and backlinks, including the FTS5-operator query regression."""
 
-import os
 
 import pytest
 
@@ -16,7 +15,7 @@ def indexed(vault, index_dir):
 
 def test_search_finds_note(indexed):
     results = search("gamma", indexed)
-    assert [r["path"] for r in results] == [os.path.join("projects", "alpha.md")]
+    assert [r["path"] for r in results] == ["projects/alpha.md"]
     assert results[0]["title"] == "Alpha Project"
     assert "gamma" in results[0]["excerpt"]
 
@@ -33,7 +32,7 @@ def test_hyphenated_query_does_not_crash(indexed):
     """Regression: a hyphen in a plain query ('external-content') is FTS5 column-filter
     syntax and raised OperationalError before the sanitize fallback was added."""
     results = search("external-content", indexed)
-    assert [r["path"] for r in results] == [os.path.join("resources", "beta.md")]
+    assert [r["path"] for r in results] == ["resources/beta.md"]
 
 
 @pytest.mark.parametrize("query", ["NEAR(", 'unbalanced "quote', "trailing-", "wild*card ("])
@@ -48,6 +47,6 @@ def test_sanitize_quotes_every_token():
 
 def test_backlinks_by_stem_and_path(indexed):
     # links store the raw wikilink target ('beta'), so stem and full path must both resolve
-    assert backlinks("beta", indexed) == [os.path.join("projects", "alpha.md")]
-    assert backlinks("resources/beta.md", indexed) == [os.path.join("projects", "alpha.md")]
+    assert backlinks("beta", indexed) == ["projects/alpha.md"]
+    assert backlinks("resources/beta.md", indexed) == ["projects/alpha.md"]
     assert backlinks("no-such-note", indexed) == []
