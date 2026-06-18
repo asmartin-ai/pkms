@@ -237,7 +237,7 @@ def capture(
 def today():
     """The front door: where you left off, what's new, one next action per note."""
     from .today import today_view
-    view = today_view(VAULT, INDEX)
+    view = today_view(VAULT, INDEX, record_offer=True)
     day = date.fromisoformat(view["date"])
     console.print()
     console.rule(f"[bold]{day:%A} · {day:%B %d}[/bold]", style="dim")
