@@ -3,7 +3,7 @@ title: PKMS repo sweep — bugs, improvements, scoped features (work order)
 tags: [pkms-design, sweep, work-order, bugs, adhd]
 created: 2026-06-17
 modified: 2026-06-17
-status: open
+status: partially-resolved
 ---
 
 # PKMS sweep work order (2026-06-17)
@@ -11,6 +11,15 @@ status: open
 > Snapshot as of 2026-06-17. Bug/improvement findings are durable; the build-state and
 > branch lines in §0 reflect that date — verify against `git` (`git branch -vv`,
 > `origin/main`) before relying on them, don't trust them as live.
+
+> **Resolution log (2026-06-17, post-bakeoff).** A Tier-B delegation bakeoff turned the
+> confirmed bugs and the F1 data-core into RED-oracle → fix pairs, all now on `main`:
+> **B1** ✅ (read-only `today_view`, `record_offer` gate) · **B2** ✅ (per-note ledger) ·
+> **B3** ✅ (OCR `OSError` guard) + **I2** ✅ (`test_ocr.py` added) · **B4** ✅ (literal
+> search by default, `raw=` opt-in) · **F1** ◐ *partial* — the `recognition_cards()` data
+> contract landed and is tested, but the visual card row (thumbnails, layout, wiring into
+> `/api/today`) is still pending. Suite 130 → **141 passing**. Still open: **B5–B7**,
+> **I1, I3–I7**, **F2–F6**, and F1's view-layer rendering.
 
 A self-contained backlog from a systematic repo sweep. Written so a fresh session
 (no prior context) can execute any item cold. Three parts: **bugs**, **improvements**,
@@ -32,10 +41,10 @@ A self-contained backlog from a systematic repo sweep. Written so a fresh sessio
   stays boring (§8); capture is sacred/zero-decision (§1).
 - **Current build state:** slices 1–6 shipped; slice 7 (Phone PWA) in progress (increment 1,
   the desktop today-view web app, landed). Repo is **private** on GitHub
-  (`asmartin-ai/pkms`); CI runs ruff + pytest. Live branches: `main`,
-  `feat/visual-home` (UI work), `chore/docs-sweep` (doc fixes + this file).
-- **Run the tests:** `.venv\Scripts\python.exe -m pytest tests -q` (130 passing baseline).
-  Lint: `.venv\Scripts\python.exe -m ruff check .`
+  (`asmartin-ai/pkms`); CI runs ruff + pytest. The bakeoff fix branches and
+  `chore/docs-sweep` are now merged to `main`; `feat/visual-home` (UI work) remains live.
+- **Run the tests:** `.venv\Scripts\python.exe -m pytest tests -q` (130 baseline →
+  **141 passing** after the bakeoff fixes). Lint: `.venv\Scripts\python.exe -m ruff check .`
 
 ---
 
@@ -44,7 +53,10 @@ A self-contained backlog from a systematic repo sweep. Written so a fresh sessio
 Severity: **high** = wrong results / data loss · **medium** · **low**.
 Confidence: **confirmed** = code path traced this sweep · **suspected** = needs a repro.
 
-### B1 — Resurface card mutates on every read of `/api/today` *(high, confirmed)*
+### B1 — Resurface card mutates on every read of `/api/today` *(high, confirmed)* — ✅ RESOLVED
+> Fixed: `today_view()`/`_resurface_card()` take `record_offer` (default `False`); only the
+> interactive CLI `pkms today` passes `True`. Web `/api/today` polls are now side-effect-free.
+> (An optional `POST /api/today/seen` for marking a genuine web open stays a future nicety.)
 - **Where:** `src/pkms/today.py:124` `today_view()` → `:109` `_resurface_card()` → calls
   `mark_offered()` in `src/pkms/resurface.py:156` (`offer_count = offer_count + 1`,
   `rest_until = …`, `conn.commit()`). The web app re-reads `/api/today` after every
@@ -63,7 +75,9 @@ Confidence: **confirmed** = code path traced this sweep · **suspected** = needs
 - **Acceptance:** a test that calls `today_view()` twice and asserts `offer_count` is
   unchanged by the read; the CLI/interactive path still advances it exactly once per open.
 
-### B2 — Keep-ingest ledger appended only after the whole loop *(medium, confirmed)*
+### B2 — Keep-ingest ledger appended only after the whole loop *(medium, confirmed)* — ✅ RESOLVED
+> Fixed: `append_ledger(index_dir, [note.id])` now runs per-note right after `write_capture`;
+> a mid-batch failure can no longer orphan a written capture into a duplicate next run.
 - **Where:** `src/pkms/keep_ingest.py` — `done_ids` accumulates inside
   `for note in new_notes:` and `append_ledger(index_dir, done_ids)` runs **once after** the
   loop (the line right after `report["new"] += 1`).
@@ -76,7 +90,9 @@ Confidence: **confirmed** = code path traced this sweep · **suspected** = needs
 - **Acceptance:** a test where the 2nd note raises mid-loop asserts the 1st note's id is
   ledgered (and not re-ingested on a second `ingest_keep` call).
 
-### B3 — OCR `subprocess.run` can raise `FileNotFoundError`, aborting the pull *(medium, confirmed)*
+### B3 — OCR `subprocess.run` can raise `FileNotFoundError`, aborting the pull *(medium, confirmed)* — ✅ RESOLVED
+> Fixed: `extract_text()` wraps `subprocess.run` in `try/except OSError: return None`, so a
+> stale tesseract path collapses to `None` ("no engine") instead of aborting the Keep pull.
 - **Where:** `src/pkms/ocr.py:31` `extract_text()` calls `subprocess.run([str(exe), …])`
   with no try/except. In `keep_ingest.py` only `_download` is wrapped in `try/except OSError`;
   the following `extract_text(...)` call is unguarded.
@@ -88,7 +104,9 @@ Confidence: **confirmed** = code path traced this sweep · **suspected** = needs
 - **Acceptance:** `test_ocr.py` (see I2) asserts a launch failure returns `None` rather than
   raising; a keep-ingest test with OCR raising still completes and ledgers prior notes.
 
-### B4 — Search runs raw user text through FTS5; sanitize is only an error-fallback *(medium, confirmed)*
+### B4 — Search runs raw user text through FTS5; sanitize is only an error-fallback *(medium, confirmed)* — ✅ RESOLVED
+> Fixed: `search()` sanitizes unconditionally by default; FTS5 operators (`OR`, `NEAR`,
+> `title:`) are matched literally. Power-search is behind an explicit `raw=True` param.
 - **Where:** `src/pkms/search.py` — `_SQL` does `WHERE notes_fts MATCH ?` with the **raw**
   query first; `_sanitize` is applied only in the `except sqlite3.OperationalError` retry.
 - **Symptom:** queries that are *valid* FTS5 but not what the user meant don't raise, so they
@@ -133,7 +151,9 @@ that changes runtime behavior vs pure cleanup/tests.
 Also bump `actions/checkout@v4`→`@v5` and `actions/setup-python@v5`→`@v6` to clear the
 Node-20 deprecation warning. Benefit: the declared support floor is actually verified.
 
-### I2 — `test_ocr.py` is missing *(M, tests)*
+### I2 — `test_ocr.py` is missing *(M, tests)* — ✅ RESOLVED
+> Added with B3: `tests/test_ocr.py` covers no-engine→`None`, launch-failure→`None`,
+> returncode≠0→`""`, and returncode 0→stripped stdout.
 `src/pkms/ocr.py` has **zero direct tests** (keep-ingest tests monkeypatch `extract_text`
 away). It guards the load-bearing `None` (no engine) vs `""` (engine ran, no text)
 distinction the OCR-disclosure UX hinges on. Add a `test_ocr.py` faking
@@ -190,7 +210,12 @@ substrate does not change.
 > + the binding design-language constraints** — not the exact visual look. An implementer
 > should propose the look within those constraints.
 
-### F1 — Recognition card row in the web today-view *(first increment; branch `feat/visual-home`)*
+### F1 — Recognition card row in the web today-view *(first increment; branch `feat/visual-home`)* — ◐ PARTIAL
+> Data core landed (on `main`): `today.recognition_cards(vault, index_dir, *, k=3)` assembles a
+> curated (≤k, never the raw pile) multi-source row over the reading queue + resurface set,
+> round-robined, side-effect-free (no offer recorded on a read — preserves B1). Tested by
+> `tests/test_recognition_cards.py`. **Still pending:** the view layer — thumbnails, "why this"
+> pills, OCR'd-image cards, and wiring `recognition_cards()` into `/api/today` + the web page.
 - **What:** add a horizontal row of visual cards to the desktop today-view: promoted reading
   notes, resurfacing candidates, and OCR'd image captures rendered as cards **with
   thumbnails** (YouTube/thread/image), each with a one-line "why this" and a ⏱ consume-cost
