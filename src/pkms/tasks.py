@@ -84,3 +84,17 @@ def stale_tasks(conn, *, days: int = RESHAPE_DAYS, today: date | None = None) ->
         (cutoff,),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def next_action_per_note(conn) -> list[dict]:
+    """One OPEN task per note, projects first — stuck/not-now/paused/iceboxed
+    are not next actions (§6). Inbox captures are excluded — their tasks
+    surface after folding, not before."""
+    rows = conn.execute(
+        """SELECT t.note_path, n.title, t.text, t.size, t.first_action, t.state, MIN(t.line)
+           FROM tasks t LEFT JOIN notes n ON n.path = t.note_path
+           WHERE t.state='open' AND t.note_path NOT LIKE 'inbox%'
+           GROUP BY t.note_path
+           ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
+    ).fetchall()
+    return [dict(r) for r in rows]

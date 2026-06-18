@@ -57,14 +57,9 @@ def _next_actions(index_dir: Path) -> list[dict]:
     if not (index_dir / "pkms.db").exists():
         return []
     from .db import connect
+    from .tasks import next_action_per_note
     conn = connect(index_dir)
-    rows = conn.execute(
-        """SELECT t.note_path, n.title, t.text, t.size, t.first_action, MIN(t.line) FROM tasks t
-           LEFT JOIN notes n ON n.path = t.note_path
-           WHERE t.state='open' AND t.note_path NOT LIKE 'inbox%'
-           GROUP BY t.note_path
-           ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
-    ).fetchall()
+    rows = next_action_per_note(conn)
     conn.close()
     return [
         {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem,
