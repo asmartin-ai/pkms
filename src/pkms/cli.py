@@ -384,12 +384,13 @@ def new(title: str, folder: str = typer.Option("", "--folder", "-f", help="Subfo
     target_dir = VAULT / folder if folder else VAULT
     target_dir.mkdir(parents=True, exist_ok=True)
     path = target_dir / f"{slug}.md"
+    n = 1
+    while path.exists():
+        n += 1
+        path = target_dir / f"{slug}-{n}.md"
     today = datetime.now().date().isoformat()
-    if path.exists():
-        console.print(f"[yellow]Already exists:[/yellow] {path}")
-    else:
-        path.write_text(f"---\ntitle: {title}\ncreated: {today}\ntags: []\n---\n\n# {title}\n\n")
-        console.print(f"[green]Created[/green] {path}")
+    path.write_text(f"---\ntitle: {title}\ncreated: {today}\ntags: []\n---\n\n# {title}\n\n")
+    console.print(f"[green]Created[/green] {path}")
     editor = os.environ.get("EDITOR", "notepad")
     subprocess.Popen([editor, str(path)])
 
