@@ -34,10 +34,13 @@ def extract_text(image: Path, *, exe: Path | None = None) -> str | None:
     exe = exe or find_tesseract()
     if exe is None:
         return None
-    out = subprocess.run(
-        [str(exe), str(image), "stdout"],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-    )
+    try:
+        out = subprocess.run(
+            [str(exe), str(image), "stdout"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+    except OSError:
+        return None
     if out.returncode != 0:
         return ""
     return out.stdout.strip()
