@@ -100,8 +100,6 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep=None) -> dict:
     new_notes = [n for n in notes if n.id not in ledger]
     media_dir = vault / "media" / "keep"
     report = {"new": 0, "images": 0, "ocr_missing": 0, "media_failed": 0}
-    done_ids: list[str] = []
-
     for note in new_notes:
         body = note.text or ""
         if note.title:
@@ -127,10 +125,8 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep=None) -> dict:
         if not body.strip():
             body = "(empty keep note)"
         write_capture(body, vault, source="keep", extra={"keep_id": note.id})
-        done_ids.append(note.id)
+        append_ledger(index_dir, [note.id])
         report["new"] += 1
-
-    append_ledger(index_dir, done_ids)
     return report
 
 
