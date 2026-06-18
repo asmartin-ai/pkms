@@ -8,6 +8,10 @@ status: open
 
 # PKMS sweep work order (2026-06-17)
 
+> Snapshot as of 2026-06-17. Bug/improvement findings are durable; the build-state and
+> branch lines in §0 reflect that date — verify against `git` (`git branch -vv`,
+> `origin/main`) before relying on them, don't trust them as live.
+
 A self-contained backlog from a systematic repo sweep. Written so a fresh session
 (no prior context) can execute any item cold. Three parts: **bugs**, **improvements**,
 **features**. Each item is scoped (location, fix, acceptance).
