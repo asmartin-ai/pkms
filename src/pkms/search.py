@@ -19,12 +19,15 @@ def _sanitize(query: str) -> str:
     return " ".join(f'"{t}"' for t in tokens)
 
 
-def search(query: str, index_dir: Path, limit: int = 20) -> list[dict]:
+def search(query: str, index_dir: Path, limit: int = 20, raw: bool = False) -> list[dict]:
     conn = connect(index_dir)
-    try:
-        rows = conn.execute(_SQL, (query, limit)).fetchall()
-    except sqlite3.OperationalError:
-        # Raw query used FTS5 syntax unintentionally (e.g. a hyphenated word) — retry quoted.
+    if raw:
+        try:
+            rows = conn.execute(_SQL, (query, limit)).fetchall()
+        except sqlite3.OperationalError:
+            # Raw query used FTS5 syntax unintentionally (e.g. a hyphenated word) — retry quoted.
+            rows = conn.execute(_SQL, (_sanitize(query), limit)).fetchall()
+    else:
         rows = conn.execute(_SQL, (_sanitize(query), limit)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
