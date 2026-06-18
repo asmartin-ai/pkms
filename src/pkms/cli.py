@@ -145,13 +145,8 @@ def tasks(
         return
 
     # default: one next action per note — never a wall (§6)
-    rows = conn.execute(
-        """SELECT t.note_path, n.title, t.text, t.size, t.first_action, t.state, MIN(t.line)
-           FROM tasks t LEFT JOIN notes n ON n.path = t.note_path
-           WHERE t.state='open' AND t.note_path NOT LIKE 'inbox%'
-           GROUP BY t.note_path
-           ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
-    ).fetchall()
+    from .tasks import next_action_per_note
+    rows = next_action_per_note(conn)
     extra = conn.execute(
         "SELECT COUNT(*) FROM tasks WHERE state IN ('open','stuck','not-now')",
     ).fetchone()[0] - len(rows)
