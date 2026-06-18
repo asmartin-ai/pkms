@@ -27,8 +27,16 @@ status: partially-resolved
 > ✅ (import/recompute hoists). **I4 deferred** — enabling the ruff S/UP/B set surfaces 345
 > findings (mostly S101 assert-in-tests + intentional-pattern noqas) = judgment, not simple.
 >
-> **Still open:** GLM bakeoff candidates **B5, B6, I3, I7a, F6**; **I4** (deferred, needs a
-> rule-policy pass); design/you items **F1 view-layer, F2–F5**.
+> **Bakeoff harvest (2026-06-18).** LLM-dev ran the delegable candidates as a 3-model
+> comparison (glm-5p1 / glm-5p2 / minimax-m3) against RED oracles — all arms passed
+> identically (functionally byte-equivalent; only docstring/line-placement differed; none
+> gamed the oracle). Harvested the winners (src + oracle tests only, Aider scratch excluded):
+> **B5** ✅ (UTC day) · **I7a** ✅ (`new` slug `-N` suffix) · **F6** ✅ (indexer paths via
+> `.as_posix()` — also retires the `os.path.join` cross-platform-test workaround) · **I3** ✅
+> (`tasks.next_action_per_note` shared helper). Suite → **145 passing**.
+>
+> **Still open:** **B6** (CRLF strip — clean GLM oracle, not yet run) · **I4** (deferred,
+> needs a ruff rule-policy pass) · design/you items **F1 view-layer, F2–F5**.
 
 A self-contained backlog from a systematic repo sweep. Written so a fresh session
 (no prior context) can execute any item cold. Three parts: **bugs**, **improvements**,
@@ -309,22 +317,22 @@ oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / de
 
 | Item | Verdict | Oracle | Effort | Note |
 |---|---|---|---|---|
-| **B5** day-from-UTC | ✅ delegate | easy | XS | Atomic one-func fix, deterministic oracle. Ideal first bakeoff item. |
-| **B6** CRLF strip | ✅ delegate | easy | XS | Defensive (no live bug); oracle clean. Marginal — a 1-liner, equally fine inline. |
+| **B5** day-from-UTC | ✅ DONE (2026-06-18) | easy | XS | Bakeoff harvest: `fromtimestamp(utc, tz=timezone.utc)`. |
+| **B6** CRLF strip | ✅ delegate | easy | XS | Defensive (no live bug); oracle clean. Marginal — a 1-liner, equally fine inline. *(Only remaining GLM candidate.)* |
 | **B7** linker order | ✅ DONE (2026-06-18) | n/a | XS | Resolved with I5: `resolve_link` deleted, so the order-dependent match is gone. |
 | **I1** CI py matrix | ✅ DONE (2026-06-18) | none | S | CI runs py3.11/3.12 matrix; checkout@v5, setup-python@v6. |
-| **I3** dedupe SQL | ✅ delegate | medium | M | Behavior-preserving refactor; needs a *characterization* oracle (below). Riskier for GLM — review for drift. |
+| **I3** dedupe SQL | ✅ DONE (2026-06-18) | medium | M | Bakeoff harvest: `tasks.next_action_per_note()` shared by `cli.tasks` + `today._next_actions`. |
 | **I4** ruff rule set | ⏸ DEFERRED | none | M | Not simple: enabling I/S/UP/B surfaces **345** findings (284 = S101 assert-in-tests; rest need per-file-ignore/noqa judgment). Needs a deliberate rule-policy pass, not a quick edit. |
 | **I5** resolve_link wire/delete | ✅ DONE (2026-06-18) | weak | S | Deleted `resolve_link` + its test (dead code). Resolves B7. |
 | **I6** packaging hygiene | ✅ DONE (2026-06-18) | none | S | Pinned `ruff>=0.6`; dropped unused `pytest-cov` (no `--cov` configured). |
-| **I7a** `new` slug collision | ✅ delegate | easy | S | Real behavior bug, clean oracle. Split this out from I7's cleanups. *(Still open — GLM candidate.)* |
+| **I7a** `new` slug collision | ✅ DONE (2026-06-18) | easy | S | Bakeoff harvest: `new` appends `-N` on slug collision instead of silently colliding. |
 | **I7b** import/recompute hoists | ✅ DONE (2026-06-18) | none(weak) | S | Hoisted rich `escape` (cli.py ×7+), `json` (keep_ingest ×2), per-note datetime recompute (indexer). Pure refactor. |
 | **F1** view layer | 🎨 design | — | L | Thumbnails/layout/copy + wire into `/api/today`. Visual → not GLM. |
 | **F2** area tiles | 🎨 design | — | L | Visual + needs `areas/` content authored. Not GLM. |
 | **F3** board view | 🎨 design | — | L | Visual, density-gated. Not GLM. |
 | **F4** notifications | 🎨 design | — | — | Design-gated, not yet specced into a slice — spec before any build. |
 | **F5** smart routing | 🎨 design | — | — | Design-gated + content-hoarder coordination — spec first. |
-| **F6** path-sep `/` | ✅ delegate | easy | S | **Not visual** — mechanical data-layer change, clean oracle. Strong GLM candidate; pairs with the F1 view layer (which stays yours). |
+| **F6** path-sep `/` | ✅ DONE (2026-06-18) | easy | S | Bakeoff harvest: indexer stores `.as_posix()` paths. Unblocks the F1 view layer (URL-safe hrefs). |
 
 ### Oracle contract sketches (delegate candidates)
 
@@ -344,16 +352,15 @@ oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / de
 
 ### Sequencing for the bakeoff chat
 
-> Update 2026-06-18: the inline batch (I1, I5/B7, I6, I7b) is done; steps below are
-> rewritten to the **remaining** GLM-delegable set: **B5, B6, I7a, F6** (easy oracles) and
-> **I3** (refactor, hardest review). **I4 is deferred** out of the bakeoff lane.
+> Update 2026-06-18: the inline batch (I1, I5/B7, I6, I7b) and the bakeoff harvest
+> (B5, I7a, F6, I3) are all done. The bakeoff lane is nearly empty — see below.
 
-1. **Cheap independent wins first:** B5, I7a, F6 — atomic, easy oracles, no coupling. Good
-   warm-up bakeoff items. (B6 is a clean oracle too, but marginal — a 1-liner.)
-2. **I3** last of the delegables — refactors carry the most GLM drift risk; review hardest.
-3. **I4** is **not** a bakeoff item — it needs a deliberate ruff rule-policy pass (per-file
+1. **B6** (CRLF strip) is the only GLM-delegable item left — clean easy oracle, but marginal
+   (a 1-liner; equally fine done inline). Nothing else is coupled to it.
+2. **I4** is **not** a bakeoff item — it needs a deliberate ruff rule-policy pass (per-file
    S101 ignore for tests + noqa the intentional subprocess/bind-all/url-open lines), not GLM.
-4. **F-items** are not in the bakeoff lane — route F1-view/F2/F3 to design; spec F4/F5 first.
+3. **F-items** are not in the bakeoff lane — route F1-view/F2/F3 to design; spec F4/F5 first.
+   Note **F6 is now done**, so the F1 view layer has URL-safe (`/`) paths to build on.
 
 ---
 
