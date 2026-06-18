@@ -122,6 +122,58 @@ def _resurface_card(vault: Path, index_dir: Path, *, record_offer: bool = False)
     return cands[0] if cands else None
 
 
+def recognition_cards(vault: Path, index_dir: Path, *, k: int = 3) -> list[dict]:
+    """Curated recognition card row: at most k cards spanning reading + resurface.
+    Side-effect-free: never records a resurface offer (§5)."""
+    # Reading cards from the promoted queue
+    reading_dir = vault / "resources" / "reading"
+    reading_cards: list[dict] = []
+    if reading_dir.is_dir():
+        import frontmatter
+        queued = []
+        for p in sorted(reading_dir.glob("*.md")):
+            meta = frontmatter.load(p).metadata
+            if meta.get("reading") == "queued":
+                queued.append({
+                    "kind": "reading",
+                    "title": str(meta.get("title") or p.stem),
+                    "why": "next in your reading queue",
+                    "minutes": meta.get("reading_minutes"),
+                    "promoted": str(meta.get("promoted", "")),
+                })
+        queued.sort(key=lambda q: q["promoted"])
+        reading_cards = queued
+
+    # Resurface cards
+    resurface_cards: list[dict] = []
+    if (index_dir / "pkms.db").exists():
+        from .db import connect
+        from .resurface import candidates, filter_never
+        conn = connect(index_dir)
+        cands = filter_never(vault, candidates(conn, k=k))
+        conn.close()
+        resurface_cards = [
+            {"kind": "resurface", "title": c["title"], "why": c["why"]}
+            for c in cands
+        ]
+
+    # Curate: round-robin so both sources appear when available, cap at k
+    result: list[dict] = []
+    ri, si = 0, 0
+    while len(result) < k:
+        if ri < len(reading_cards):
+            result.append(reading_cards[ri])
+            ri += 1
+        if len(result) >= k:
+            break
+        if si < len(resurface_cards):
+            result.append(resurface_cards[si])
+            si += 1
+        if ri >= len(reading_cards) and si >= len(resurface_cards):
+            break
+    return result
+
+
 def today_view(vault: Path, index_dir: Path, *, record_offer: bool = False) -> dict:
     today_stem = date.today().isoformat()
     actions = _next_actions(index_dir)
