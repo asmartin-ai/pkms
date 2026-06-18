@@ -18,8 +18,17 @@ status: partially-resolved
 > **B3** ✅ (OCR `OSError` guard) + **I2** ✅ (`test_ocr.py` added) · **B4** ✅ (literal
 > search by default, `raw=` opt-in) · **F1** ◐ *partial* — the `recognition_cards()` data
 > contract landed and is tested, but the visual card row (thumbnails, layout, wiring into
-> `/api/today`) is still pending. Suite 130 → **141 passing**. Still open: **B5–B7**,
-> **I1, I3–I7**, **F2–F6**, and F1's view-layer rendering.
+> `/api/today`) is still pending. Suite 130 → **141 passing**.
+>
+> **Inline batch (2026-06-18, Haiku-delegated).** The simple no-oracle items cleared by
+> scoped Haiku subagents, reviewed by Opus: **I1** ✅ (CI py3.11/3.12 matrix + action
+> bumps) · **I5 + B7** ✅ (deleted dead `linker.resolve_link` + test — drops one test, 141
+> → **140 passing**) · **I6** ✅ (pinned `ruff>=0.6`, dropped unused `pytest-cov`) · **I7b**
+> ✅ (import/recompute hoists). **I4 deferred** — enabling the ruff S/UP/B set surfaces 345
+> findings (mostly S101 assert-in-tests + intentional-pattern noqas) = judgment, not simple.
+>
+> **Still open:** GLM bakeoff candidates **B5, B6, I3, I7a, F6**; **I4** (deferred, needs a
+> rule-policy pass); design/you items **F1 view-layer, F2–F5**.
 
 A self-contained backlog from a systematic repo sweep. Written so a fresh session
 (no prior context) can execute any item cold. Three parts: **bugs**, **improvements**,
@@ -302,14 +311,14 @@ oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / de
 |---|---|---|---|---|
 | **B5** day-from-UTC | ✅ delegate | easy | XS | Atomic one-func fix, deterministic oracle. Ideal first bakeoff item. |
 | **B6** CRLF strip | ✅ delegate | easy | XS | Defensive (no live bug); oracle clean. Marginal — a 1-liner, equally fine inline. |
-| **B7** linker order | ⏸ decide-first | n/a | XS | Couples to **I5** — decide wire-vs-delete first; if delete, B7 vanishes. |
-| **I1** CI py matrix | 🔧 inline | none | S | YAML/CI config — no pytest oracle; the bakeoff harness doesn't fit. |
+| **B7** linker order | ✅ DONE (2026-06-18) | n/a | XS | Resolved with I5: `resolve_link` deleted, so the order-dependent match is gone. |
+| **I1** CI py matrix | ✅ DONE (2026-06-18) | none | S | CI runs py3.11/3.12 matrix; checkout@v5, setup-python@v6. |
 | **I3** dedupe SQL | ✅ delegate | medium | M | Behavior-preserving refactor; needs a *characterization* oracle (below). Riskier for GLM — review for drift. |
-| **I4** ruff rule set | 🔧 inline | none | S | Config edit; **cascades** — enabling I/S/UP/B flags existing code, and that cleanup is the real work. Do first (see sequencing). |
-| **I5** resolve_link wire/delete | 🔧 inline | weak | S | A decision + a delete; not oracle-shaped. Resolves B7. |
-| **I6** packaging hygiene | 🔧 inline | none | S | `pyproject` edit + a coverage decision; no pytest oracle. |
-| **I7a** `new` slug collision | ✅ delegate | easy | S | Real behavior bug, clean oracle. Split this out from I7's cleanups. |
-| **I7b** import/recompute hoists | 🔧 inline | none(weak) | S | Pure cleanup; **I4's ruff `I`** auto-sorts imports — fold into I4, don't bakeoff. |
+| **I4** ruff rule set | ⏸ DEFERRED | none | M | Not simple: enabling I/S/UP/B surfaces **345** findings (284 = S101 assert-in-tests; rest need per-file-ignore/noqa judgment). Needs a deliberate rule-policy pass, not a quick edit. |
+| **I5** resolve_link wire/delete | ✅ DONE (2026-06-18) | weak | S | Deleted `resolve_link` + its test (dead code). Resolves B7. |
+| **I6** packaging hygiene | ✅ DONE (2026-06-18) | none | S | Pinned `ruff>=0.6`; dropped unused `pytest-cov` (no `--cov` configured). |
+| **I7a** `new` slug collision | ✅ delegate | easy | S | Real behavior bug, clean oracle. Split this out from I7's cleanups. *(Still open — GLM candidate.)* |
+| **I7b** import/recompute hoists | ✅ DONE (2026-06-18) | none(weak) | S | Hoisted rich `escape` (cli.py ×7+), `json` (keep_ingest ×2), per-note datetime recompute (indexer). Pure refactor. |
 | **F1** view layer | 🎨 design | — | L | Thumbnails/layout/copy + wire into `/api/today`. Visual → not GLM. |
 | **F2** area tiles | 🎨 design | — | L | Visual + needs `areas/` content authored. Not GLM. |
 | **F3** board view | 🎨 design | — | L | Visual, density-gated. Not GLM. |
@@ -335,13 +344,16 @@ oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / de
 
 ### Sequencing for the bakeoff chat
 
+> Update 2026-06-18: the inline batch (I1, I5/B7, I6, I7b) is done; steps below are
+> rewritten to the **remaining** GLM-delegable set: **B5, B6, I7a, F6** (easy oracles) and
+> **I3** (refactor, hardest review). **I4 is deferred** out of the bakeoff lane.
+
 1. **Cheap independent wins first:** B5, I7a, F6 — atomic, easy oracles, no coupling. Good
-   warm-up bakeoff items.
-2. **I4 before I7b** — enable the ruff rule set, *then* let `ruff --fix` handle the import
-   hoists; don't bakeoff I7b separately.
-3. **I5 then B7** — make the wire-vs-delete call; B7 collapses out of the delete path.
-4. **I3** last of the delegables — refactors carry the most GLM drift risk; review hardest.
-5. **F-items** are not in the bakeoff lane — route F1-view/F2/F3 to design; spec F4/F5 first.
+   warm-up bakeoff items. (B6 is a clean oracle too, but marginal — a 1-liner.)
+2. **I3** last of the delegables — refactors carry the most GLM drift risk; review hardest.
+3. **I4** is **not** a bakeoff item — it needs a deliberate ruff rule-policy pass (per-file
+   S101 ignore for tests + noqa the intentional subprocess/bind-all/url-open lines), not GLM.
+4. **F-items** are not in the bakeoff lane — route F1-view/F2/F3 to design; spec F4/F5 first.
 
 ---
 
