@@ -13,12 +13,16 @@ editing it are in that repo's README).
 
 ```
 vault/
-  daily/       # Daily notes, YYYY-MM-DD.md
+  daily/       # Daily notes, YYYY-MM-DD.md   (gitignored — kept local)
+  inbox/       # Raw captures awaiting /fold   (gitignored — kept local)
   projects/    # Active project notes
-  areas/       # Ongoing responsibilities (health, finance, etc.)
+  areas/       # Ongoing responsibilities (health, finance, etc.) — currently empty
   resources/   # Reference material
-  archive/     # Completed / inactive notes
+  archive/     # Completed / inactive notes — currently empty
 ```
+
+`vault/daily/`, `vault/inbox/`, and `vault/media/` are gitignored (personal content
+kept local; the app recreates the dirs on demand). The rest of the vault is tracked.
 
 ## Source layout
 
@@ -47,7 +51,7 @@ scripts/       # One-off maintenance scripts
 - **User-visible state lives in note frontmatter, never only in the index** (e.g.
   `reading: queued` on promoted notes). The SQLite index is a derived, regenerable
   view — task states (slice 5) and any future state must follow the same rule.
-- Generated artifacts (reading bundles, exports) go in `exports/`, never in `vault/` — the FTS index must not see duplicate content. Throwaway experiments live in `spike/`.
+- Throwaway generated artifacts (export bundles, e.g. `scripts/build_reading_bundle.py`) go in `exports/`, never in `vault/` — the FTS index must not see duplicate content. Throwaway experiments live in `spike/`. (Distinct from `pkms promote` output: a promoted reading note is *first-class* vault content in `vault/resources/reading/` with `reading: queued` frontmatter, and is meant to be indexed.)
 - **Unattended/scheduled steps must not depend on an optional interactive service.**
   Anything that runs on a timer or in the background (e.g. the Keep pull) picks a
   self-contained engine over one that needs a server up: OCR-at-ingest uses
@@ -77,6 +81,8 @@ pkms serve            # Web service :8765 — capture endpoint + desktop today-v
 pkms index            # Rebuild full index from vault
 pkms search <query>   # Full-text search
 pkms backlinks <note> # Show what links to a note
+pkms promote <url|terms> # Hoarded Reddit thread → readable note in vault/resources/reading/
+                      #   (comment tree + provenance; reading: queued for the today-view)
 pkms tasks            # One next action per note (--all backlog · --stash · --stale · --done)
 pkms did "thing"      # Log a done thing into today's note (retroactive welcome)
 pkms resurface        # Up to 3 curious questions from the vault, each with a why

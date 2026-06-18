@@ -50,6 +50,7 @@ pkms capture "text"   # Dump a thought into the inbox (zero decisions)
 pkms today            # Front door: breadcrumb, inbox-as-progress, next actions
 pkms tasks            # One next action per note
 pkms search <query>   # Full-text search
+pkms promote <url>    # Turn a hoarded Reddit thread into a readable vault note
 pkms resurface        # Up to 3 curious questions from the vault, each with a why
 pkms index            # Rebuild the full index from the vault
 pkms serve            # Web service: capture endpoint + desktop today-view
