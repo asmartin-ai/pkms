@@ -18,8 +18,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
-    "pytest-cov",
-    "ruff",
+    "ruff>=0.6",
     "Pillow",
 ]
 

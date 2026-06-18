@@ -17,6 +17,7 @@ one-time token dance is docs/keep-setup.md. Behavior rules:
   rebuilds guilt.
 """
 
+import json
 import urllib.request
 from pathlib import Path
 
@@ -56,14 +57,12 @@ def make_keep(email: str, token: str, index_dir: Path):
     state = None
     state_path = index_dir / STATE
     if state_path.exists():
-        import json
         try:
             state = json.loads(state_path.read_text(encoding="utf-8"))
         except ValueError:
             state = None  # corrupt cache: resync from scratch
     keep.authenticate(email, token, state=state)
     try:
-        import json
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_path.write_text(json.dumps(keep.dump()), encoding="utf-8")
     except OSError:
