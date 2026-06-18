@@ -7,6 +7,7 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 app = typer.Typer(help="Personal Knowledge Management System")
@@ -65,7 +66,6 @@ def backlinks(note: str):
 
 
 def _task_line(r, *, show_state: bool = False) -> str:
-    from rich.markup import escape
     bits = [escape(r["text"])]
     if r["size"]:
         bits.append(f"[dim]⏱{escape(r['size'])}[/dim]")
@@ -82,7 +82,6 @@ def tasks(
     done: bool = typer.Option(False, "--done", help="Done tasks"),
 ):
     """One next action per note (default); everything else is one flag away."""
-    from rich.markup import escape
     from .db import connect
     conn = connect(INDEX)
 
@@ -180,7 +179,6 @@ def resurface(
     let_go: str = typer.Option("", "--let-go", help="Stop asking about a note forever (reversible: delete its 'resurface: never' line)"),
 ):
     """Up to three curious questions from the vault — each says why it came up."""
-    from rich.markup import escape
     from .db import connect
     from .resurface import candidates, dismiss, filter_never
     from .resurface import let_go as _let_go
@@ -263,19 +261,15 @@ def today():
     nxt = view["next_read"]
     if nxt:
         mins = f" [dim]· ~{nxt['minutes']} min[/dim]" if nxt.get("minutes") else ""
-        from rich.markup import escape as _esc
-        console.print(f"  [magenta]▸[/magenta] up next to read: [italic]{_esc(nxt['title'])}[/italic]{mins}")
+        console.print(f"  [magenta]▸[/magenta] up next to read: [italic]{escape(nxt['title'])}[/italic]{mins}")
 
     card = view["resurface"]
     if card:  # the one rationed curious question (§5) — why-line included (§9)
-        from rich.markup import escape as _esc
-        console.print(f"  [yellow]?[/yellow] {_esc(card['question'])}"
-                      f"  [dim]{_esc(card['why'])} · pkms resurface[/dim]")
+        console.print(f"  [yellow]?[/yellow] {escape(card['question'])}"
+                      f"  [dim]{escape(card['why'])} · pkms resurface[/dim]")
     console.print()
 
     if view["next_actions"]:
-        from rich.markup import escape
-
         def fit(s: str, w: int) -> str:
             return s if len(s) <= w else s[: w - 1] + "…"
 
@@ -312,13 +306,12 @@ def promote(query: str):
             console.print("[yellow]Nothing hydrated matches.[/yellow] "
                           "Try other words, or paste the thread URL.")
             return
-        from rich.markup import escape as _esc
         console.print("[bold]which one?[/bold]")
         for i, c in enumerate(cands, 1):
             bits = [b for b in (f"r/{c['subreddit']}" if c["subreddit"] else "",
                                 f"saved {c['saved']}" if c["saved"] else "") if b]
             tail = f"  [dim]{' · '.join(bits)}[/dim]" if bits else ""
-            console.print(f"  [cyan]{i}.[/cyan] {_esc(c['title'][:80])}{tail}")
+            console.print(f"  [cyan]{i}.[/cyan] {escape(c['title'][:80])}{tail}")
         try:
             choice = typer.prompt("\npromote which? (number · Enter to skip)",
                                   default="", show_default=False).strip()
