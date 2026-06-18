@@ -284,7 +284,7 @@ def today():
 
 
 def _print_promoted(result: dict):
-    rel = result["note"].relative_to(VAULT)
+    rel = result["note"].relative_to(VAULT).as_posix()
     console.print(f"[green]promoted ✓[/green] vault/{rel}  [dim]· queued · ~{result['minutes']} min read[/dim]")
     console.print("[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]")
 
