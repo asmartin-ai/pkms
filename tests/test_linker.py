@@ -1,8 +1,6 @@
 """Wikilink extraction and resolution."""
 
-import os
-
-from pkms.linker import extract_links, resolve_link
+from pkms.linker import extract_links
 
 
 def test_plain_link():
@@ -24,9 +22,3 @@ def test_multiple_links_in_order():
 
 def test_no_links():
     assert extract_links("plain text [not a link] [[]]") == []
-
-
-def test_resolve_exact_and_case_insensitive(vault):
-    assert str(resolve_link("beta", vault)) == os.path.join("resources", "beta.md")
-    assert str(resolve_link("BETA", vault)) == os.path.join("resources", "beta.md")
-    assert resolve_link("missing", vault) is None

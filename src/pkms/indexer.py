@@ -19,6 +19,7 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
     conn = connect(index_dir)
     stats = {"notes": 0, "links": 0, "tasks": 0}
     seen: set[str] = set()
+    today = datetime.now().date().isoformat()
 
     for md_path in sorted(vault_root.rglob("*.md")):
         rel = str(md_path.relative_to(vault_root))
@@ -50,7 +51,6 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
             stats["links"] += 1
 
         # Tasks
-        today = datetime.now().date().isoformat()
         conn.execute("DELETE FROM tasks WHERE note_path=?", (rel,))
         for t in extract_tasks(content):
             conn.execute(
