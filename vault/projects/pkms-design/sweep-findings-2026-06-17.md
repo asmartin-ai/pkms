@@ -282,6 +282,69 @@ substrate does not change.
 
 ---
 
+## 4. Delegation scope (added 2026-06-17 — for the bakeoff chat)
+
+Per-item scope so another session can decide what to hand to **GLM-5.1 via Aider** (the
+Tier-B offload bakeoff: GLM is a *code executor against a RED pytest oracle*, reviewed by
+Opus — see the `aider-headless-delegate` skill and the `bakeoff-oracle-authoring` rules).
+
+**What GLM is good for:** well-defined, self-contained, mechanically-testable fixes with a
+clean red→green oracle. **What it's not:** design/UX judgment, oracle-less config/tooling
+edits, and cross-cutting refactors that need taste. **Decision (2026-06-17): keep GLM off
+all visual/UX work** — F1's view layer, F2, F3 go to Kenja or a design-capable model, never
+the executor. Oracle depth here is *feasibility + a prose contract sketch*; the bakeoff chat
+authors the actual RED test (and must honor the double-oracle anti-gaming pattern).
+
+Verdicts: **✅ delegate** (GLM candidate) · **🔧 inline** (do in-chat — config/no pytest
+oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / design-model).
+
+| Item | Verdict | Oracle | Effort | Note |
+|---|---|---|---|---|
+| **B5** day-from-UTC | ✅ delegate | easy | XS | Atomic one-func fix, deterministic oracle. Ideal first bakeoff item. |
+| **B6** CRLF strip | ✅ delegate | easy | XS | Defensive (no live bug); oracle clean. Marginal — a 1-liner, equally fine inline. |
+| **B7** linker order | ⏸ decide-first | n/a | XS | Couples to **I5** — decide wire-vs-delete first; if delete, B7 vanishes. |
+| **I1** CI py matrix | 🔧 inline | none | S | YAML/CI config — no pytest oracle; the bakeoff harness doesn't fit. |
+| **I3** dedupe SQL | ✅ delegate | medium | M | Behavior-preserving refactor; needs a *characterization* oracle (below). Riskier for GLM — review for drift. |
+| **I4** ruff rule set | 🔧 inline | none | S | Config edit; **cascades** — enabling I/S/UP/B flags existing code, and that cleanup is the real work. Do first (see sequencing). |
+| **I5** resolve_link wire/delete | 🔧 inline | weak | S | A decision + a delete; not oracle-shaped. Resolves B7. |
+| **I6** packaging hygiene | 🔧 inline | none | S | `pyproject` edit + a coverage decision; no pytest oracle. |
+| **I7a** `new` slug collision | ✅ delegate | easy | S | Real behavior bug, clean oracle. Split this out from I7's cleanups. |
+| **I7b** import/recompute hoists | 🔧 inline | none(weak) | S | Pure cleanup; **I4's ruff `I`** auto-sorts imports — fold into I4, don't bakeoff. |
+| **F1** view layer | 🎨 design | — | L | Thumbnails/layout/copy + wire into `/api/today`. Visual → not GLM. |
+| **F2** area tiles | 🎨 design | — | L | Visual + needs `areas/` content authored. Not GLM. |
+| **F3** board view | 🎨 design | — | L | Visual, density-gated. Not GLM. |
+| **F4** notifications | 🎨 design | — | — | Design-gated, not yet specced into a slice — spec before any build. |
+| **F5** smart routing | 🎨 design | — | — | Design-gated + content-hoarder coordination — spec first. |
+| **F6** path-sep `/` | ✅ delegate | easy | S | **Not visual** — mechanical data-layer change, clean oracle. Strong GLM candidate; pairs with the F1 view layer (which stays yours). |
+
+### Oracle contract sketches (delegate candidates)
+
+- **B5** — pick an epoch (e.g. UTC `…T23:30Z`) whose calendar day differs from a non-UTC
+  local tz; assert `promote._day(epoch)` returns the **UTC** date. RED now (uses local tz).
+- **B6** — feed `extract_tasks` a task line ending in `\r` (read via `newline=""`/bytes);
+  assert the parsed `text` has no trailing `\r` and the line hash equals the `\n`-stripped
+  form. RED if the `\r` leaks into text/hash.
+- **I3** — *characterization*: from one fixture DB, assert `cli` tasks-default and
+  `today._next_actions` produce the **identical** (note, action) ordering; after the shared
+  helper is extracted both must still match. Stays-green refactor (the anti-gaming half: a
+  second assertion that the helper is actually called from both sites).
+- **I7a** — `pkms new` two notes whose titles slug identically; assert the second lands at
+  `<slug>-2.md` and the first is **not** overwritten. RED now (silent collision).
+- **F6** — index a note under a nested dir; assert the stored/returned `path` contains `/`
+  and **no** `\` on any OS. RED on Windows now (stores OS-native separators).
+
+### Sequencing for the bakeoff chat
+
+1. **Cheap independent wins first:** B5, I7a, F6 — atomic, easy oracles, no coupling. Good
+   warm-up bakeoff items.
+2. **I4 before I7b** — enable the ruff rule set, *then* let `ruff --fix` handle the import
+   hoists; don't bakeoff I7b separately.
+3. **I5 then B7** — make the wire-vs-delete call; B7 collapses out of the delete path.
+4. **I3** last of the delegables — refactors carry the most GLM drift risk; review hardest.
+5. **F-items** are not in the bakeoff lane — route F1-view/F2/F3 to design; spec F4/F5 first.
+
+---
+
 ## Appendix — also recorded
 
 - **Icebox (in `build-plan.md`):** when Fable 5 is restored, get its **blind** take on the
