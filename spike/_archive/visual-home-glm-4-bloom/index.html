@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PKMS the bloom — a warm pastel, sensory-calibrated daily edition.">
+  <title>the bloom · pkms</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="density-calm">
+
+  <main class="garden" id="app">
+
+    <!-- ─── Masthead ─── -->
+    <header class="masthead">
+      <div>
+        <div class="masthead__title">
+          <small>today's bloom</small>
+          pkms
+        </div>
+        <div class="masthead__date" id="masthead-date">—</div>
+      </div>
+
+      <div class="salience" role="group" aria-label="How much to show today">
+        <span class="salience__label">bloom</span>
+        <button data-density="calm"       aria-pressed="true">calm</button>
+        <button data-density="more"       aria-pressed="false">more</button>
+        <button data-density="everything" aria-pressed="false">all</button>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Surfaces">
+      <a href="#today"   data-route="today">today</a>
+      <a href="#capture" data-route="capture">capture</a>
+      <a href="#reading" data-route="reading">reading</a>
+      <a href="#actions" data-route="actions">all actions</a>
+      <span class="nav__spacer"></span>
+      <a href="#search"  data-route="search">find</a>
+    </nav>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         TODAY — the bloom (bounded daily edition)
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="today" id="today">
+
+      <p class="edition-mark">today's edition · <span id="edition-date">—</span></p>
+
+      <!-- ─── THE BLOOM — the one thing to do ─── -->
+      <div class="bloom" id="bloom">
+        <span class="bloom__kicker">the one thing</span>
+
+        <p class="bloom__lede" id="lede"></p>
+        <div class="bloom__sub" id="lede-sub"></div>
+
+        <h1 class="bloom__action" id="bloom-action">
+          <span class="bloom__action-verb">first move</span>
+          <span id="bloom-action-text"></span>
+        </h1>
+
+        <button class="bloom__do" id="bloom-do" type="button">
+          <span class="bloom__do-size" id="bloom-do-size"></span>
+          <span>begin</span>
+          <span>→</span>
+        </button>
+
+        <div class="bloom__fold" id="fold"></div>
+      </div>
+
+      <!-- ─── RHYTHM — Fresh / Later, clock-free partition ─── -->
+      <div class="rhythm block--rhythm" id="rhythm">
+        <div class="rhythm__col rhythm__col--fresh">
+          <div class="rhythm__kicker">
+            <span class="rhythm__kicker-glyph">☀</span>
+            <span>fresh — while energy is high</span>
+          </div>
+          <div id="rhythm-fresh"></div>
+        </div>
+        <div class="rhythm__col rhythm__col--later">
+          <div class="rhythm__kicker">
+            <span class="rhythm__kicker-glyph">☽</span>
+            <span>later — when it suits</span>
+          </div>
+          <div id="rhythm-later"></div>
+        </div>
+      </div>
+
+      <!-- ─── AMBIENT cards — peripheral (Calm Tech) ─── -->
+      <div class="ambient block--ambient" id="ambient">
+        <!-- resurface (sky) + reading (sage) cards -->
+      </div>
+
+      <!-- ─── LOGBOOK — wins-only archive (Things 3) ─── -->
+      <div class="logbook" id="logbook">
+        <div class="logbook__kicker">
+          <span>✿</span>
+          <span>today's logbook — wins only</span>
+        </div>
+        <div class="pebbles" id="pebbles"></div>
+      </div>
+
+      <!-- ─── BLOOM CLEARED — the bounded edition's end state ─── -->
+      <div class="cleared is-hidden" id="cleared">
+        <div class="cleared__pre">❀ ❀ ❀</div>
+        <h2 class="cleared__stamp">edition complete.</h2>
+        <p class="cleared__sub">you've done what mattered today. rest well.</p>
+        <div class="pebbles cleared__pebbles" id="cleared-pebbles"></div>
+      </div>
+
+      <!-- ─── The closing — a clear end to today's edition ─── -->
+      <div class="closing">
+        <p class="closing__line">that's today's edition.</p>
+        <p class="closing__sub">come back tomorrow — it'll be a fresh bloom.</p>
+      </div>
+
+      <div class="search-affordance">
+        <p class="search-affordance__prompt">
+          looking for something specific?
+          <button type="button" data-go="search">find it</button>
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CAPTURE
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="capture" id="capture" hidden>
+      <div class="capture">
+        <p class="capture__hint">drop it here. the garden keeps it.</p>
+        <textarea
+          class="capture__field"
+          id="capture-field"
+          placeholder="whatever just bloomed…"
+          autofocus
+          aria-label="Capture box"></textarea>
+        <div class="capture__meta">
+          <span><span class="capture__kbd">⌘/Ctrl</span> + <span class="capture__kbd">Enter</span> save · <span class="capture__kbd">Esc</span> clear</span>
+          <span id="capture-status">unsaved</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         READING QUEUE
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="reading" id="reading" hidden>
+      <ul class="reading-list" id="reading-list"></ul>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ACTIONS / QUEUE — full list
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="actions" id="actions-surface" hidden>
+      <div class="rhythm">
+        <div class="rhythm__col rhythm__col--fresh">
+          <div class="rhythm__kicker"><span class="rhythm__kicker-glyph">☀</span><span>fresh</span></div>
+          <div id="actions-fresh"></div>
+        </div>
+        <div class="rhythm__col rhythm__col--later">
+          <div class="rhythm__kicker"><span class="rhythm__kicker-glyph">☽</span><span>later</span></div>
+          <div id="actions-later"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEARCH — recognition-first
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="search" id="search-surface" hidden>
+      <div class="search">
+        <label class="search__label" for="search-input">find — the fallback path</label>
+        <p class="search__hint">point at the one you mean:</p>
+        <ul class="search__candidates" id="search-candidates"></ul>
+        <input
+          type="text"
+          class="search__input"
+          id="search-input"
+          placeholder="…or type a word if none of those is it"
+          aria-label="free-text search">
+        <p class="search__fallback-note">free-text is the secondary path — recognition usually beats recall here.</p>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast__msg" id="toast-msg">—</span>
+      <button class="toast__action" id="toast-action">undo</button>
+    </div>
+
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

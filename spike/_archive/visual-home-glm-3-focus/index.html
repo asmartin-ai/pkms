@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PKMS focus — one thing at a time, full-screen.">
+  <title>focus · pkms</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="density-calm">
+
+  <main class="stage" id="app">
+
+    <header class="masthead">
+      <span class="masthead__date" id="masthead-date">—</span>
+      <div class="masthead__density" role="group" aria-label="How much to show today">
+        <button data-density="calm"       aria-pressed="true">calm</button>
+        <button data-density="more"       aria-pressed="false">more</button>
+        <button data-density="everything" aria-pressed="false">all</button>
+      </div>
+    </header>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         FOCUS — the hero, one thing at a time
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="today" id="today">
+
+      <div class="hero" id="hero">
+        <div class="hero__kicker" id="hero-kicker">the one thing</div>
+
+        <p class="hero__lede" id="lede"></p>
+        <div class="hero__sub" id="lede-sub"></div>
+
+        <h1 class="hero__action" id="hero-action">
+          <span class="hero__action-verb">first move</span>
+          <span id="hero-action-text"></span>
+        </h1>
+
+        <button class="hero__do" id="hero-do" type="button">
+          <span class="hero__do-size" id="hero-do-size"></span>
+          <span>begin</span>
+          <span class="hero__do-arrow">→</span>
+        </button>
+
+        <div class="hero__meta" id="hero-meta">
+          <!-- ⏱ size + ✓ done-when -->
+        </div>
+
+        <div class="hero__fold" id="fold"></div>
+
+        <!-- PAGE CLEARED — replaces the hero when all visible actions done -->
+        <div class="cleared is-hidden" id="cleared">
+          <div class="cleared__pre">· · ·</div>
+          <h2 class="cleared__stamp">cleared.</h2>
+          <p class="cleared__sub">nothing owed. go well.</p>
+          <div class="pebbles cleared__pebbles" id="cleared-pebbles"></div>
+        </div>
+      </div>
+
+      <!-- "What else" — one gesture away, never the default -->
+      <div class="elsewhere">
+        <button class="elsewhere__toggle" type="button" data-elsewhere aria-expanded="false">
+          <span class="glyph">›</span>
+          <span>what else is here</span>
+        </button>
+        <div class="elsewhere__content" id="elsewhere-content">
+
+          <div class="resurface" id="resurface"></div>
+
+          <div class="elsewhere__reading" id="reading-line"></div>
+
+          <ul class="chain" id="actions"></ul>
+          <div class="chain__more" id="more-notes" hidden></div>
+
+          <div class="pebbles" id="pebbles" style="margin-top: var(--stack); padding-top: var(--stack); border-top: 1px solid var(--rule);"></div>
+        </div>
+      </div>
+
+      <div class="search-affordance">
+        <p class="search-affordance__prompt">
+          looking for something specific?
+          <button type="button" data-go="search">find it</button>
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CAPTURE — full-bleed, the whole screen is the box
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="capture" id="capture" hidden>
+      <div class="capture">
+        <p class="capture__hint">type. the system owns "later."</p>
+        <textarea
+          class="capture__field"
+          id="capture-field"
+          placeholder="say it…"
+          autofocus
+          aria-label="Capture box"></textarea>
+        <div class="capture__meta">
+          <span><span class="capture__kbd">⌘/Ctrl</span> + <span class="capture__kbd">Enter</span> save · <span class="capture__kbd">Esc</span> clear</span>
+          <span id="capture-status">unsaved</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         READING QUEUE
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="reading" id="reading" hidden>
+      <ul class="reading-list" id="reading-list"></ul>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ACTIONS / QUEUE
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="actions" id="actions-surface" hidden>
+      <ul class="chain" id="actions-full"></ul>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEARCH
+         ════════════════════════════════════════════════════════════════ -->
+    <section data-surface="search" id="search-surface" hidden>
+      <div class="search">
+        <label class="search__label" for="search-input">find — the fallback</label>
+        <p class="search__hint">point at the one you mean:</p>
+        <ul class="search__candidates" id="search-candidates"></ul>
+        <input
+          type="text"
+          class="search__input"
+          id="search-input"
+          placeholder="…or type a word if none of those is it"
+          aria-label="free-text search">
+        <p class="search__fallback-note">free-text is the secondary path — recognition usually beats recall here.</p>
+      </div>
+    </section>
+
+    <nav class="nav" aria-label="Surfaces">
+      <a href="#today"   data-route="today">focus</a>
+      <a href="#capture" data-route="capture">capture</a>
+      <a href="#reading" data-route="reading">reading</a>
+      <a href="#actions" data-route="actions">queue</a>
+      <a href="#search"  data-route="search">find</a>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast__msg" id="toast-msg">—</span>
+      <button class="toast__action" id="toast-action">undo</button>
+    </div>
+
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

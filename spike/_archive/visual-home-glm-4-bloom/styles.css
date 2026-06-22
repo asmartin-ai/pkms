@@ -1,0 +1,1058 @@
+/* ============================================================================
+   PKMS "the bloom" — design system #4
+   Vision: a warm pastel, sensory-calibrated daily edition. Built from research
+   (Tiimo's soothing palette, Things 3's Logbook, Readwise's half-life resurface,
+   Goblin Tools' gentle tone, The Browser's bounded edition, Calm Tech's
+   peripheral→center). Deliberately NOT cream-serif (#1), NOT dark material (#2),
+   NOT stark minimal (#3) — this is the "soft, friendly, GAAD-aware" take.
+   See RESEARCH.md for provenance.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. Tokens — Tiimo-inspired pastels, explicitly sensory-calibrated (GAAD)
+   Low contrast, rounded, warm — designed to reduce visual stress, not "pretty."
+   No red. No ochre/sage/brass (those were #1/#2). Pastels throughout.
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Ground — warm dawn pastel */
+  --dawn:          #f7f1ea;
+  --dawn-raised:   #fdf8f2;
+  --dawn-deep:     #efe6da;
+
+  /* Ink — soft warm brown, not stark black */
+  --ink:           #4a3f33;
+  --ink-soft:      #756857;
+  --ink-faint:     #a59886;
+  --ink-ghost:     #c8bca9;
+  --rule:          #e4d8c6;
+
+  /* Pastel accents — one per surface, all low-saturation, sensory-friendly */
+  --blossom:       #d9a8b8;   /* dusty rose — the one thing, the hero */
+  --blossom-deep:  #b07f93;
+  --blossom-wash:  #f5e3ea;
+
+  --sky:           #a8c4d9;   /* soft sky — the curious question */
+  --sky-deep:      #7a9bb3;
+  --sky-wash:      #e3edf4;
+
+  --sage:          #b8cca8;   /* soft sage — reading */
+  --sage-deep:     #8aa573;
+  --sage-wash:     #e8efe0;
+
+  --honey:         #e8c98a;   /* soft honey — the rhythm partition (Fresh) */
+  --honey-deep:    #b89a55;
+  --honey-wash:    #f7eed6;
+
+  --lavender:      #c5b8d9;   /* soft lavender — the rhythm partition (Later) */
+  --lavender-deep: #9a86b8;
+  --lavender-wash: #ece6f2;
+
+  /* Completion — soft mint, never aggressive green */
+  --mint:          #9bc9a8;
+  --mint-deep:     #6fa07c;
+  --mint-wash:     #e4f0e7;
+
+  /* Documented absence: no red, no bright/saturated colors. (HONESTY.md.) */
+
+  /* Type — Nunito (rounded sans) for the gentle, friendly tone */
+  --display: "Nunito", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sans:    "Nunito", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:    "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale — moderate, readable, not huge */
+  --step--2: clamp(0.70rem, 0.68rem + 0.10vw, 0.78rem);
+  --step--1: clamp(0.82rem, 0.78rem + 0.18vw, 0.92rem);
+  --step-0:  clamp(0.98rem, 0.92rem + 0.25vw, 1.12rem);
+  --step-1:  clamp(1.22rem, 1.10rem + 0.55vw, 1.62rem);
+  --step-2:  clamp(1.55rem, 1.30rem + 1.10vw, 2.25rem);
+  --step-3:  clamp(2.00rem, 1.60rem + 1.80vw, 3.00rem);
+  --step-4:  clamp(2.60rem, 1.90rem + 3.00vw, 4.20rem);
+
+  /* Layout — generous, breathable, never dense */
+  --measure: 36rem;
+  --gutter: clamp(1.25rem, 0.75rem + 2.5vw, 2.75rem);
+  --stack: clamp(0.85rem, 0.65rem + 0.8vw, 1.35rem);
+  --block-gap: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+
+  /* Rounded — the shape language. Soft corners everywhere. */
+  --r-sm: 8px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 100px;
+
+  /* Motion — gentle, slow, organic (blooms, not snaps) */
+  --ease: cubic-bezier(0.34, 1.4, 0.64, 1); /* gentle overshoot */
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 200ms;
+  --dur: 420ms;
+  --dur-bloom: 800ms;
+}
+
+/* ----------------------------------------------------------------------------
+   2. Reset + base
+   ---------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--dawn);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  font-weight: 500;
+  min-height: 100vh;
+
+  /* A very faint warm wash at the top, like dawn light. */
+  background-image:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(232, 201, 138, 0.18), transparent 60%);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0 0 1em; max-width: var(--measure); }
+p:last-child { margin-bottom: 0; }
+
+a {
+  color: var(--blossom-deep);
+  text-decoration: underline;
+  text-decoration-color: var(--blossom);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  transition: color var(--dur-fast) var(--ease-soft);
+}
+a:hover { color: var(--ink); text-decoration-color: currentColor; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+::selection { background: var(--blossom-wash); color: var(--ink); }
+
+:focus-visible {
+  outline: 3px solid var(--sky-deep);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* ----------------------------------------------------------------------------
+   3. Layout shell — a soft "card stage" on the dawn
+   ---------------------------------------------------------------------------- */
+.garden {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: var(--gutter);
+  min-height: 100vh;
+}
+
+/* Masthead — gentle, rounded */
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--dawn-raised);
+  border-radius: var(--r-lg);
+  margin-bottom: var(--block-gap);
+  box-shadow: 0 2px 12px rgba(74, 63, 51, 0.04);
+}
+.masthead__title {
+  font-family: var(--display);
+  font-size: var(--step-1);
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.018em;
+}
+.masthead__title small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--blossom-deep);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+}
+.masthead__date {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  margin-top: 0.2rem;
+}
+
+/* Salience knob — soft segmented control */
+.salience {
+  display: inline-flex;
+  background: var(--dawn-deep);
+  border-radius: var(--r-pill);
+  padding: 0.22rem;
+}
+.salience__label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--ink-faint);
+  padding: 0 0.4rem 0 0.6rem;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  align-self: center;
+}
+.salience button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--r-pill);
+  transition: background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft);
+}
+.salience button:hover { color: var(--ink); }
+.salience button[aria-pressed="true"] {
+  background: var(--blossom);
+  color: white;
+  box-shadow: 0 2px 6px rgba(217, 168, 184, 0.5);
+}
+
+/* Nav — pill-shaped */
+.nav {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: var(--block-gap);
+  flex-wrap: wrap;
+}
+.nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--r-pill);
+  background: var(--dawn-raised);
+  transition: background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft);
+}
+.nav a:hover { background: var(--dawn-deep); color: var(--ink); }
+.nav a[aria-current="page"] {
+  background: var(--blossom-wash);
+  color: var(--blossom-deep);
+}
+.nav__spacer { flex: 1; }
+
+/* ----------------------------------------------------------------------------
+   4. THE BLOOM — the one thing, as a soft card with a "petal" shape
+   ---------------------------------------------------------------------------- */
+.bloom {
+  background: var(--blossom-wash);
+  border-radius: var(--r-xl);
+  padding: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
+  margin-bottom: var(--block-gap);
+  position: relative;
+  overflow: hidden;
+  animation: bloom-open var(--dur-bloom) var(--ease) both;
+}
+@keyframes bloom-open {
+  from { opacity: 0; transform: scale(0.96); border-radius: var(--r); }
+  to   { opacity: 1; transform: scale(1); border-radius: var(--r-xl); }
+}
+
+/* A soft radial "glow" at the top-right — the blossom's warmth */
+.bloom::before {
+  content: "";
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(232, 201, 138, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.bloom__kicker {
+  font-family: var(--mono);
+  font-size: 0.70rem;
+  color: var(--blossom-deep);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: var(--stack);
+  display: block;
+  position: relative;
+}
+
+/* Re-entry lede — gentle, warm */
+.bloom__lede {
+  font-family: var(--display);
+  font-size: var(--step-1);
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin-bottom: calc(var(--stack) * 1.5);
+  max-width: 32rem;
+  position: relative;
+}
+.bloom__lede strong { color: var(--ink); font-weight: 800; }
+
+.bloom__sub {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  line-height: 1.75;
+  margin-bottom: calc(var(--stack) * 1.5);
+  padding: var(--stack) 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--r);
+  border-left: 3px solid var(--blossom);
+  position: relative;
+}
+.bloom__sub ul { list-style: none; margin: 0; padding: 0; }
+.bloom__sub li { margin-bottom: 0.3rem; }
+.bloom__sub li::before { content: "🌸 "; opacity: 0.7; margin-right: 0.3rem; }
+
+/* THE action — the heart of the bloom */
+.bloom__action {
+  font-family: var(--display);
+  font-size: var(--step-3);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: var(--stack);
+  position: relative;
+}
+.bloom__action-verb {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.28em;
+  font-weight: 600;
+  color: var(--blossom-deep);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: white;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--r-pill);
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+/* The DO button — pill, soft, inviting */
+.bloom__do {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--blossom-deep);
+  color: white;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--step-1);
+  padding: 0.85rem 1.6rem 0.95rem;
+  border-radius: var(--r-pill);
+  border: 0;
+  margin-top: var(--stack);
+  box-shadow: 0 4px 14px rgba(176, 127, 147, 0.4);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease-soft);
+}
+.bloom__do:hover {
+  transform: translateY(-2px);
+  background: var(--ink);
+  box-shadow: 0 6px 18px rgba(74, 63, 51, 0.3);
+}
+.bloom__do:active { transform: translateY(0); }
+.bloom__do-size {
+  font-family: var(--mono);
+  font-size: 0.55em;
+  font-weight: 600;
+  background: rgba(255,255,255,0.25);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--r-pill);
+}
+
+/* Fold-in progress — gentle "N of M" pill */
+.bloom__fold {
+  margin-top: calc(var(--stack) * 1.5);
+  padding-top: var(--stack);
+  border-top: 1px dashed var(--blossom);
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  font-weight: 600;
+  position: relative;
+}
+.bloom__fold-progress {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: white;
+  background: var(--honey-deep);
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+}
+.bloom__fold-hint {
+  color: var(--ink-faint);
+  margin-left: auto;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ----------------------------------------------------------------------------
+   5. Rhythm partition — Fresh / Later (Things 3 "This Evening" generalized,
+   Tiimo visual flow, clock-free)
+   ---------------------------------------------------------------------------- */
+.rhythm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: var(--block-gap);
+}
+@media (max-width: 36rem) {
+  .rhythm { grid-template-columns: 1fr; }
+}
+
+.rhythm__col {
+  background: var(--dawn-raised);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.35rem;
+}
+.rhythm__col--fresh {
+  background: var(--honey-wash);
+}
+.rhythm__col--later {
+  background: var(--lavender-wash);
+}
+.rhythm__kicker {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.rhythm__col--fresh .rhythm__kicker { color: var(--honey-deep); }
+.rhythm__col--later .rhythm__kicker { color: var(--lavender-deep); }
+.rhythm__kicker-glyph { font-size: 0.9em; }
+
+.rhythm__item {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+}
+.rhythm__item:last-child { border-bottom: 0; }
+.rhythm__item-title {
+  font-family: var(--display);
+  font-size: var(--step-0);
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+  line-height: 1.3;
+}
+.rhythm__item-first {
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.rhythm__item-first-verb {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--blossom-deep);
+  margin-right: 0.3rem;
+}
+.rhythm__item-meta {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  margin-top: 0.25rem;
+}
+.rhythm__item-toggle {
+  background: transparent;
+  border: 0;
+  color: var(--mint-deep);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0;
+  margin-top: 0.3rem;
+  text-decoration: underline;
+  text-decoration-color: var(--mint);
+  text-underline-offset: 3px;
+}
+.rhythm__item-toggle:hover { color: var(--ink); }
+.rhythm__item--done .rhythm__item-title {
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-faint);
+  color: var(--ink-faint);
+}
+.rhythm__item--done .rhythm__item-first { opacity: 0.6; }
+
+/* ----------------------------------------------------------------------------
+   6. Ambient cards — the peripheral tray (Calm Tech peripheral→center)
+   ---------------------------------------------------------------------------- */
+.ambient {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin-bottom: var(--block-gap);
+}
+@media (min-width: 44rem) {
+  .ambient { grid-template-columns: 1fr 1fr; }
+}
+
+.card {
+  background: var(--dawn-raised);
+  border-radius: var(--r-lg);
+  padding: 1.35rem 1.45rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-fast) var(--ease-soft);
+}
+.card:hover { transform: translateY(-2px); }
+
+.card--sky {
+  background: var(--sky-wash);
+}
+.card--sage {
+  background: var(--sage-wash);
+}
+
+.card__kind {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+  display: block;
+}
+.card--sky .card__kind { color: var(--sky-deep); }
+.card--sage .card__kind { color: var(--sage-deep); }
+
+.card__title {
+  font-family: var(--display);
+  font-size: var(--step-1);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.55rem;
+  color: var(--ink);
+}
+.card__title a { text-decoration: none; color: inherit; }
+.card__title a:hover { color: var(--blossom-deep); }
+
+/* The curious question — italic, soft */
+.card__question {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--sky-deep);
+  margin-bottom: 0.55rem;
+}
+
+.card__why {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-bottom: 0.75rem;
+}
+.card__why::before { content: "why · "; opacity: 0.7; }
+
+/* Half-life indicator — Readwise-inspired, clock-free */
+.card__halflife {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--ink-faint);
+  background: rgba(255,255,255,0.6);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--r-pill);
+  display: inline-block;
+  margin-bottom: 0.85rem;
+}
+
+.card__cost {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--sage-deep);
+  background: rgba(255,255,255,0.7);
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--r-pill);
+  margin-bottom: 0.75rem;
+}
+
+.card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.card__actions button {
+  background: white;
+  border: 0;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.4rem 0.95rem;
+  border-radius: var(--r-pill);
+  color: var(--ink-soft);
+  transition: background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft);
+}
+.card__actions button:hover { background: var(--ink); color: white; }
+.card__actions .btn--ghost {
+  background: transparent;
+  color: var(--ink-faint);
+}
+.card__actions .btn--ghost:hover { background: var(--ink-faint); color: white; }
+
+/* ----------------------------------------------------------------------------
+   7. Logbook — Things 3 inspired wins-only archive (Pebbles)
+   ---------------------------------------------------------------------------- */
+.logbook {
+  background: var(--mint-wash);
+  border-radius: var(--r-lg);
+  padding: 1.35rem 1.45rem;
+  margin-bottom: var(--block-gap);
+}
+.logbook__kicker {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mint-deep);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.pebbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pebble {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: white;
+  padding: 0.3rem 0.75rem 0.35rem 0.45rem;
+  border-radius: var(--r-pill);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  font-weight: 700;
+  color: var(--ink-soft);
+  box-shadow: 0 2px 6px rgba(111, 160, 124, 0.2);
+  animation: pebble-bloom var(--dur) var(--ease) both;
+}
+.pebble__dot {
+  width: 0.55rem; height: 0.55rem;
+  border-radius: 50%;
+  background: var(--mint);
+  flex-shrink: 0;
+}
+.pebble:nth-child(3n) .pebble__dot { background: var(--blossom); }
+.pebble:nth-child(4n) .pebble__dot { background: var(--honey-deep); }
+@keyframes pebble-bloom {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.pebbles__caption {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--mint-deep);
+  margin-left: 0.4rem;
+  font-weight: 600;
+}
+.pebbles--empty {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-0);
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------------------
+   8. The bounded edition — "today's edition" framing + a clear ending
+   ---------------------------------------------------------------------------- */
+.edition-mark {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: var(--stack);
+}
+.edition-mark::before, .edition-mark::after {
+  content: " ❀ ";
+  color: var(--blossom);
+}
+
+/* The closing/invitation — a clear end to today's edition */
+.closing {
+  background: var(--dawn-raised);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: var(--block-gap);
+}
+.closing__line {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-1);
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+.closing__sub {
+  font-family: var(--mono);
+  font-size: 0.70rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* ----------------------------------------------------------------------------
+   9. BLOOM CLEARED — the bounded edition's end state
+   ---------------------------------------------------------------------------- */
+.cleared {
+  background: var(--mint-wash);
+  border-radius: var(--r-xl);
+  padding: clamp(2rem, 1.5rem + 2vw, 3rem);
+  text-align: center;
+  margin-bottom: var(--block-gap);
+  animation: bloom-open var(--dur-bloom) var(--ease) both;
+}
+.cleared__pre {
+  font-family: var(--mono);
+  font-size: 0.70rem;
+  color: var(--mint-deep);
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  margin-bottom: var(--stack);
+}
+.cleared__stamp {
+  font-family: var(--display);
+  font-size: var(--step-4);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--mint-deep);
+  margin-bottom: var(--stack);
+  animation: bloom-celebrate var(--dur-bloom) var(--ease) both;
+}
+@keyframes bloom-celebrate {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.cleared__sub {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-1);
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: var(--block-gap);
+}
+.cleared__pebbles { justify-content: center; }
+
+/* ----------------------------------------------------------------------------
+   10. Capture — warm, friendly, big soft box
+   ---------------------------------------------------------------------------- */
+.capture {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+.capture__hint {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-0);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: var(--stack);
+  text-align: center;
+}
+.capture__field {
+  width: 100%;
+  min-height: 14rem;
+  padding: 1.35rem 1.5rem;
+  border: 2px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--dawn-raised);
+  font-family: var(--display);
+  font-size: var(--step-1);
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ink);
+  resize: vertical;
+  transition: border-color var(--dur-fast) var(--ease-soft), box-shadow var(--dur-fast) var(--ease-soft);
+}
+.capture__field:focus {
+  outline: none;
+  border-color: var(--blossom);
+  box-shadow: 0 0 0 4px var(--blossom-wash);
+}
+.capture__field::placeholder { color: var(--ink-faint); font-style: italic; }
+.capture__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--stack);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.capture__kbd {
+  background: var(--dawn-deep);
+  border-radius: var(--r-sm);
+  padding: 0.12rem 0.45rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.capture__confirm {
+  background: var(--mint-wash);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-2);
+  font-weight: 800;
+  color: var(--mint-deep);
+  animation: bloom-open var(--dur) var(--ease) both;
+}
+.capture__confirm small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  font-style: normal;
+  font-weight: 400;
+  margin-top: var(--stack);
+}
+
+/* ----------------------------------------------------------------------------
+   11. Reading queue
+   ---------------------------------------------------------------------------- */
+.reading-list { list-style: none; margin: 0; padding: 0; }
+.reading-item {
+  background: var(--sage-wash);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 0.85rem;
+  transition: transform var(--dur-fast) var(--ease-soft);
+}
+.reading-item:hover { transform: translateY(-2px); }
+.reading-item__title {
+  font-family: var(--display);
+  font-size: var(--step-1);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.5rem;
+}
+.reading-item__title a { text-decoration: none; color: var(--ink); }
+.reading-item__title a:hover { color: var(--sage-deep); }
+.reading-item__row {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+.reading-item__cost {
+  color: var(--sage-deep);
+  background: rgba(255,255,255,0.7);
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+}
+
+/* ----------------------------------------------------------------------------
+   12. Search — recognition-first picker
+   ---------------------------------------------------------------------------- */
+.search-affordance {
+  text-align: center;
+  padding: var(--block-gap) 0;
+}
+.search-affordance__prompt {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-1);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.search-affordance__prompt button {
+  background: transparent;
+  border: 0;
+  color: var(--blossom-deep);
+  font: inherit;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: var(--blossom);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.search-affordance__prompt button:hover { color: var(--ink); }
+
+.search { max-width: 36rem; margin: 0 auto; }
+.search__label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--blossom-deep);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: var(--stack);
+  display: block;
+}
+.search__hint {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: var(--step-1);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: calc(var(--stack) * 1.5);
+}
+.search__candidates { list-style: none; margin: 0 0 calc(var(--stack) * 1.5); padding: 0; }
+.search__candidates li {
+  background: var(--dawn-raised);
+  border-radius: var(--r);
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 0.4rem;
+  font-family: var(--display);
+  font-size: var(--step-0);
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background var(--dur-fast) var(--ease-soft), transform var(--dur-fast) var(--ease-soft);
+}
+.search__candidates li:hover {
+  background: var(--blossom-wash);
+  transform: translateX(4px);
+}
+.search__candidates li small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  font-weight: 400;
+  margin-top: 0.2rem;
+}
+.search__input {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border: 2px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--dawn-raised);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  font-weight: 600;
+  color: var(--ink);
+}
+.search__input:focus { outline: none; border-color: var(--blossom); }
+.search__input::placeholder { color: var(--ink-faint); font-style: italic; }
+.search__fallback-note {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------------------------
+   13. Toast — soft pill, ambient
+   ---------------------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: var(--gutter);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--r-pill);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-soft), transform var(--dur-fast) var(--ease-soft);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: 0 8px 24px rgba(74, 63, 51, 0.25);
+  max-width: calc(100vw - 2rem);
+}
+.toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.toast__action {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--r-pill);
+}
+.toast__action:hover { background: rgba(255,255,255,0.35); }
+
+/* ----------------------------------------------------------------------------
+   14. Density levels
+   ---------------------------------------------------------------------------- */
+body.density-calm .block--rhythm,
+body.density-calm .block--ambient,
+body.density-calm .search-affordance { display: none; }
+
+body.density-more .block--rhythm { display: grid; }
+body.density-more .block--ambient { display: grid; }
+body.density-more .search-affordance { display: none; }
+
+body.density-everything .block--rhythm { display: grid; }
+body.density-everything .block--ambient { display: grid; }
+body.density-everything .search-affordance { display: block; }
+body.density-everything .rhythm__more { display: block !important; }
+
+.rhythm__more[hidden] { display: none; }
+.is-hidden { display: none !important; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   15. Reduced motion
+   ---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .pebble, .bloom, .cleared, .cleared__stamp { animation: none; }
+}
+
+@media print {
+  .nav, .salience, .search-affordance, .toast { display: none; }
+  .bloom__do, .card__actions button, .rhythm__item-toggle { display: none; }
+}
