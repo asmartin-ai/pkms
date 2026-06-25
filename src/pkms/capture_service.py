@@ -4,13 +4,19 @@ Graduated from spike/capture_server.py after the Pixel ramp validated G2.
 Stdlib only; meant to run resident (startup shortcut) and be reached over
 the tailnet (HTTP Shortcuts tile on the phone — see docs/pixel-capture-setup.md).
 
-Surfaces (all token-gated except /health):
+Surfaces (the static shell is open; all data routes are token-gated):
   GET  /              302 redirect → /web/ (the new-tab poster front door)
-  GET  /web/*         static assets for the new-tab poster + mobile PWA
-  GET  /api/today     today_view() as JSON — the app's only data source
+  GET  /web/*         static assets — OPEN (no token; browsers fetch sub-resources
+                      without ?token=, and the shell holds no vault data)
+  GET  /api/today     today_view() as JSON — token-gated (the app's only data source)
   GET  /capture-page  the original minimal capture form (kept as a side door)
   POST /capture       append a capture to vault/inbox/ (phone tile, web box)
   GET  /health        liveness, no token
+
+Why /web/* is open: the shell (index.html, app.js, styles.css, sw.js) contains
+zero vault content. Every datum flows through /api/today, which stays gated —
+and app.js shows its own "token required" banner when that fetch 403s. Token-
+gating the shell broke browser sub-resource loads (no ?token= on <script>/<link>).
 
 A token is ALWAYS required — the service refuses to start without one.
 Resolution order: explicit --token / PKMS_CAPTURE_TOKEN env, else
@@ -97,7 +103,17 @@ def make_server(vault: Path, index_dir: Path, host: str, port: int,
             path = urlparse(self.path).path
             if path == "/health":
                 return self._send(200, "ok")
-            if not self._authed():  # every surface below is token-gated
+
+            # The static shell (/web/*) is served WITHOUT a token. Browsers
+            # fetch sub-resources (styles.css, app.js, sw.js) via <script>/<link>
+            # which do NOT carry the ?token= query — gating them 403s the
+            # sub-resource and the page never runs. The shell holds no vault
+            # data (it's all fetched via /api/today, which stays gated below);
+            # app.js shows its own "token required" banner when that fetch 403s.
+            if path.startswith("/web/"):
+                return self._serve_static(path)
+
+            if not self._authed():  # every data surface below is token-gated
                 return self._send(403, "token required")
 
             # Desktop front door: /  → 302 redirect to the new-tab poster at /web/.
@@ -108,10 +124,6 @@ def make_server(vault: Path, index_dir: Path, host: str, port: int,
                 self.send_header("Location", "/web/" + ("?" + qs if qs else ""))
                 self.end_headers()
                 return
-
-            # Static assets for the new-tab poster + mobile PWA.
-            if path.startswith("/web/"):
-                return self._serve_static(path)
 
             if path == "/capture-page":
                 self._send(200, CAPTURE_PAGE, "text/html; charset=utf-8")
