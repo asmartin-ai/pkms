@@ -38,17 +38,78 @@ def _get(url):
         return r.status, r.read().decode("utf-8"), r.headers.get("Content-Type", "")
 
 
+def _get_no_redirect(url):
+    """GET that does NOT follow redirects, returning (status, location_header)."""
+    import urllib.request
+    class _NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, *a, **k):
+            return None
+    no_redir = urllib.request.build_opener(_NoRedirect)
+    try:
+        with no_redir.open(url, timeout=5) as r:  # noqa: S310 — loopback only
+            return r.status, r.headers.get("Location", "")
+    except HTTPError as e:
+        # a 302 surfaces as HTTPError under the no-redirect handler
+        return e.code, e.headers.get("Location", "")
+
+
 def test_health_needs_no_token(service):
     status, body, _ = _get(service + "/health")
     assert status == 200 and body == "ok"
 
 
-def test_root_serves_today_app_with_token(service):
-    status, body, ctype = _get(f"{service}/?token={TOKEN}")
+def test_root_redirects_to_web(vault, index_dir, service):
+    """The desktop front door is now /web/ (the new-tab poster); / 302-redirects there."""
+    status, location = _get_no_redirect(f"{service}/?token={TOKEN}")
+    assert status == 302
+    assert location.startswith("/web/")
+
+
+def test_root_redirect_preserves_token_query(service):
+    """The 302 to /web/ carries the ?token=… so the authed page loads without re-prompt."""
+    _, location = _get_no_redirect(f"{service}/?token={TOKEN}")
+    assert "token=" in location
+
+
+def test_web_rejects_missing_token(service):
+    """Token-gating applies to /web/* like every other surface (design-language: no open data)."""
+    with pytest.raises(HTTPError) as exc:
+        _get(f"{service}/web/")
+    assert exc.value.code == 403
+
+
+def test_web_index_html_served(service):
+    """GET /web/?token=... returns the new-tab poster HTML, which loads its data layer (app.js)."""
+    status, body, ctype = _get(f"{service}/web/?token={TOKEN}")
     assert status == 200
     assert "text/html" in ctype
-    assert "/api/today" in body  # the app fetches its data from there
-    assert "pkms · today" in body
+    assert "pkms" in body.lower()
+    # the page loads app.js (Task 4 wires app.js to fetch /api/today).
+    assert 'app.js' in body
+
+
+def test_web_app_js_is_served_and_will_fetch_api_today(service):
+    """app.js is served; once Task 4 wires it, it fetches /api/today (live data)."""
+    status, body, ctype = _get(f"{service}/web/app.js?token={TOKEN}")
+    assert status == 200 and "text/javascript" in ctype
+    # Task 4 replaces inlined fake data with fetch('/api/today'); until then this
+    # asserts the script is the real, non-empty app logic.
+    assert "renderToday" in body
+
+
+def test_web_static_assets_served_with_correct_types(service):
+    """styles.css, app.js, manifest.webmanifest, icon.svg serve with right content-types."""
+    cases = [
+        ("/web/styles.css", "text/css"),
+        ("/web/app.js", "text/javascript"),
+        ("/web/manifest.webmanifest", "application/manifest+json"),
+        ("/web/icon.svg", "image/svg+xml"),
+    ]
+    for path, expected_ctype in cases:
+        status, body, ctype = _get(f"{service}{path}?token={TOKEN}")
+        assert status == 200, f"{path} returned {status}"
+        assert ctype.startswith(expected_ctype), f"{path}: expected {expected_ctype}, got {ctype}"
+        assert len(body) > 0
 
 
 def test_root_rejects_missing_token(service):
