@@ -43,10 +43,15 @@
 
   /* Never used: red. (Documented absence — see HONESTY.md.) */
 
-  /* Type families */
-  --serif: "Fraunces", "Iowan Old Style", "Apple Garamond", Georgia, "Times New Roman", serif;
-  --sans:  "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono:  "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  /* Type families — Cormorant Garamond + Barlow + Fira Code.
+     Selected via local-LLM-delegated research (gpt-oss-20b; see
+     spike/newtab-firefox/TYPEFACE-RESEARCH.md): Cormorant brings a calligraphic
+     serif with more authored personality than Fraunces; Barlow avoids Inter's
+     generic-SaaS read while staying humanist; Fira Code's rounded terminals read
+     less "coder" than JetBrains Mono. Fallback stacks degrade gracefully offline. */
+  --serif: "Cormorant Garamond", "Iowan Old Style", "Apple Garamond", Georgia, "Times New Roman", serif;
+  --sans:  "Barlow", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono:  "Fira Code", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
 
   /* Type scale — fluid. The lede is the largest thing on the page. */
   --step--1: clamp(0.78rem, 0.76rem + 0.10vw, 0.84rem);
@@ -107,12 +112,11 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--serif);
-  font-weight: 460;
+  font-weight: 500;
   line-height: 1.18;
   letter-spacing: -0.01em;
   margin: 0;
   color: var(--ink);
-  font-variation-settings: "opsz" 24, "SOFT" 50, "WONK" 0;
 }
 
 p { margin: 0 0 1em; max-width: var(--measure); }
@@ -164,7 +168,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .masthead__title {
   font-family: var(--serif);
   font-size: var(--step-1);
-  font-weight: 480;
+  font-weight: 500;
   letter-spacing: -0.015em;
 }
 .masthead__title em { font-style: italic; color: var(--ink-soft); font-weight: 400; }
@@ -238,14 +242,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-family: var(--serif);
   font-size: var(--step-5);          /* largest type on the page */
   line-height: 1.1;
-  font-weight: 420;
+  font-weight: 400;
   color: var(--ink);
   letter-spacing: -0.02em;
   max-width: 22ch;                    /* keep it a finite, glanceable line */
   margin: 0;
-  font-variation-settings: "opsz" 144, "SOFT" 50;
 }
-.lede strong { font-weight: 620; color: var(--ink); }
+.lede strong { font-weight: 600; color: var(--ink); }
 .lede em { font-style: italic; }
 .lede__sub {
   margin-top: 1rem;
@@ -273,7 +276,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: var(--radius);
   font-family: var(--serif);
   font-size: var(--step-1);
-  font-weight: 460;
+  font-weight: 500;
   text-align: left;
   letter-spacing: -0.005em;
   line-height: 1.3;
@@ -405,7 +408,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-style: italic;
   font-size: var(--step-1);
   line-height: 1.32;
-  font-weight: 420;
+  font-weight: 400;
   color: var(--sage-deep);
   letter-spacing: -0.01em;
   margin: 0;
@@ -484,7 +487,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card__title {
   font-family: var(--serif);
   font-size: var(--step-1);
-  font-weight: 480;
+  font-weight: 500;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
@@ -525,7 +528,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .action__title {
   font-family: var(--serif);
   font-size: var(--step-1);
-  font-weight: 480;
+  font-weight: 500;
   line-height: 1.25;
   letter-spacing: -0.008em;
   grid-column: 1 / 2;
@@ -718,7 +721,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .reading-item__title {
   font-family: var(--serif);
   font-size: var(--step-1);
-  font-weight: 480;
+  font-weight: 500;
   line-height: 1.3;
   margin-bottom: 0.35rem;
 }
@@ -817,7 +820,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: var(--radius);
   transform: rotate(-3deg);
   animation: stamp-press var(--dur-stamp) var(--ease) both;
-  font-variation-settings: "opsz" 144;
 }
 .cleared__sub {
   font-family: var(--serif);
