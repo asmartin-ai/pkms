@@ -88,13 +88,13 @@ def test_web_index_html_served(service):
     assert 'app.js' in body
 
 
-def test_web_app_js_is_served_and_will_fetch_api_today(service):
-    """app.js is served; once Task 4 wires it, it fetches /api/today (live data)."""
+def test_web_app_js_fetches_api_today(service):
+    """app.js must fetch /api/today (live data), not rely on inlined fake JSON."""
     status, body, ctype = _get(f"{service}/web/app.js?token={TOKEN}")
     assert status == 200 and "text/javascript" in ctype
-    # Task 4 replaces inlined fake data with fetch('/api/today'); until then this
-    # asserts the script is the real, non-empty app logic.
-    assert "renderToday" in body
+    assert "fetch(" in body and "/api/today" in body
+    # the inlined fake-data constants must be gone (mockup-only artifact)
+    assert "inbox_new: 3" not in body, "app.js still carries inlined fake data"
 
 
 def test_web_static_assets_served_with_correct_types(service):
