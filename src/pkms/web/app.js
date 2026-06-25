@@ -10,223 +10,45 @@
   "use strict";
 
   /* ---------------------------------------------------------------------------
-     1. FAKE DATA — maps cleanly to the real /api/today contract.
-     Field names verified against:
-       date, breadcrumb.{name,lines}, inbox_new, done_today,
-       next_read.{title,minutes,promoted}, resurface.{title,question,why,path},
-       next_actions[].{note,title,text,size,first_action}, more_notes
+     1. LIVE DATA — fetched from /api/today (the app's only data source).
+     Token rides in location.search (?token=...). Shape is the exact contract
+     from today.py:172-184; the mockup's inlined fake JSON is gone.
+     Overflow actions, recognition cards, reading queue, pebbles, recent notes
+     are proposed endpoints (see DATA-CONTRACT.md). Until those ship, the
+     optional surfaces stay empty and calm mode (the default) hides them.
      --------------------------------------------------------------------------- */
-
-  /// GET /api/today — exact shape from today.py:172-184
-  const TODAY = {
-    date: "2026-06-24",
-    breadcrumb: {
-      name: "2026-06-21",
-      lines: [
-        "folded the F6 promote path-mismatch fix into the sweep lane",
-        "drafted the GLM frontend brief — blind take, mockup-first",
-        "started slicing the design-language §4 decay-card work",
-        "left the B6 quiet-decay-line copy half-written",
-      ],
-    },
-    inbox_new: 3,
-    done_today: 2,
-    next_read: {
-      title: "The Cost of Interrupted Work: More Faster and Worse",
-      minutes: 12,
-      promoted: "2026-06-18",
-    },
-    resurface: {
-      title: "Barkley on the performance/knowledge distinction",
-      question: "Still chewing on what 'performance disorder' means in practice?",
-      why: "short · cited in 4 of your recent notes",
-      path: "resources/barkley-performance-disorder.md",
-    },
-    next_actions: [
-      {
-        note: "projects/newtab-pivot.md",
-        title: "New-tab pivot",
-        text: "land the Firefox new-tab mockup + decision gates",
-        size: "30m",
-        first_action: "open the new spike and re-read the HARD BOUNDS",
-        done_when: "the mockup opens clean and the G1 reconciliation is written",
-      },
-      {
-        note: "projects/sweep-bakeoff.md",
-        title: "Sweep bakeoff",
-        text: "close out the B6 quiet-decay-line copy",
-        size: "15m",
-        first_action: "open vault/projects/sweep-bakeoff.md and find the half-written line",
-        done_when: "the decay-line copy is merged and reads ambient, not accusatory",
-      },
-      {
-        note: "projects/decay-cards.md",
-        title: "Decay cards",
-        text: "sketch the §4 reshape-before-fade card states",
-        size: "45m",
-        first_action: "make a list of the 3 card variants (reshaped / not-now / stashed)",
-        done_when: "each state has a one-line spec and a shame-free label",
-      },
-      {
-        note: "projects/capture-on-ramp.md",
-        title: "Capture on-ramp",
-        text: "decide on the keyboard shortcut for the capture ramp",
-        size: "10m",
-        first_action: "open the decisions log and add the gate",
-        done_when: "one option is picked with a one-line why",
-      },
-      {
-        note: "projects/indexer-rebuild.md",
-        title: "Indexer rebuild",
-        text: "write the regeneration test for the .as_posix() path invariant",
-        size: "20m",
-        first_action: "open src/pkms/indexer.py at line 25",
-        done_when: "the test fails when rel uses backslashes, passes with .as_posix()",
-      },
-      {
-        note: "projects/reading-queue-promote.md",
-        title: "Reading queue promote",
-        text: "wire the promoted-date sort into the queue view",
-        size: "25m",
-        first_action: "open today.py:124 (the queued-items sort)",
-        done_when: "queue renders oldest-promoted first, matches the design",
-      },
-      {
-        note: "projects/resurface-filter.md",
-        title: "Resurface filter",
-        text: "add the resurface:never frontmatter check to candidates",
-        size: "15m",
-        first_action: "open resurface.py and find filter_never",
-        done_when: "frontmatter flag is respected and tested",
-      },
-      {
-        note: "projects/honesty-section.md",
-        title: "Honesty section",
-        text: "audit the mockup for any forbidden patterns",
-        size: "10m",
-        first_action: "open HONESTY.md and run the absence checklist",
-        done_when: "every forbidden pattern is confirmed absent or explicitly flagged",
-      },
-    ],
-    more_notes: 4,
-  };
-
-  /// GET /api/next-actions overflow — the `more_notes` items past MAX_NOTES_SHOWN.
-  const MORE_ACTIONS = [
-    {
-      note: "projects/quiet-decay-line.md",
-      title: "Quiet decay line",
-      text: "land the ambient disclosure copy for sweep waves",
-      size: "15m",
-      first_action: "open vault/projects/sweep-bakeoff.md and find the half-written line",
-      done_when: "decay line reads ambient and dismissable, never modal or alerting",
-    },
-    {
-      note: "projects/mobile-capture-latency.md",
-      title: "Mobile capture latency",
-      text: "measure the cold-start time of the capture ramp",
-      size: "20m",
-      first_action: "open the capture ramp on a cold mobile browser tab",
-      done_when: "latency is under the 2-second bar (§1) or a fix is filed",
-    },
-    {
-      note: "projects/pebble-reset-logic.md",
-      title: "Pebble reset logic",
-      text: "verify pebbles reset at local midnight with no debt",
-      size: "10m",
-      first_action: "open the pebbles data-contract spec (DATA-CONTRACT.md §4)",
-      done_when: "the reset invariant is tested and the no-debt property holds",
-    },
-    {
-      note: "projects/resurface-no-renag.md",
-      title: "Resurface no-renag",
-      text: "confirm the not-now window actually suppresses re-presentation",
-      size: "15m",
-      first_action: "open resurface.py and find the dismissal/offer bookkeeping",
-      done_when: "dismissed items do not reappear inside the no-renag window",
-    },
-  ];
-
-  /// GET /api/recognition-cards — shape from today.py:120-169 (exists, unwired).
-  const RECOGNITION_CARDS = [
-    {
-      kind: "reading",
-      title: "The Cost of Interrupted Work: More Faster and Worse",
-      why: "next in your reading queue",
-      minutes: 12,
-      promoted: "2026-06-18",
-    },
-    {
-      kind: "resurface",
-      title: "Barkley on the performance/knowledge distinction",
-      why: "short · cited in 4 of your recent notes",
-    },
-    {
-      kind: "reading",
-      title: "Recognition vs. recall in memory research (Gathercole)",
-      why: "next in your reading queue",
-      minutes: 18,
-      promoted: "2026-06-15",
-    },
-  ];
-
-  /// GET /api/reading-queue — proposed (see DATA-CONTRACT.md).
-  const READING_QUEUE = [
-    {
-      title: "The Cost of Interrupted Work: More Faster and Worse",
-      minutes: 12,
-      promoted: "2026-06-18",
-      why: "next up · shortest in the queue",
-      path: "resources/reading/cost-of-interrupted-work.md",
-    },
-    {
-      title: "Recognition vs. recall in memory research",
-      minutes: 18,
-      promoted: "2026-06-15",
-      why: "cited by three notes you've touched this week",
-      path: "resources/reading/recognition-vs-recall.md",
-    },
-    {
-      title: "Barkley — ADHD as a performance disorder (BK1–BK8)",
-      minutes: 25,
-      promoted: "2026-06-12",
-      why: "foundational · you've quoted it twice",
-      path: "resources/reading/barkley-performance-disorder.md",
-    },
-    {
-      title: "Loss aversion and the sunk-cost fallacy in personal archives",
-      minutes: null,
-      promoted: "2026-06-08",
-      why: "long read · no minutes recorded",
-      path: "resources/reading/loss-aversion-archives.md",
-    },
-  ];
-
-  /// GET /api/pebbles?date= — proposed (see DATA-CONTRACT.md).
-  const PEBBLES = {
-    date: "2026-06-24",
-    count: 2,
-    goal: null, // OFF by default — daily goal flirts with settings sprawl.
-    entries: [
-      { label: "folded the F6 promote fix", at: "09:42" },
-      { label: "drafted the GLM frontend brief", at: "11:15" },
-    ],
-  };
-
-  /// GET /api/recent-notes?limit=10 — proposed.
-  const RECENT_NOTES = [
-    { title: "New-tab pivot", path: "projects/newtab-pivot.md", touched: "today" },
-    { title: "PKMS design", path: "projects/pkms-design.md", touched: "yesterday" },
-    { title: "Sweep bakeoff", path: "projects/sweep-bakeoff.md", touched: "yesterday" },
-    { title: "Frontend design brief — GLM-5.2", path: "projects/pkms-design/frontend-design-brief-glm.md", touched: "yesterday" },
-    { title: "Decay cards", path: "projects/decay-cards.md", touched: "2 days ago" },
-    { title: "Barkley on performance disorders", path: "resources/barkley-performance-disorder.md", touched: "3 days ago" },
-    { title: "Capture on-ramp", path: "projects/capture-on-ramp.md", touched: "4 days ago" },
-    { title: "The Cost of Interrupted Work", path: "resources/reading/cost-of-interrupted-work.md", touched: "5 days ago" },
-  ];
+  let TODAY = null;          // populated by loadToday()
+  const MORE_ACTIONS = [];   // populated when /api/next-actions ships
+  const RECOGNITION_CARDS = [];
+  const READING_QUEUE = [];
+  const PEBBLES = { count: 0, goal: null, entries: [] };
+  const RECENT_NOTES = [];
 
   /// MAX_NOTES_SHOWN mirrors today.py:15.
   const MAX_NOTES_SHOWN = 8;
+
+  /// Fetch /api/today and render. The capture service serves this at the same
+  /// origin as /web/, so the fetch is same-origin + token-gated via ?token=...
+  async function loadToday() {
+    try {
+      const r = await fetch("/api/today" + location.search, {
+        headers: { Accept: "application/json" },
+      });
+      if (r.status === 403) return showError("token required — open with ?token=..."  );
+      if (!r.ok) return showError("couldn't load today (" + r.status + ")");
+      TODAY = await r.json();
+      // pebbles derive from done_today until /api/pebbles ships
+      PEBBLES.count = TODAY.done_today || 0;
+      if (state.route === "today") renderToday();
+    } catch (e) {
+      showError("couldn't reach the service — is pkms serve running?");
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-banner");
+    if (el) { el.textContent = msg; el.hidden = false; }
+  }
 
   /* ---------------------------------------------------------------------------
      2. STATE
@@ -290,6 +112,7 @@
      4. RENDER — Today (the poster centerpiece)
      --------------------------------------------------------------------------- */
   function renderToday() {
+    if (!TODAY) return;  // loadToday() re-calls renderToday() once data lands
     // Masthead date — quiet mono metadata, NOT a hero.
     $("#masthead-date").textContent = fmtDate(TODAY.date);
 
@@ -712,6 +535,7 @@
   function init() {
     wire();
     router();
+    loadToday();   // fetch live data; re-renders today when it lands
   }
 
   if (document.readyState === "loading") {
