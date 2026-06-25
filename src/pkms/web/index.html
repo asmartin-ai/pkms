@@ -203,5 +203,11 @@
   </div>
 
   <script src="app.js" defer></script>
+  <script>
+    // Register the PWA service worker (offline shell; /api/today stays network).
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+  </script>
 </body>
 </html>
