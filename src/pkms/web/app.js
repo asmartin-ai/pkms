@@ -90,9 +90,20 @@
   /// The lede renders the breadcrumb as prose. THIS is the page's glance anchor
   /// — it does the re-entry welcome-back job (§7) without a Momentum-style
   /// greeting. Gap logic: if no daily note yesterday, soften the lede — shame-free.
+  /// Empty-actions guard: when nothing is owed (the design's "win" state), the
+  /// lede says so calmly instead of dereferencing next_actions[0] (which would
+  /// throw and leave the poster half-rendered — no error banner, stuck on the
+  /// HTML-comment placeholder).
   function ledeText() {
     const bc = TODAY.breadcrumb;
     const action = TODAY.next_actions[0];
+    if (!action) {
+      // Nothing owed — the calm win state (fresh install, cleared, weekend).
+      return {
+        html: `Nothing's owed today. Come back when something sparks.`,
+        lines: [],
+      };
+    }
     if (!bc || !bc.name) {
       // Gap day — no breadcrumb. Soften, never bill.
       return {
@@ -113,6 +124,17 @@
      --------------------------------------------------------------------------- */
   function renderToday() {
     if (!TODAY) return;  // loadToday() re-calls renderToday() once data lands
+    try {
+      _renderTodayImpl();
+    } catch (e) {
+      // A render error must never leave the poster half-rendered (stuck on
+      // HTML-comment placeholders with no banner). Surface it explicitly.
+      console.error(e);
+      showError("today-view hit a render error — check the console");
+    }
+  }
+
+  function _renderTodayImpl() {
     // Masthead date — quiet mono metadata, NOT a hero.
     $("#masthead-date").textContent = fmtDate(TODAY.date);
 

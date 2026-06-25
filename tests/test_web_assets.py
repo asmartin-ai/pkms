@@ -34,3 +34,20 @@ def test_service_worker_exists_and_registered():
     assert sw.exists() and sw.stat().st_size > 0
     html = (WEB / "index.html").read_text(encoding="utf-8")
     assert "serviceWorker" in html and "sw.js" in html
+
+
+def test_app_js_guards_empty_next_actions():
+    """Regression: ledeText() must not dereference next_actions[0] when the list
+    is empty. /api/today returns next_actions: [] for the design-intended 'win'
+    state (fresh install, cleared, weekend). The old code threw a TypeError on
+    action.title, leaving the poster half-rendered (stuck on the HTML-comment
+    placeholder, no error banner). Source-level guard; the empty-actions branch
+    must precede the action.title dereference."""
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    # The guard must exist...
+    assert "if (!action)" in js, "ledeText must guard the empty-actions case"
+    # ...and it must come BEFORE the first action.title dereference (so the
+    # guard short-circuits before the throw).
+    guard = js.index("if (!action)")
+    first_deref = js.index("action.title")
+    assert guard < first_deref, "empty-actions guard must precede action.title dereference"
