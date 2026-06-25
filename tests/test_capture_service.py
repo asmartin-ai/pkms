@@ -71,11 +71,24 @@ def test_root_redirect_preserves_token_query(service):
     assert "token=" in location
 
 
-def test_web_rejects_missing_token(service):
-    """Token-gating applies to /web/* like every other surface (design-language: no open data)."""
-    with pytest.raises(HTTPError) as exc:
-        _get(f"{service}/web/")
-    assert exc.value.code == 403
+def test_web_shell_is_open_without_token(service):
+    """The static shell (/web/) is intentionally OPEN — browsers fetch
+    sub-resources (styles.css, app.js) via <script>/<link> which do NOT carry
+    ?token=, so gating them 403s the sub-resource and the page never runs.
+    The shell holds no vault data; the real data boundary is /api/today
+    (covered by test_api_today_rejects_bad_token)."""
+    status, body, ctype = _get(f"{service}/web/")
+    assert status == 200, "the static shell must load without a token"
+    assert "text/html" in ctype
+
+
+def test_web_subresources_load_without_token(service):
+    """Regression: browsers request <script src='app.js'> without ?token=.
+    styles.css + app.js must serve 200 without a token or the page breaks
+    in a real browser (app.js never runs → renders empty 'nothing owed')."""
+    for sub in ("/web/styles.css", "/web/app.js"):
+        status, _, _ = _get(service + sub)
+        assert status == 200, f"{sub} must load without ?token= (browser sub-resource)"
 
 
 def test_web_index_html_served(service):
