@@ -1,6 +1,10 @@
 // Minimal service worker for the PKMS new-tab/PWA shell.
-// Strategy: cache-first for static assets (instant tab-open, works offline),
-// network-only for /api/today (always-fresh data; if offline, the page shows
+// Strategy: stale-while-revalidate for static assets — serve cached on the
+// request (instant tab-open, works offline) but fetch the network copy in the
+// background and update the cache, so the NEXT tab-open always reflects the
+// latest shell edit. (Pure cache-first served a stale shell forever when only
+// app.js/styles.css changed and sw.js didn't — a footgun for an iterated tool.)
+// /api/today is network-only (always-fresh data; if offline, the page shows
 // its error banner — sync is never load-bearing for correctness, §9).
 const CACHE = "pkms-shell-v1";
 const SHELL = [
@@ -28,16 +32,29 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  // Never cache the live data endpoint or capture POSTs.
+  // Never intercept the live data endpoint or capture POSTs — always network.
   if (url.pathname.startsWith("/api/") || e.request.method !== "GET") return;
+
+  // Stale-while-revalidate: serve the cached copy immediately (instant tab-open,
+  // offline-capable) AND fetch the network copy in the background to refresh the
+  // cache — so the next tab-open picks up shell edits without a manual version
+  // bump. The cache is the fallback if the network fails (offline).
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
-      // cache newly-fetched static assets opportunistically
-      if (r.ok) {
-        const copy = r.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+    (async () => {
+      const cached = await caches.match(e.request);
+      const network = fetch(e.request).then((r) => {
+        if (r.ok) {
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+        }
+        return r;
+      }).catch(() => null);
+      if (cached) {
+        // Revalidate in the background; serve stale now.
+        network.catch(() => {});
+        return cached;
       }
-      return r;
-    }).catch(() => caches.match("/web/index.html")))
+      return (await network) || caches.match("/web/index.html");
+    })()
   );
 });
