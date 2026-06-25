@@ -26,3 +26,11 @@ def test_manifest_links_icon():
     """The PWA manifest references the icon file."""
     manifest = (WEB / "manifest.webmanifest").read_text(encoding="utf-8")
     assert "icon.svg" in manifest, "manifest.webmanifest must reference icon.svg"
+
+
+def test_service_worker_exists_and_registered():
+    """sw.js exists and index.html registers it (PWA offline shell)."""
+    sw = WEB / "sw.js"
+    assert sw.exists() and sw.stat().st_size > 0
+    html = (WEB / "index.html").read_text(encoding="utf-8")
+    assert "serviceWorker" in html and "sw.js" in html
