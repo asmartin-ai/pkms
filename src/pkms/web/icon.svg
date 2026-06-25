@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Warm paper ground -->
+  <rect width="512" height="512" rx="96" fill="#f6f1e8"/>
+  <!-- Ink mark: a single ochre "next thing" glyph on paper -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#b8762b" stroke-width="20"/>
+  <path d="M196 256 L236 296 L324 200" fill="none" stroke="#8f5a1d" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

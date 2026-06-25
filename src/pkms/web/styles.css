@@ -1,0 +1,956 @@
+/* ============================================================================
+   PKMS "ambient poster" — new-tab edition
+   ----------------------------------------------------------------------------
+   Same aesthetic spine as the daily-edition mockup (warm paper, single ochre
+   accent, editorial serif, one loud moment reserved for completion) — what
+   changed is the DELIVERY VEHICLE: a full-bleed Firefox new-tab poster, with a
+   responsive reflow to a mobile PWA card-stack at narrow widths.
+
+   Deliberately NOT a Momentum descendant: no hero greeting/clock/focus-word/
+   photo-background. The re-entry lede ("Yesterday you were in Alpha…") is this
+   page's glance anchor — it does the welcome-back job without a salutation.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. Tokens
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Ground — warm "bond" cream paper */
+  --ground:        #f6f1e8;
+  --ground-raised: #fbf7ee;
+  --ground-sunken: #efe8da;
+
+  /* Ink */
+  --ink:           #2a2520;
+  --ink-soft:      #5c534a;
+  --ink-faint:     #8a7f73;
+  --rule:          #ddd3c2;
+
+  /* Single accent — muted ochre (actions, "the next thing to do") */
+  --ochre:         #b8762b;
+  --ochre-deep:    #8f5a1d;
+  --ochre-wash:    #f3e6cf;
+
+  /* Resurface — soft sage (the curious question, never red) */
+  --sage:          #6b8e7f;
+  --sage-deep:     #4f6e61;
+  --sage-wash:     #e0e8e3;
+
+  /* Completion — saturated green-gold (the ONE loud color) */
+  --celebrate:     #3f8f5b;
+  --celebrate-deep:#2d6b43;
+  --celebrate-wash:#d8ead9;
+
+  /* Never used: red. (Documented absence — see HONESTY.md.) */
+
+  /* Type families */
+  --serif: "Fraunces", "Iowan Old Style", "Apple Garamond", Georgia, "Times New Roman", serif;
+  --sans:  "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono:  "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Type scale — fluid. The lede is the largest thing on the page. */
+  --step--1: clamp(0.78rem, 0.76rem + 0.10vw, 0.84rem);
+  --step-0:  clamp(0.95rem, 0.92rem + 0.15vw, 1.04rem);
+  --step-1:  clamp(1.13rem, 1.07rem + 0.30vw, 1.33rem);
+  --step-2:  clamp(1.40rem, 1.28rem + 0.60vw, 1.82rem);
+  --step-3:  clamp(1.85rem, 1.60rem + 1.20vw, 2.70rem);
+  --step-4:  clamp(2.50rem, 2.00rem + 2.40vw, 4.20rem);
+  --step-5:  clamp(2.85rem, 2.15rem + 3.50vw, 5.40rem);   /* lede at the widest */
+
+  /* Measure — prose stays finite. The poster widens the lead-action column. */
+  --measure: 40rem;
+  --measure-narrow: 30rem;
+  --poster-max: 64rem;          /* the wide-poster cap; content never stretches edge-to-edge */
+  --gutter: clamp(1.25rem, 0.5rem + 3vw, 3.5rem);
+  --block-gap: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 140ms;
+  --dur: 280ms;
+  --dur-stamp: 520ms;
+
+  --radius: 3px;       /* tight — paper, not plastic */
+  --radius-soft: 8px;
+}
+
+/* ----------------------------------------------------------------------------
+   2. Reset + base
+   ---------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  font-weight: 400;
+  min-height: 100vh;
+
+  /* Single low-opacity paper-grain — earns "authored document," not kitsch.
+     Same texture as the daily-edition; the new-tab vehicle is continuous. */
+  background-image:
+    radial-gradient(rgba(120, 95, 60, 0.025) 1px, transparent 1px),
+    radial-gradient(rgba(120, 95, 60, 0.018) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  font-weight: 460;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--ink);
+  font-variation-settings: "opsz" 24, "SOFT" 50, "WONK" 0;
+}
+
+p { margin: 0 0 1em; max-width: var(--measure); }
+p:last-child { margin-bottom: 0; }
+
+a {
+  color: var(--ochre-deep);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+a:hover { text-decoration-color: currentColor; color: var(--ochre-deep); }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+::selection { background: var(--ochre-wash); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   3. Poster shell — the new-tab layout
+   ---------------------------------------------------------------------------- */
+.poster {
+  max-width: var(--poster-max);
+  margin: 0 auto;
+  padding: var(--gutter) var(--gutter) calc(var(--gutter) * 2);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar: quiet masthead + the one knob, opposite ends. */
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.masthead { display: flex; align-items: baseline; gap: 0.85rem; flex-wrap: wrap; }
+.masthead__title {
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  font-weight: 480;
+  letter-spacing: -0.015em;
+}
+.masthead__title em { font-style: italic; color: var(--ink-soft); font-weight: 400; }
+.masthead__meta {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
+
+/* Salience knob — the ONE sanctioned personalization (calm / more / everything) */
+.salience {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ground-raised);
+  border: 1px solid var(--rule);
+  border-radius: 100px;
+  padding: 0.25rem;
+  flex-shrink: 0;
+}
+.salience__label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  padding: 0 0.4rem 0 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+.salience button {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-family: var(--sans);
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.salience button:hover { color: var(--ink); }
+.salience button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--ground-raised);
+}
+
+/* Nav — minimal, hash-routed. Reads as utility, not primary navigation. */
+.nav {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0.6rem 0 var(--block-gap);
+  font-size: var(--step--1);
+  font-family: var(--mono);
+  color: var(--ink-faint);
+}
+.nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+.nav a:hover { color: var(--ink); border-bottom-color: var(--rule); }
+.nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--ink); }
+.nav__spacer { flex: 1; }
+
+/* ----------------------------------------------------------------------------
+   4. The lede — re-entry breadcrumb-as-prose. THE glance anchor.
+   ---------------------------------------------------------------------------- */
+.poster-body { margin-bottom: var(--block-gap); }
+
+.lede {
+  font-family: var(--serif);
+  font-size: var(--step-5);          /* largest type on the page */
+  line-height: 1.1;
+  font-weight: 420;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  max-width: 22ch;                    /* keep it a finite, glanceable line */
+  margin: 0;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+}
+.lede strong { font-weight: 620; color: var(--ink); }
+.lede em { font-style: italic; }
+.lede__sub {
+  margin-top: 1rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--ochre-wash);
+}
+.lede__sub ul { margin: 0; padding: 0; }
+.lede__sub li { list-style: none; margin-bottom: 0.25rem; }
+.lede__sub li::before { content: "—"; color: var(--ink-faint); margin-right: 0.5rem; }
+
+/* The single lead action — the dominant affordance, sized to compete with the
+   browser address bar for "what you do with this tab." */
+.lead-action {
+  display: block;
+  margin: var(--block-gap) 0 0;
+  padding: 1.2rem 1.5rem;
+  background: var(--ink);
+  color: var(--ground-raised);
+  border: 0;
+  border-radius: var(--radius);
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  font-weight: 460;
+  text-align: left;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  width: 100%;
+  max-width: var(--measure);
+  transition: transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.lead-action:hover { background: var(--ochre-deep); transform: translateY(-1px); }
+.lead-action:active { transform: translateY(0); }
+.lead-action__prompt {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(246, 241, 232, 0.55);
+  margin-bottom: 0.5rem;
+}
+.lead-action__verb {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--ochre-wash);
+  margin-right: 0.5rem;
+  font-weight: 400;
+}
+.lead-action__size {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: rgba(246, 241, 232, 0.7);
+  margin-top: 0.6rem;
+  font-weight: 400;
+}
+
+/* ----------------------------------------------------------------------------
+   5. The ambient shelf — quiet, secondary. Forward-only progress + pebbles.
+      Three columns wide; stacks on narrow viewports.
+   ---------------------------------------------------------------------------- */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.5rem;
+  padding-top: var(--block-gap);
+  border-top: 1px solid var(--rule);
+}
+.shelf__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.shelf__kicker {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.shelf__kicker--sage { color: var(--sage-deep); }
+
+/* "To fold in" — inbox as forward-only progress, never a count. */
+.fold {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  color: var(--ink);
+  line-height: 1.3;
+}
+.fold__progress {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ochre-deep);
+  background: var(--ochre-wash);
+  padding: 0.15rem 0.55rem;
+  border-radius: 100px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.fold__hint {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+/* Pebbles — today's wins. Forward-only, resets without debt. */
+.pebbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.pebble {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--celebrate);
+  box-shadow: 0 1px 2px rgba(63, 143, 91, 0.35);
+  animation: pebble-settle var(--dur) var(--ease) both;
+}
+.pebble:nth-child(odd) { background: var(--celebrate-deep); }
+.pebble:nth-child(3n) { background: var(--ochre); box-shadow: 0 1px 2px rgba(184, 118, 43, 0.35); }
+@keyframes pebble-settle {
+  from { transform: translateY(-6px) scale(0.6); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.pebbles__caption {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.pebbles--empty {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* Resurface — the single ambient curious question (sage, never red). */
+.resurface { display: flex; flex-direction: column; gap: 0.5rem; }
+.resurface__question {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--step-1);
+  line-height: 1.32;
+  font-weight: 420;
+  color: var(--sage-deep);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.resurface__why {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.resurface__why::before { content: "why · "; color: var(--ink-faint); }
+.resurface__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
+.resurface__actions button {
+  border: 1px solid var(--sage-deep);
+  background: transparent;
+  color: var(--sage-deep);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.resurface__actions button:hover { background: var(--sage-deep); color: var(--ground-raised); }
+.resurface__actions .btn--ghost { border-color: var(--rule); color: var(--ink-soft); }
+.resurface__actions .btn--ghost:hover { background: var(--ink-soft); border-color: var(--ink-soft); color: var(--ground-raised); }
+
+/* ----------------------------------------------------------------------------
+   6. Recognition rail (optional) — curated reading + resurface cards.
+   ---------------------------------------------------------------------------- */
+.rail { margin-top: var(--block-gap); }
+.rail__kicker,
+.actions-block__kicker {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.rail__kicker::after,
+.actions-block__kicker::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.cards { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 52rem) {
+  .cards { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+}
+
+.card {
+  background: var(--ground-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-soft);
+  padding: 1.15rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+.card:hover { border-color: var(--ink-faint); }
+.card__kind {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.card--reading .card__kind { color: var(--ochre-deep); }
+.card--resurface .card__kind { color: var(--sage-deep); }
+.card__title {
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  font-weight: 480;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.card__title a { text-decoration: none; color: inherit; }
+.card__title a:hover { color: var(--ochre-deep); }
+.card__why {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0;
+}
+.card__cost {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ochre-deep);
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+/* ----------------------------------------------------------------------------
+   7. Next actions — one per note, anatomy: ⏱ ▶ ✓
+   ---------------------------------------------------------------------------- */
+.actions-block { margin-top: var(--block-gap); }
+.actions { list-style: none; margin: 0; padding: 0; }
+.action {
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+}
+.action:last-child { border-bottom: 0; }
+.action__title {
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  font-weight: 480;
+  line-height: 1.25;
+  letter-spacing: -0.008em;
+  grid-column: 1 / 2;
+}
+.action__title a { text-decoration: none; color: inherit; }
+.action__title a:hover { color: var(--ochre-deep); }
+.action__size {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  text-align: right;
+  white-space: nowrap;
+}
+.action__first {
+  grid-column: 1 / 3;
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  color: var(--ink);
+  margin-top: 0.15rem;
+}
+.action__first-verb {
+  font-family: var(--mono);
+  color: var(--ochre-deep);
+  font-size: 0.88rem;
+  margin-right: 0.4rem;
+  font-weight: 500;
+}
+.action__done-when {
+  grid-column: 1 / 3;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  margin-top: 0.3rem;
+}
+.action__done-when::before { content: "✓ done when · "; color: var(--celebrate-deep); }
+.action__done-toggle {
+  grid-column: 1 / 3;
+  justify-self: start;
+  margin-top: 0.6rem;
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  transition: all var(--dur-fast) var(--ease);
+}
+.action__done-toggle:hover { border-color: var(--celebrate); color: var(--celebrate-deep); }
+.action--done { opacity: 0.5; }
+.action--done .action__title { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+/* "more one click away" — accordion, never a wall */
+.more-notes { margin-top: 1rem; font-family: var(--mono); font-size: 0.78rem; }
+.more-notes__toggle {
+  background: transparent;
+  border: 0;
+  color: var(--ink-soft);
+  font: inherit;
+  padding: 0.4rem 0;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.more-notes__toggle:hover { color: var(--ink); text-decoration-color: currentColor; }
+.more-notes__list { margin-top: 0.5rem; }
+.more-notes__list[hidden] { display: none; }
+
+/* ----------------------------------------------------------------------------
+   8. Capture surface
+   ---------------------------------------------------------------------------- */
+.surface--capture { flex: 1; display: flex; }
+.capture {
+  max-width: var(--measure-narrow);
+  margin: 0 auto;
+  padding-top: 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.capture__hint {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+.capture__field {
+  width: 100%;
+  min-height: 14rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-soft);
+  background: var(--ground-raised);
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.capture__field:focus {
+  outline: none;
+  border-color: var(--ochre);
+  box-shadow: 0 0 0 3px var(--ochre-wash);
+}
+.capture__field::placeholder { color: var(--ink-faint); font-style: italic; }
+.capture__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.85rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.capture__kbd {
+  background: var(--ground-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+.capture__back {
+  align-self: flex-start;
+  margin-top: 1.5rem;
+  background: transparent;
+  border: 0;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.capture__back:hover { color: var(--ink); text-decoration-color: currentColor; }
+.capture__confirm {
+  text-align: center;
+  padding: 2rem 0;
+  font-family: var(--serif);
+  font-size: var(--step-2);
+  color: var(--celebrate-deep);
+  font-style: italic;
+  animation: confirm-rise var(--dur) var(--ease) both;
+}
+.capture__confirm .glyph {
+  font-style: normal;
+  color: var(--celebrate);
+  margin-right: 0.4rem;
+}
+.capture__confirm small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  font-style: normal;
+  margin-top: 0.5rem;
+}
+@keyframes confirm-rise {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ----------------------------------------------------------------------------
+   9. Reading queue + generic block
+   ---------------------------------------------------------------------------- */
+.block { margin-bottom: var(--block-gap); }
+.block__kicker {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.block__kicker::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+.reading-list { list-style: none; margin: 0; padding: 0; }
+.reading-item { padding: 1.15rem 0; border-bottom: 1px solid var(--rule); }
+.reading-item:last-child { border-bottom: 0; }
+.reading-item__title {
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  font-weight: 480;
+  line-height: 1.3;
+  margin-bottom: 0.35rem;
+}
+.reading-item__title a { text-decoration: none; color: inherit; }
+.reading-item__title a:hover { color: var(--ochre-deep); }
+.reading-item__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+}
+.reading-item__cost {
+  color: var(--ochre-deep);
+  font-weight: 500;
+  background: var(--ochre-wash);
+  padding: 0.1rem 0.55rem;
+  border-radius: 100px;
+}
+
+/* ----------------------------------------------------------------------------
+   10. Search — clearly the fallback, recognition-first picker
+   ---------------------------------------------------------------------------- */
+.search { margin-top: var(--block-gap); max-width: var(--measure); }
+.search__label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+.search__pointer {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: var(--step-1);
+  margin-bottom: 1rem;
+}
+.search__candidates { list-style: none; margin: 0 0 1.25rem; padding: 0; }
+.search__candidates li {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--serif);
+  font-size: var(--step-0);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), padding-left var(--dur-fast) var(--ease);
+}
+.search__candidates li:hover { background: var(--ochre-wash); padding-left: 1rem; }
+.search__candidates li small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  margin-top: 0.15rem;
+}
+.search__input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--ground-raised);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  color: var(--ink);
+}
+.search__input:focus { outline: none; border-color: var(--ink-faint); }
+.search__fallback-note {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------------------------
+   11. PAGE CLEARED — the one loud moment
+   ---------------------------------------------------------------------------- */
+.cleared {
+  text-align: center;
+  padding: var(--block-gap) 0;
+  animation: cleared-fade var(--dur) var(--ease) both;
+}
+.cleared__stamp {
+  display: inline-block;
+  font-family: var(--serif);
+  font-size: var(--step-4);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--celebrate-deep);
+  border: 4px double var(--celebrate);
+  padding: 0.6rem 1.8rem 0.7rem;
+  border-radius: var(--radius);
+  transform: rotate(-3deg);
+  animation: stamp-press var(--dur-stamp) var(--ease) both;
+  font-variation-settings: "opsz" 144;
+}
+.cleared__sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--step-1);
+  color: var(--ink-soft);
+  margin-top: 1.25rem;
+}
+.cleared__pebbles { justify-content: center; margin-top: 1.5rem; }
+@keyframes stamp-press {
+  0%   { transform: rotate(-3deg) scale(2.4); opacity: 0; filter: blur(2px); }
+  55%  { transform: rotate(-3deg) scale(0.94); opacity: 1; filter: blur(0); }
+  100% { transform: rotate(-3deg) scale(1); }
+}
+@keyframes cleared-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ----------------------------------------------------------------------------
+   12. Closing invitation
+   ---------------------------------------------------------------------------- */
+.invitation {
+  margin-top: auto;
+  padding-top: var(--block-gap);
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink-faint);
+  font-size: var(--step-1);
+  line-height: 1.4;
+}
+.invitation::before { content: "❧ "; color: var(--rule); font-style: normal; }
+
+/* ----------------------------------------------------------------------------
+   13. Undo toast
+   ---------------------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: var(--gutter);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--ground-raised);
+  padding: 0.7rem 1.1rem;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  max-width: calc(100vw - 2rem);
+}
+.toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.toast__action {
+  background: transparent;
+  border: 1px solid rgba(246, 241, 232, 0.4);
+  color: var(--ground-raised);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 100px;
+}
+.toast__action:hover { background: rgba(246, 241, 232, 0.15); }
+
+/* ----------------------------------------------------------------------------
+   14. Calm-mode (deep-low / worst-state) and density levels
+   ---------------------------------------------------------------------------- */
+/* CALM (default): lede + lead action + shelf (fold/pebbles/resurface).
+   No rail, no actions list, no search affordance. The worst-state spec. */
+body.density-calm .block--optional { display: none; }
+
+/* MORE: + recognition rail + actions list. */
+body.density-more .block--optional { display: block; }
+
+/* EVERYTHING: + search affordance + full backlog revealed. */
+body.density-everything .block--optional { display: block; }
+body.density-everything .more-notes__list { display: block !important; }
+body.density-everything .more-notes__toggle { display: none; }
+
+/* ----------------------------------------------------------------------------
+   15. Narrow / mobile PWA reflow
+      The same page becomes a card-stack: the shelf collapses to a single
+      column, the lede drops a step, the top bar stacks. No separate mobile
+      codebase — one responsive document.
+   ---------------------------------------------------------------------------- */
+@media (max-width: 48rem) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+  .salience { align-self: flex-start; }
+  .lede { font-size: var(--step-3); }   /* step down from --step-5 */
+  .shelf { grid-template-columns: 1fr; }
+  .nav { gap: 1rem; flex-wrap: wrap; }
+  .invitation::before { content: ""; }
+}
+
+/* ----------------------------------------------------------------------------
+   16. Reduced motion
+   ---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .cleared__stamp { transform: rotate(-3deg); }
+  .pebble { animation: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   17. Print — the editorial metaphor holds on paper
+   ---------------------------------------------------------------------------- */
+@media print {
+  body { background: white; }
+  .nav, .salience, .toast, .capture__back { display: none; }
+  .lead-action, .resurface__actions button, .action__done-toggle { display: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   18. Tiny utilities
+   ---------------------------------------------------------------------------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.is-hidden { display: none !important; }
