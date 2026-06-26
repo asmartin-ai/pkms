@@ -1,6 +1,4 @@
 """Token-required HTTP capture endpoint + desktop today-view, writing to vault/inbox/.
-
-Graduated from spike/capture_server.py after the Pixel ramp validated G2.
 Stdlib only; meant to run resident (startup shortcut) and be reached over
 the tailnet (HTTP Shortcuts tile on the phone — see docs/pixel-capture-setup.md).
 
@@ -64,7 +62,6 @@ _STATIC_TYPES = {
 }
 
 
-
 def resolve_token(root: Path, token: str | None = None) -> str:
     """Explicit token wins; otherwise read or create .secrets/capture-token."""
     if token:
@@ -78,8 +75,9 @@ def resolve_token(root: Path, token: str | None = None) -> str:
     return generated
 
 
-def make_server(vault: Path, index_dir: Path, host: str, port: int,
-                token: str) -> ThreadingHTTPServer:
+def make_server(
+    vault: Path, index_dir: Path, host: str, port: int, token: str
+) -> ThreadingHTTPServer:
     if not token:
         raise ValueError("capture service requires a token — refusing to start open")
 
@@ -129,6 +127,7 @@ def make_server(vault: Path, index_dir: Path, host: str, port: int,
                 self._send(200, CAPTURE_PAGE, "text/html; charset=utf-8")
             elif path == "/api/today":
                 from .today import today_view
+
                 body = json.dumps(today_view(vault, index_dir))
                 self._send(200, body, "application/json; charset=utf-8")
             else:
@@ -136,7 +135,7 @@ def make_server(vault: Path, index_dir: Path, host: str, port: int,
 
         def _serve_static(self, request_path: str) -> None:
             """Serve a file from WEB_DIR. Prevents path traversal; index.html for /web/."""
-            rel = request_path[len("/web/"):].lstrip("/")
+            rel = request_path[len("/web/") :].lstrip("/")
             if rel == "":
                 rel = "index.html"
             # Resolve and confirm the result is still inside WEB_DIR (no traversal).
@@ -186,8 +185,9 @@ def make_server(vault: Path, index_dir: Path, host: str, port: int,
     return ThreadingHTTPServer((host, port), Handler)
 
 
-def run(vault: Path, root: Path, *, host: str = "0.0.0.0", port: int = 8765,
-        token: str | None = None) -> None:
+def run(
+    vault: Path, root: Path, *, host: str = "0.0.0.0", port: int = 8765, token: str | None = None
+) -> None:
     token = resolve_token(root, token)
     server = make_server(vault, root / ".index", host, port, token)
     print(f"pkms capture service on http://{host}:{port}  (inbox: {vault / 'inbox'})")
