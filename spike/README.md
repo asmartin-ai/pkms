@@ -1,50 +1,37 @@
 # PKMS visual-home
 
-Web frontend mockup for the PKMS daily "today" view. **Chosen design: #1 Daily
-Edition** — editorial serif on warm paper, single-column, bounded and authored.
+Web frontend mockups for the PKMS daily "today" view. The original four design
+directions are **archived** in `_archive/` as design history. The chosen spine
+(aesthetic: editorial serif on warm paper, single ochre accent) was carried
+forward into two deliveries:
 
-The three other design directions explored during selection are preserved as
-reference in `_archive/` (workbench / focus / bloom).
+- **`src/pkms/web/`** — the live today-view PWA, served by `pkms serve`
+- **`spike/newtab-firefox/`** — the "ambient poster" new-tab mockup, design provenance
 
-## Status
+## Archive (`_archive/`)
 
-- **#1 Daily Edition** (`visual-home-glm/`) — **active**, desktop. Open
-  `index.html` in a browser; no build, no server, no fetch.
-- Mobile layout — **backlogged** (parked, not started).
-- #2 Workbench, #3 Focus, #4 The Bloom — **archived** in `_archive/` as design
-  history. Mine for ideas, not active.
+Four blind independent takes from GLM-5.2, preserved as design history:
 
-## What's in `visual-home-glm/`
+| # | Name | Aesthetic |
+|---|------|-----------|
+| 1 | daily-edition | Editorial serif, warm paper, single ochre accent — **the chosen spine** |
+| 2 | workbench | Dark card-stack builder UI, two-pane vise+tray |
+| 3 | focus | Zen single-thing, soft lighting, ultra-minimal |
+| 4 | bloom | Nature-inspired, growth metaphors, garden layout |
 
-```
-visual-home-glm/
-├── index.html        ← app shell; 6 surfaces; hash-route nav; salience knob
-├── styles.css        ← full design system (tokens, type, layout, motion)
-├── app.js            ← inlined fake JSON + render functions + interactions
-├── RATIONALE.md      ← the big moves, which hard-bound each serves
-├── DATA-CONTRACT.md  ← proposed read-only endpoints with shapes + derivation
-├── HONESTY.md        ← bends/interpretations + forbidden-pattern checklist
-└── README.md         ← run instructions + file map
-```
+Also preserved: `_inline.cjs` (mobile-packaging script), `_mobile.css` (shared
+mobile overrides), `screenshot.py` (Playwright render shots). Paths in those
+helper scripts reference the pre-archive layout and are broken — they're kept as
+reference for any future mockup work.
 
-## The vision
+## Active mockup
 
-The front door reads like a short, finite, hand-edited morning briefing — a
-chief-of-staff memo, not a dashboard. The aesthetic bet that kills the SaaS
-read: **editorial serif (Fraunces) on warm cream paper, one muted ochre accent,
-one loud moment reserved for completion (PAGE CLEARED).**
-
-Open `index.html`. Toggle `calm / more / everything` in the top-right. Mark
-actions done and watch a pebble appear; clear them all and the stamp fires.
+**`spike/newtab-firefox/`** — the "ambient poster" mockup that became the
+graduated `src/pkms/web/`. Full-bleed editorial briefing-poster designed for
+Firefox new-tab delivery. See its own README.
 
 ## Provenance
 
 - Brief: `vault/projects/pkms-design/frontend-design-brief-glm.md`
 - Binding design language: `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md`
 - Data contract source: `src/pkms/today.py`, `resurface.py`, `tasks.py`
-
-## Backlog
-
-- **Mobile-tuned layout** for `visual-home-glm/`. (A mobile-override CSS was
-  drafted during exploration and is preserved in `_archive/_mobile.css` as a
-  starting point — bottom-anchored nav, touch targets, single-col collapse.)

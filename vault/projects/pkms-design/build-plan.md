@@ -68,7 +68,7 @@ real usage to predict from; embeddings decision lives inside slice 6.
 
 ## Slice 1 — Capture everywhere + minimal today-view
 
-⏱ one heavy sitting · ▶ graduate `spike/capture_server.py` into `src/pkms/capture_service.py` with token auth **mandatory** (the spike stays untouched and dies later)
+⏱ one heavy sitting · ▶ build `src/pkms/capture_service.py` with token auth **mandatory**
 
 Ships:
 - `vault/inbox/` landing zone; capture format = one timestamped file
