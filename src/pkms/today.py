@@ -175,6 +175,7 @@ def recognition_cards(vault: Path, index_dir: Path, *, k: int = 3) -> list[JsonD
                         "why": "next in your reading queue",
                         "minutes": meta.get("reading_minutes"),
                         "promoted": str(meta.get("promoted", "")),
+                        "path": "/".join(p.relative_to(vault).parts),
                     }
                 )
         queued.sort(key=lambda q: q["promoted"])
@@ -190,7 +191,8 @@ def recognition_cards(vault: Path, index_dir: Path, *, k: int = 3) -> list[JsonD
         cands = filter_never(vault, candidates(conn, k=k))
         conn.close()
         resurface_cards = [
-            {"kind": "resurface", "title": c["title"], "why": c["why"]} for c in cands
+            {"kind": "resurface", "title": c["title"], "why": c["why"], "path": c["path"]}
+            for c in cands
         ]
 
     # Curate: round-robin so both sources appear when available, cap at k

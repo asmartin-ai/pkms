@@ -49,6 +49,9 @@ pip install -e ".[dev]"
 pkms capture "text"   # Dump a thought into the inbox (zero decisions)
 pkms today            # Front door: breadcrumb, inbox-as-progress, next actions
 pkms tasks            # One next action per note
+pkms tasks --done     # Done tasks, grouped by note path
+pkms tasks --all      # Open/stuck/not-now backlog
+pkms tasks --stash    # Paused/iceboxed tasks
 pkms search <query>   # Full-text search
 pkms promote <url>    # Turn a hoarded Reddit thread into a readable vault note
 pkms resurface        # Up to 3 curious questions from the vault, each with a why
@@ -56,6 +59,84 @@ pkms index            # Rebuild the full index from the vault
 pkms serve            # Web service: capture endpoint + desktop today-view
 ```
 
+## Start the desktop service
+
+Run the web service from the repo so it uses this checkout and the existing
+vault/index at `K:\Projects\PKMS\vault` and `K:\Projects\PKMS\.index\pkms.db`:
+
+```powershell
+cd K:\Projects\PKMS
+.\.venv\Scripts\python.exe -m pkms.cli serve
+```
+
+Leave that terminal open. The service listens on port `8765`.
+
+Health check:
+
+```powershell
+curl http://localhost:8765/health
+```
+
+Expected output:
+
+```text
+ok
+```
+
+If port `8765` is already in use, find and stop the old service first:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8765 -State Listen |
+  Select-Object LocalAddress,LocalPort,OwningProcess
+
+Stop-Process -Id <OwningProcess>
+```
+
+Then start the service again with the command above.
+
+## Firefox new-tab setup
+
+1. Start the desktop service.
+2. Load the temporary extension from Firefox:
+
+   ```text
+   about:debugging#/runtime/this-firefox
+   ```
+
+   Click **Load Temporary Add-on…** and select:
+
+   ```text
+   K:\Projects\PKMS\src\pkms\web_ext\manifest.json
+   ```
+
+3. Get your capture token:
+
+   ```powershell
+   Get-Content K:\Projects\PKMS\.secrets\capture-token
+   ```
+
+4. Open Firefox add-ons:
+
+   ```text
+   about:addons
+   ```
+
+   Find **PKMS new-tab** → **Preferences** / **Options** and paste:
+
+   ```text
+   http://localhost:8765/web/?token=YOUR_TOKEN
+   ```
+
+5. Open a new tab. It should show the PKMS today-view. The top-level page is
+   packaged in the extension, so Firefox keeps the address bar clean; live data
+   is fetched from `pkms serve` with the token sent as `X-Capture-Token`.
+
+The reading surface shows notes with `reading: queued` frontmatter under
+`vault/resources/reading/`. Click a reading item to open the markdown note in
+your default local editor/app.
+
+Temporary add-ons disappear when Firefox restarts. For the full walkthrough and
+permanent-install options, see `docs/firefox-newtab-setup.md`.
 
 ## Agent instructions
 
