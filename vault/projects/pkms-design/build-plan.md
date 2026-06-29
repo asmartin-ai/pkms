@@ -321,11 +321,11 @@ when picked up.
   perceptible hot path (capture is AHK/resident-server, search is FTS5/C).
 - **Fable's blind take on the visual-home UI** (Kenja, 2026-06-17) — when the Fable 5
   model is available again, have it produce its *own* design for the "see my notes"
-  visual surfaces (area tiles + recognition cards with thumbnails — the visual-home
-  direction now being built on branch `feat/visual-home`) **blind**: without seeing this
-  session's mockup, that branch's work, or the discussion that produced it — an
-  independent design to compare against, not a refinement of it. Why: parallel
+  visual surfaces (area tiles + recognition cards with thumbnails — compare against the
+  archived visual-home/new-tab work after Fable's draft exists) **blind**: without seeing
+  this session's mockup, prior branch/tagged archive, or the discussion that produced it —
+  an independent design to compare against, not a refinement of it. Why: parallel
   independent takes let Kenja pick the best from a list (the agent-grammar strength, §9 /
   judge-panel pattern) and surface framings the Opus 4.8 pass missed. Reactivation
-  condition: Fable 5 restored. Keep it blind — don't point Fable at the branch or mockup
+  condition: Fable 5 restored. Keep it blind — don't point Fable at the archive or mockup
   until after it ships its own take, then diff the two.
