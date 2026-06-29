@@ -1,6 +1,7 @@
 """The web frontend assets exist, are non-empty, and internal references resolve."""
-from pathlib import Path
+
 import re
+from pathlib import Path
 
 WEB = Path(__file__).resolve().parents[1] / "src" / "pkms" / "web"
 
@@ -51,3 +52,20 @@ def test_app_js_guards_empty_next_actions():
     guard = js.index("if (!action)")
     first_deref = js.index("action.title")
     assert guard < first_deref, "empty-actions guard must precede action.title dereference"
+
+
+def test_app_js_loads_live_auxiliary_surfaces():
+    """Reading and recognition surfaces must use live token-gated APIs, not empty mock arrays."""
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "/api/reading-queue" in js
+    assert "/api/recognition-cards" in js
+    assert "const READING_QUEUE = []" not in js
+    assert "const RECOGNITION_CARDS = []" not in js
+
+
+def test_app_js_persists_resurface_actions():
+    """The resurface buttons must POST to the backend before hiding the card."""
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "/api/resurface" in js
+    assert 'method: "POST"' in js
+    assert "JSON.stringify({ path: card.path, action: kind })" in js
