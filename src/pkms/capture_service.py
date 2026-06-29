@@ -25,6 +25,7 @@ import json
 import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import parse_qs, urlparse
 
 from .capture import write_capture
@@ -179,8 +180,10 @@ def make_server(
                 ctype = self.headers.get("Content-Type", "")
                 if "json" in ctype:
                     try:
-                        text = str(json.loads(raw).get("text", raw))
-                    except (json.JSONDecodeError, AttributeError):
+                        capture_payload = json.loads(raw)
+                        if isinstance(capture_payload, dict):
+                            text = str(capture_payload.get("text", raw))
+                    except json.JSONDecodeError:
                         pass
                 elif "form-urlencoded" in ctype:
                     text = parse_qs(raw).get("text", [raw])[0]
@@ -202,8 +205,9 @@ def make_server(
                     return self._send(400, "invalid json")
                 if not isinstance(data, dict):
                     return self._send(400, "invalid json")
-                path_key = data.get("path")
-                action = data.get("action")
+                payload = cast(dict[str, Any], data)
+                path_key = payload.get("path")
+                action = payload.get("action")
                 if not path_key or not action:
                     return self._send(400, "missing path or action")
                 if action not in {"not-now", "let-go"}:
@@ -222,13 +226,13 @@ def make_server(
                     resurface_dismiss(conn, safe_path)
                     conn.close()
                 else:
-                    resurface_let_go(vault, safe_path)
+                    _ = resurface_let_go(vault, safe_path)
                 body = json.dumps({"ok": True, "action": action, "path": safe_path})
                 self._send(200, body, "application/json; charset=utf-8")
             else:
                 return self._send(404, "not found")
 
-        def log_message(self, *args):  # quiet default request logging
+        def log_message(self, format: str, *args: object) -> None:  # quiet default request logging
             pass
 
     return ThreadingHTTPServer((host, port), Handler)

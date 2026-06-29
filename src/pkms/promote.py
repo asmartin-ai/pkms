@@ -14,21 +14,39 @@ import re
 import sqlite3
 from datetime import date, datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 HOARDER_DB = Path(r"K:\Projects\content-hoarder\data\app.db")
 READING_DIR = ("resources", "reading")
-WPM = 200                # consume-cost estimate basis
-MAX_COMMENTS = 150       # keep notes readable; the full thread stays one click away
-MAX_DEPTH = 4            # deeper replies are noise at reading time
+WPM = 200  # consume-cost estimate basis
+MAX_COMMENTS = 150  # keep notes readable; the full thread stays one click away
+MAX_DEPTH = 4  # deeper replies are noise at reading time
 
-_URL_ID_RE = re.compile(r"(?:redd\.it|reddit\.com)/(?:r/[^/]+/comments/|comments/)?([a-z0-9]{5,9})", re.I)
+_URL_ID_RE = re.compile(
+    r"(?:redd\.it|reddit\.com)/(?:r/[^/]+/comments/|comments/)?([a-z0-9]{5,9})", re.I
+)
 _BARE_ID_RE = re.compile(r"^(?:t3_)?([a-z0-9]{5,9})$", re.I)
+
+
+def _sqlite_readonly_uri(db_path: Path) -> str:
+    """SQLite file: URI for read-only opens, including Windows extended paths.
+
+    pytest on this machine can hand us temp paths shaped like ``//?/O:/...``;
+    SQLite treats that as a URI authority and rejects it. For local drive paths,
+    SQLite wants ``file:/O:/...``.
+    """
+    path = db_path.resolve().as_posix()
+    if re.match(r"^//[.?]/[A-Za-z]:/", path):
+        path = "/" + path[4:]
+    elif re.match(r"^[A-Za-z]:/", path):
+        path = "/" + path
+    return f"file:{quote(path, safe='/:')}?mode=ro"
 
 
 def connect_hoarder(db_path: Path = HOARDER_DB) -> sqlite3.Connection:
     if not db_path.exists():
         raise FileNotFoundError(f"content-hoarder DB not found: {db_path}")
-    conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
+    conn = sqlite3.connect(_sqlite_readonly_uri(db_path), uri=True)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -87,12 +105,14 @@ def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list
     out = []
     for r in rows:
         meta = json.loads(r["metadata"] or "{}")
-        out.append({
-            "id": r["fullname"].removeprefix("reddit:t3_"),
-            "title": r["title"],
-            "subreddit": meta.get("subreddit", ""),
-            "saved": _day(r["saved_utc"]),
-        })
+        out.append(
+            {
+                "id": r["fullname"].removeprefix("reddit:t3_"),
+                "title": r["title"],
+                "subreddit": meta.get("subreddit", ""),
+                "saved": _day(r["saved_utc"]),
+            }
+        )
     return out
 
 
@@ -143,7 +163,9 @@ def render_note(thread: dict, *, today: date | None = None) -> tuple[str, int]:
 
     body_lines: list[str] = []
     stats = {"shown": 0, "omitted": 0}
-    for child in sorted(top_comments, key=lambda c: c.get("data", {}).get("score") or 0, reverse=True):
+    for child in sorted(
+        top_comments, key=lambda c: c.get("data", {}).get("score") or 0, reverse=True
+    ):
         before = len(body_lines)
         _comment_lines(child, 0, body_lines, stats)
         if len(body_lines) > before:
@@ -153,14 +175,18 @@ def render_note(thread: dict, *, today: date | None = None) -> tuple[str, int]:
         body_lines.pop()
 
     selftext = (post.get("selftext") or "").strip()
-    words = len(post.get("title", "").split()) + len(selftext.split()) + sum(
-        len(ln.split()) for ln in body_lines
+    words = (
+        len(post.get("title", "").split())
+        + len(selftext.split())
+        + sum(len(ln.split()) for ln in body_lines)
     )
     minutes = max(1, round(words / WPM))
 
     discussion = f"## Discussion ({stats['shown']} comments"
     if stats["omitted"]:
-        discussion += f" shown · {stats['omitted']} more in the [full thread]({thread['permalink']})"
+        discussion += (
+            f" shown · {stats['omitted']} more in the [full thread]({thread['permalink']})"
+        )
     discussion += ")"
 
     head_bits = [
@@ -184,21 +210,27 @@ def render_note(thread: dict, *, today: date | None = None) -> tuple[str, int]:
         f"saved: {_day(thread['saved_utc'])}",
         f"promoted: {today.isoformat()}",
     ]
-    note = "\n".join([
-        "---",
-        *[ln for ln in fm if not ln.endswith(": ")],  # omit provenance the hoard lacks
-        "---",
-        "",
-        f"# {thread['title']}",
-        "",
-        "*" + " · ".join(b for b in head_bits if b) + "*",
-        "",
-        *( [selftext, ""] if selftext else ([f"Link post → {thread['url']}", ""] if thread["url"] else []) ),
-        discussion,
-        "",
-        *body_lines,
-        "",
-    ])
+    note = "\n".join(
+        [
+            "---",
+            *[ln for ln in fm if not ln.endswith(": ")],  # omit provenance the hoard lacks
+            "---",
+            "",
+            f"# {thread['title']}",
+            "",
+            "*" + " · ".join(b for b in head_bits if b) + "*",
+            "",
+            *(
+                [selftext, ""]
+                if selftext
+                else ([f"Link post → {thread['url']}", ""] if thread["url"] else [])
+            ),
+            discussion,
+            "",
+            *body_lines,
+            "",
+        ]
+    )
     return note, minutes
 
 
