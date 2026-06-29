@@ -1,0 +1,9 @@
+{
+  "files": [
+    "src/pkms/web/index.html",
+    "src/pkms/web_ext/newtab.html"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}
