@@ -69,3 +69,33 @@ def test_app_js_persists_resurface_actions():
     assert "/api/resurface" in js
     assert 'method: "POST"' in js
     assert "JSON.stringify({ path: card.path, action: kind })" in js
+
+
+def test_lead_action_opens_context_instead_of_marking_done():
+    """The new-tab primary lead action is continue/open, not completion."""
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    listener_start = js.index('$("#lead-action").addEventListener("click"')
+    listener_end = js.index('document.addEventListener("click"', listener_start)
+    listener = js[listener_start:listener_end]
+    assert "openNote(lead.note)" in listener
+    assert "toggleDone(lead.note)" not in listener
+
+
+def test_command_desk_has_persistent_search_bar():
+    """The landing page uses a command/search ramp instead of a tiny find link."""
+    html = (WEB / "index.html").read_text(encoding="utf-8")
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "PKMS command desk" in html
+    assert 'class="nav-search"' in html
+    assert "find a note, capture a thought" in html
+    assert "const navSearch" in js and 'location.hash = "#search"' in js
+
+
+def test_context_rail_includes_read_next():
+    """The calm context rail includes reading as one glanceable item, not a separate pile."""
+    html = (WEB / "index.html").read_text(encoding="utf-8")
+    js = (WEB / "app.js").read_text(encoding="utf-8")
+    assert "read next" in html
+    assert 'id="next-read"' in html
+    assert "function renderNextRead()" in js
+    assert "READING_QUEUE[0] || TODAY.next_read" in js
