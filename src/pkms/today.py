@@ -101,6 +101,28 @@ def _next_read(vault: Path) -> dict | None:
     return queued[0]
 
 
+def reading_queue(vault: Path) -> list[dict]:
+    """All queued reading items, oldest promoted first."""
+    reading = vault / "resources" / "reading"
+    if not reading.is_dir():
+        return []
+    import frontmatter
+    items = []
+    for p in sorted(reading.glob("*.md")):
+        meta = frontmatter.load(p).metadata
+        if meta.get("reading") == "queued":
+            rel = "/".join(p.relative_to(vault).parts)
+            items.append({
+                "title": str(meta.get("title") or p.stem),
+                "minutes": meta.get("reading_minutes"),
+                "promoted": str(meta.get("promoted", "")),
+                "why": "next up in your reading queue",
+                "path": rel,
+            })
+    items.sort(key=lambda i: i["promoted"])
+    return items
+
+
 def _resurface_card(vault: Path, index_dir: Path, *, record_offer: bool = False) -> dict | None:
     """AT MOST ONE candidate — the today-view is the single rationed ambient
     surface (§5). Showing it starts the card's rest window only when
