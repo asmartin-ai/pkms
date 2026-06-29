@@ -200,6 +200,8 @@ def make_server(
                     data = json.loads(raw)
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     return self._send(400, "invalid json")
+                if not isinstance(data, dict):
+                    return self._send(400, "invalid json")
                 path_key = data.get("path")
                 action = data.get("action")
                 if not path_key or not action:
