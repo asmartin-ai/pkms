@@ -56,6 +56,18 @@ pkms index            # Rebuild the full index from the vault
 pkms serve            # Web service: capture endpoint + desktop today-view
 ```
 
+
+## Agent instructions
+
+Repo-local agent rules live in `AGENTS.md`, layered on top of the global
+`C:/Users/Kenja/agent-hub/AGENTS.md`. `CLAUDE.md` is a compatibility shim that
+imports `AGENTS.md` for Claude Code.
+
+Project-local Claude skills still live under `.claude/skills/`:
+
+- `/fold` folds `vault/inbox/` captures into the vault after an approval step.
+- `/resume` reads/writes the daily breadcrumb around sessions.
+
 ## Development
 
 ```powershell

@@ -17,7 +17,7 @@ status: in-progress
 > at HIGH effort; Kenja's actions are the few ⏱-marked items inside slices.
 
 **Binding rules for every build sitting** (the per-slice definition of done):
-1. Read `DESIGN-LANGUAGE.md` before designing any surface, flow, or copy (CLAUDE.md rule).
+1. Read `DESIGN-LANGUAGE.md` before designing any surface, flow, or copy (AGENTS.md rule).
 2. Tests added with the slice; full suite green (`.venv\Scripts\python.exe -m pytest tests -q`).
 3. `pkms index` clean after any vault-shape change; verify contents, not exit codes.
 4. Commit per slice with a message naming the slice.
