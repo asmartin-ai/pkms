@@ -23,10 +23,14 @@ Mechanics, bound to the design language:
   reappears as work.
 """
 
+import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Any, TypeAlias
 
-OFFER_REST_DAYS = 3     # an offered card rests before it may reappear
+Candidate: TypeAlias = dict[str, Any]
+
+OFFER_REST_DAYS = 3  # an offered card rests before it may reappear
 DISMISS_REST_DAYS = 30  # "not now" — silent, no-renag window
 ACTIVE_WINDOW_DAYS = 21  # notes created/modified inside this count as "active"
 DORMANT_AFTER_DAYS = 30  # younger notes aren't "old enough to be interesting"
@@ -42,7 +46,7 @@ _TEMPLATES = (
 )
 
 
-def _ensure_offers_table(conn) -> None:
+def _ensure_offers_table(conn: sqlite3.Connection) -> None:
     conn.execute(
         """CREATE TABLE IF NOT EXISTS resurface_offers (
                path         TEXT PRIMARY KEY,
@@ -52,11 +56,13 @@ def _ensure_offers_table(conn) -> None:
     )
 
 
-def _note_date(row) -> str:
+def _note_date(row: Any) -> str:
     return str(row["modified"] or row["created"] or "")
 
 
-def candidates(conn, *, today: date | None = None, k: int = 3) -> list[dict]:
+def candidates(
+    conn: sqlite3.Connection, *, today: date | None = None, k: int = 3
+) -> list[Candidate]:
     """Top-k resurfacing candidates with transparent why-lines."""
     today = today or date.today()
     _ensure_offers_table(conn)
@@ -85,12 +91,13 @@ def candidates(conn, *, today: date | None = None, k: int = 3) -> list[dict]:
             # an active note points AT this one — the strongest pull (§5)
             src_stem = Path(ln["source"]).stem.lower()
             woven_into_active.setdefault(stem_to_path[tgt], []).append(
-                active_titles.get(src_stem, Path(ln["source"]).stem))
+                active_titles.get(src_stem, Path(ln["source"]).stem)
+            )
         elif tgt in active_titles:
             # this note points INTO active work — still a pull, same why-shape
             woven_into_active.setdefault(ln["source"], []).append(active_titles[tgt])
 
-    out = []
+    out: list[Candidate] = []
     for n in notes:
         path = n["path"]
         if path.replace("\\", "/").startswith(_EXCLUDED_PREFIXES):
@@ -123,25 +130,29 @@ def candidates(conn, *, today: date | None = None, k: int = 3) -> list[dict]:
             score += 0.5
         if score <= 0.5:
             continue
-        count = (r["offer_count"] if r else 0)
-        out.append({
-            "path": path,
-            "title": n["title"] or Path(path).stem,
-            "question": _TEMPLATES[count % len(_TEMPLATES)].format(
-                title=n["title"] or Path(path).stem),
-            "why": " · ".join(why[:2]),
-            "score": round(score, 2),
-        })
+        count = r["offer_count"] if r else 0
+        out.append(
+            {
+                "path": path,
+                "title": n["title"] or Path(path).stem,
+                "question": _TEMPLATES[count % len(_TEMPLATES)].format(
+                    title=n["title"] or Path(path).stem
+                ),
+                "why": " · ".join(why[:2]),
+                "score": round(score, 2),
+            }
+        )
 
     out.sort(key=lambda c: -c["score"])
     return out[:k]
 
 
-def filter_never(vault: Path, cands: list[dict]) -> list[dict]:
+def filter_never(vault: Path, cands: list[Candidate]) -> list[Candidate]:
     """Drop notes whose frontmatter carries the forever-exit (resurface: never).
     Read from disk — user-visible state lives in the file, never only the index."""
     import frontmatter
-    kept = []
+
+    kept: list[Candidate] = []
     for c in cands:
         p = vault / c["path"]
         try:
@@ -153,7 +164,7 @@ def filter_never(vault: Path, cands: list[dict]) -> list[dict]:
     return kept
 
 
-def mark_offered(conn, paths: list[str], *, today: date | None = None) -> None:
+def mark_offered(conn: sqlite3.Connection, paths: list[str], *, today: date | None = None) -> None:
     """An offered card rests OFFER_REST_DAYS so nothing repeats back-to-back."""
     today = today or date.today()
     _ensure_offers_table(conn)
@@ -168,7 +179,7 @@ def mark_offered(conn, paths: list[str], *, today: date | None = None) -> None:
     conn.commit()
 
 
-def dismiss(conn, path: str, *, today: date | None = None) -> None:
+def dismiss(conn: sqlite3.Connection, path: str, *, today: date | None = None) -> None:
     """Not now: silent, no-renag for DISMISS_REST_DAYS. No copy ever counts these."""
     today = today or date.today()
     _ensure_offers_table(conn)
@@ -185,6 +196,7 @@ def let_go(vault: Path, rel_path: str) -> Path:
     """Forever-exit: write `resurface: never` into the note's frontmatter.
     The content stays; only the asking stops. Reversible by deleting the line."""
     import frontmatter
+
     p = vault / rel_path
     post = frontmatter.load(p)
     post.metadata["resurface"] = "never"
