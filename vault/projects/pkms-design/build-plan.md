@@ -8,12 +8,13 @@ status: in-progress
 
 # PKMS Build Plan (Phase 4)
 
-> **Status: IN PROGRESS (2026-06-17) — slices 1–6 shipped; slice 7 (Phone PWA) underway
-> (increment 1, the desktop today-view web app, landed); repo published to GitHub with CI.**
+> **Status: IN PROGRESS (2026-06-29) — slices 1–6 shipped; slice 7 (Phone PWA) underway
+> (increment 2 landed: desktop new-tab/PWA shell now has real web capture,
+> reading/recognition APIs, and persistent resurface actions); repo published to GitHub with CI.**
 > Derived from [[decisions]] (all 10 gates closed
 > 2026-06-12) and bound by the shared design language at
 > `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` (v post-CH-pass, commit `ce809e2`).
-> Each slice ends in something Kenja can actually use. Build sittings are Claude-executed
+> Each slice ends in something Kenja can actually use. Build sittings are agent-executed
 > at HIGH effort; Kenja's actions are the few ⏱-marked items inside slices.
 
 **Binding rules for every build sitting** (the per-slice definition of done):
@@ -235,12 +236,17 @@ it on the Pixel over tailnet before building anything else
 Ships:
 - Tailnet PWA (vanilla JS, no deps — content-hoarder's proven shape): home = today-view;
   reading queue (promoted notes readable on the couch/plane-adjacent); capture textbox
-  posting to the same `/capture`; fold-lite triage (pick-list actions only).
+  posting to the same `/capture`; resurface actions persist through `/api/resurface`;
+  fold-lite triage (pick-list actions only).
 - Reuses CH's hard-won mobile rules by *reference*: Firefox-on-Pixel-6 PWA gotchas and
   gesture pricing live in `content-hoarder/.claude/skills/frontend-design/SKILL.md`;
   behavior comes from `DESIGN-LANGUAGE.md`; PKMS visual tokens are its own, local.
 - Friction asymmetry on any triage gestures (§2): reduce cheapest, preserve priced,
   deferral between.
+
+Increment landed 2026-06-29: desktop/new-tab frontend posts real captures, fetches live
+reading/recognition data, and persists resurface not-now/let-go actions. Remaining slice-7
+proof is device-level.
 
 ✓ Done-when: on the Pixel, over tailnet, Kenja opens the PWA → sees today-view, reads a
 promoted thread, captures a thought from inside it — all three demonstrated.

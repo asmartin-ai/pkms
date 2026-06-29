@@ -1,11 +1,11 @@
 # DATA CONTRACT — new-tab pivot
 
-The mockup uses the **exact** `/api/today` field names (verified against
-`src/pkms/today.py:172-184`), so it maps to reality without a schema change.
-The additional read-only payloads are the same ones the daily-edition proposed
-(they derive from already-indexed data); they're restated here for
-self-containment. **No change to the capture path or underlying files** — those
-are sacred/regenerable.
+The new-tab frontend uses the **exact** `/api/today` field names from
+`src/pkms/today.py`, plus small token-gated companion endpoints served by
+`src/pkms/capture_service.py`. The additional read-only payloads derive from
+plain vault files / the regenerable index; action routes write through existing
+PKMS mechanics. Capture still writes one append-only inbox file — the sacred
+zero-decision path is preserved.
 
 ## Existing — `GET /api/today` (unchanged)
 
@@ -27,7 +27,7 @@ are sacred/regenerable.
 Note paths are forward-slash and URL-safe. The live app is token-gated
 (`?token=…`); the mockup ignores that.
 
-## Existing (unwired) — `GET /api/recognition-cards`
+## Existing — `GET /api/recognition-cards`
 
 Shape from `today.py:120-169`. Round-robin of reading + resurface, capped at k=3:
 
@@ -39,7 +39,7 @@ Shape from `today.py:120-169`. Round-robin of reading + resurface, capped at k=3
 ]
 ```
 
-## Proposed (read-only)
+## Existing — read-only companion endpoints
 
 ### `GET /api/reading-queue`
 Promoted long-reads awaiting consumption.
@@ -48,7 +48,7 @@ Promoted long-reads awaiting consumption.
 - **Shape:**
 ```json
 [
-  {"title": "…", "minutes": 12, "promoted": "2026-06-18", "why": "next up · shortest in the queue", "path": "resources/reading/….md"}
+  {"title": "…", "minutes": 12, "promoted": "2026-06-18", "why": "next up in your reading queue", "path": "resources/reading/….md"}
 ]
 ```
 
@@ -73,11 +73,28 @@ Recognition-first picker candidates for the search surface.
 [{"title": "…", "path": "projects/….md", "touched": "yesterday"}]
 ```
 
+## Existing — `POST /api/resurface`
+
+Persists the two web resurface actions. Token required.
+
+```json
+{"path": "resources/research/foo.md", "action": "not-now"}
+```
+
+- `not-now` records the no-renag rest window in the derived index.
+- `let-go` writes `resurface: never` into the note frontmatter, matching the CLI
+  forever-exit.
+- Invalid paths/actions return non-2xx and do not change files.
+
+## Existing — `POST /capture`
+
+The capture surface posts raw text to the existing append-only capture endpoint.
+Success means a real inbox file was written; failure preserves the textarea
+content and shows an honest not-saved-yet toast.
+
 ## New-tab-specific (build-time, not a vault change)
 
-The extension needs no new vault data. The only new question is *delivery* of the
-above to the new-tab page — see RATIONALE.md G-N2 (bundled vs redirector). Under
-the redirector option, the page calls the existing `/api/*` endpoints unchanged;
-under the bundled option, data freshness is solved at the extension layer
-(storage sync or a localhost fetch with a host permission), still reading the
-same endpoints. Either way, **no new endpoints and no vault/file changes**.
+The extension needs no new vault data. Delivery is redirector-only (G-N2): the
+new tab points at `pkms serve`, and the page calls the token-gated `/api/*` and
+`/capture` routes on that same origin. Bundling the page into the extension would
+need an extension-layer freshness/auth design and remains out of scope.

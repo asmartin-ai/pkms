@@ -38,14 +38,16 @@ browser.storage.local.set({ pkmsUrl: "http://localhost:8765/web/?token=YOUR_TOKE
 Replace `YOUR_TOKEN` with the contents of `.secrets/capture-token`.
 
 Open a new tab (Ctrl+T). You should see the today-view poster with the
-re-entry lede and live `/api/today` data.
+re-entry lede and live data from `/api/today`, `/api/reading-queue`, and
+`/api/recognition-cards`.
 
 ## Mobile (Pixel 6, over tailnet)
 
 The same page is the PWA. Browse to
 `http://<tailnet-host>:8765/web/?token=…` on the phone, then **"Add to Home
 Screen"** in Firefox — it installs as a standalone app with the offline shell
-(cache-first static assets; `/api/today` always fetched live).
+(cache-first static assets; `/api/*` data and action routes always use the
+network).
 
 ## Troubleshooting
 
@@ -56,6 +58,10 @@ Screen"** in Firefox — it installs as a standalone app with the offline shell
 - **Stale data after a capture** — the page re-fetches `/api/today` on save; if
   it doesn't, hard-refresh once (the SW may be serving a cached *shell* — but
   data is always fetched live, never cached).
+- **Reading/resurface actions do nothing** — check that the stored URL includes
+  the token. The shell loads without it, but `/api/reading-queue`,
+  `/api/recognition-cards`, `/api/resurface`, `/api/today`, and `/capture` are
+  token-gated.
 - **"temporary add-on" disappears on restart** — expected for load-unpacked.
   Re-load from `about:debugging`, or move to a signed/Developer Edition install.
 
@@ -69,7 +75,7 @@ newtab.html ──loads──► newtab.js
    │  reads storage.local.pkmsUrl → location.replace(...)
    ▼
 http://localhost:8765/web/?token=…   (capture_service serves src/pkms/web/)
-   │  page fetches /api/today (live, token-gated)
+   │  page fetches /api/today + read-only queues; POSTs capture/resurface actions
    ▼
 PKMS today-view poster  ◄── sw.js caches the shell only (offline-ready)
 ```
