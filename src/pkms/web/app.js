@@ -15,26 +15,113 @@
      required core payload; reading queue + recognition cards are read-only
      auxiliary surfaces loaded from the same service.
      --------------------------------------------------------------------------- */
-  let TODAY = null;          // populated by loadToday()
-  const MORE_ACTIONS = [];   // populated when /api/next-actions ships
+  let TODAY = null; // populated by loadToday()
+  const MORE_ACTIONS = []; // populated when /api/next-actions ships
   let RECOGNITION_CARDS = [];
   let READING_QUEUE = [];
   const PEBBLES = { count: 0, goal: null, entries: [] };
   const RECENT_NOTES = [];
 
+  let PKMS_BASE_URL = "";
+  let PKMS_TOKEN = "";
+  let CONFIG_PROMISE = null;
+
   /// MAX_NOTES_SHOWN mirrors today.py:15.
   const MAX_NOTES_SHOWN = 8;
 
+  const extensionApi = () => {
+    if (
+      !location.protocol.startsWith("moz-extension") &&
+      !location.protocol.startsWith("chrome-extension")
+    ) {
+      return null;
+    }
+    return globalThis.browser || globalThis.chrome || null;
+  };
+
+  function storageGet(keys) {
+    const api = extensionApi();
+    return new Promise((resolve, reject) => {
+      if (!api?.storage?.local) {
+        resolve({});
+        return;
+      }
+
+      try {
+        const maybePromise = api.storage.local.get(keys);
+        if (maybePromise?.then) {
+          maybePromise.then((value) => resolve(value || {}), reject);
+          return;
+        }
+      } catch {
+        // Fall through to the Chrome callback form below.
+      }
+
+      api.storage.local.get(keys, (value) => {
+        const err = api.runtime?.lastError;
+        if (err) reject(new Error(err.message));
+        else resolve(value || {});
+      });
+    });
+  }
+
+  function configFromStoredUrl(pkmsUrl) {
+    if (!pkmsUrl) return null;
+    try {
+      const parsed = new URL(pkmsUrl);
+      return {
+        baseUrl: parsed.origin,
+        token: parsed.searchParams.get("token") || "",
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async function loadConfig() {
+    if (!extensionApi()) return;
+
+    const stored = await storageGet(["pkmsBaseUrl", "pkmsToken", "pkmsUrl"]);
+    const legacy = configFromStoredUrl(stored.pkmsUrl);
+    PKMS_BASE_URL = String(
+      stored.pkmsBaseUrl || legacy?.baseUrl || "http://localhost:8765",
+    ).replace(/\/$/, "");
+    PKMS_TOKEN = String(stored.pkmsToken || legacy?.token || "").trim();
+    if (!PKMS_TOKEN) {
+      throw new Error(
+        "token required — open the extension options and save your PKMS URL",
+      );
+    }
+  }
+
+  async function ensureConfig() {
+    CONFIG_PROMISE ||= loadConfig();
+    await CONFIG_PROMISE;
+  }
+
+  function apiUrl(path) {
+    return PKMS_BASE_URL
+      ? `${PKMS_BASE_URL}${path}`
+      : `${path}${location.search}`;
+  }
+
+  async function apiFetch(path, init = {}) {
+    await ensureConfig();
+    const headers = new Headers(init.headers || {});
+    if (PKMS_TOKEN) headers.set("X-Capture-Token", PKMS_TOKEN);
+    return fetch(apiUrl(path), { ...init, headers });
+  }
+
   async function fetchJson(path) {
-    const r = await fetch(path + location.search, {
+    const r = await apiFetch(path, {
       headers: { Accept: "application/json" },
     });
     if (!r.ok) throw new Error(`${path} failed (${r.status})`);
     return await r.json();
   }
 
-  /// Fetch /api/today and render. The capture service serves this at the same
-  /// origin as /web/, so the fetch is same-origin + token-gated via ?token=...
+  /// Fetch /api/today and render. Served /web/ mode uses same-origin requests
+  /// token-gated via ?token=...; packaged extension mode uses X-Capture-Token.
   async function loadToday() {
     try {
       TODAY = await fetchJson("/api/today");
@@ -43,9 +130,11 @@
       if (state.route === "today") renderToday();
       loadAuxiliarySurfaces();
     } catch (e) {
-      showError(e.message.includes("403")
-        ? "token required — open with ?token=..."
-        : "couldn't reach the service — is pkms serve running?");
+      showError(
+        e.message.includes("403") || e.message.includes("token required")
+          ? "token required — open the extension options or use ?token=..."
+          : "couldn't reach the service — is pkms serve running?",
+      );
     }
   }
 
@@ -66,7 +155,10 @@
 
   function showError(msg) {
     const el = document.getElementById("error-banner");
-    if (el) { el.textContent = msg; el.hidden = false; }
+    if (el) {
+      el.textContent = msg;
+      el.hidden = false;
+    }
   }
 
   /* ---------------------------------------------------------------------------
@@ -83,28 +175,44 @@
   /* ---------------------------------------------------------------------------
      3. HELPERS
      --------------------------------------------------------------------------- */
-  const $  = (sel, root = document) => root.querySelector(sel);
+  const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
   const fmtDate = (iso) => {
     try {
       const d = new Date(iso + "T00:00:00");
       return d.toLocaleDateString("en-US", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
-    } catch { return iso; }
+    } catch {
+      return iso;
+    }
   };
 
   const fmtShortDate = (iso) => {
     try {
       const d = new Date(iso + "T00:00:00");
       return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } catch { return iso; }
+    } catch {
+      return iso;
+    }
   };
 
-  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
+  const esc = (s) =>
+    String(s ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
 
   /// The lede renders the breadcrumb as prose. THIS is the page's glance anchor
   /// — it does the re-entry welcome-back job (§7) without a Momentum-style
@@ -126,14 +234,16 @@
     if (!bc || !bc.name) {
       // Gap day — no breadcrumb. Soften, never bill.
       return {
-        html: `It's been a few days. Nothing's overdue — here's where ` +
-              `<strong>${esc(action.title)}</strong> was when you last touched it.`,
+        html:
+          `It's been a few days. Nothing's overdue — here's where ` +
+          `<strong>${esc(action.title)}</strong> was when you last touched it.`,
         lines: [],
       };
     }
     return {
-      html: `Yesterday you were in <strong>${esc(action.title)}</strong>, ` +
-            `${esc(action.text)}.`,
+      html:
+        `Yesterday you were in <strong>${esc(action.title)}</strong>, ` +
+        `${esc(action.text)}.`,
       lines: bc.lines || [],
     };
   }
@@ -142,7 +252,7 @@
      4. RENDER — Today (the poster centerpiece)
      --------------------------------------------------------------------------- */
   function renderToday() {
-    if (!TODAY) return;  // loadToday() re-calls renderToday() once data lands
+    if (!TODAY) return; // loadToday() re-calls renderToday() once data lands
     try {
       _renderTodayImpl();
     } catch (e) {
@@ -210,18 +320,26 @@
 
   function renderRecognitionCards() {
     const el = $("#recognition-cards");
-    if (!el || !RECOGNITION_CARDS.length) { if (el) el.innerHTML = ""; return; }
+    if (!el || !RECOGNITION_CARDS.length) {
+      if (el) el.innerHTML = "";
+      return;
+    }
 
     el.innerHTML = RECOGNITION_CARDS.map((c) => {
-      const kindClass = c.kind === "reading" ? "card--reading" : "card--resurface";
+      const kindClass =
+        c.kind === "reading" ? "card--reading" : "card--resurface";
       const kindLabel = c.kind === "reading" ? "reading" : "resurfacing";
-      const cost = (c.kind === "reading" && c.minutes)
-        ? `<span class="card__cost">⏱ ~${c.minutes} min</span>`
-        : "";
+      const cost =
+        c.kind === "reading" && c.minutes
+          ? `<span class="card__cost">⏱ ~${c.minutes} min</span>`
+          : "";
+      const title = c.path
+        ? `<button class="card__title card__title-button" type="button" data-path="${esc(c.path)}">${esc(c.title)}</button>`
+        : `<h3 class="card__title">${esc(c.title)}</h3>`;
       return `
         <article class="card ${kindClass}">
           <span class="card__kind">${kindLabel}</span>
-          <h3 class="card__title">${esc(c.title)}</h3>
+          ${title}
           ${cost}
           <p class="card__why">${esc(c.why)}</p>
         </article>`;
@@ -248,8 +366,8 @@
 
   function renderActions(listEl, leadExcluded) {
     if (!listEl) return;
-    const items = TODAY.next_actions.filter((a, i) =>
-      !(leadExcluded && i === 0)
+    const items = TODAY.next_actions.filter(
+      (a, i) => !(leadExcluded && i === 0),
     );
     listEl.innerHTML = items.map((a) => actionHtml(a)).join("");
   }
@@ -303,7 +421,10 @@
       return;
     }
     el.className = "pebbles";
-    const dots = Array.from({ length: total }, () => `<span class="pebble"></span>`).join("");
+    const dots = Array.from(
+      { length: total },
+      () => `<span class="pebble"></span>`,
+    ).join("");
     const caption = PEBBLES.goal
       ? `<span class="pebbles__caption">${total}${PEBBLES.goal ? ` of ${PEBBLES.goal}` : ""} today</span>`
       : `<span class="pebbles__caption">${total} ${total === 1 ? "win" : "wins"} today</span>`;
@@ -312,15 +433,21 @@
 
   function checkCleared() {
     const cleared = $("#cleared");
-    const visibleActions = TODAY.next_actions.filter((_, i) => i < MAX_NOTES_SHOWN);
-    const allDone = visibleActions.length > 0 &&
+    const visibleActions = TODAY.next_actions.filter(
+      (_, i) => i < MAX_NOTES_SHOWN,
+    );
+    const allDone =
+      visibleActions.length > 0 &&
       visibleActions.every((a) => state.doneNotes.has(a.note));
 
     if (allDone) {
       cleared.classList.remove("is-hidden");
       const cp = $("#cleared-pebbles");
       const total = PEBBLES.count + state.doneNotes.size;
-      cp.innerHTML = Array.from({ length: total }, () => `<span class="pebble"></span>`).join("");
+      cp.innerHTML = Array.from(
+        { length: total },
+        () => `<span class="pebble"></span>`,
+      ).join("");
     } else {
       cleared.classList.add("is-hidden");
     }
@@ -341,7 +468,7 @@
         : `<span class="reading-item__cost" style="background:transparent;color:var(--ink-faint);">long read</span>`;
       return `
         <li class="reading-item">
-          <h3 class="reading-item__title"><a href="#">${esc(r.title)}</a></h3>
+          <h3 class="reading-item__title"><a href="#" data-path="${esc(r.path)}">${esc(r.title)}</a></h3>
           <div class="reading-item__row">
             ${cost}
             <span>${esc(r.why)}</span>
@@ -363,11 +490,13 @@
      --------------------------------------------------------------------------- */
   function renderSearch() {
     const el = $("#search-candidates");
-    el.innerHTML = RECENT_NOTES.map((n) => `
+    el.innerHTML = RECENT_NOTES.map(
+      (n) => `
       <li data-path="${esc(n.path)}">
         ${esc(n.title)}
         <small>${esc(n.path)} · touched ${esc(n.touched)}</small>
-      </li>`).join("");
+      </li>`,
+    ).join("");
   }
 
   /* ---------------------------------------------------------------------------
@@ -375,8 +504,11 @@
      --------------------------------------------------------------------------- */
   function router() {
     const hash = (location.hash || "#today").replace(/^#/, "");
-    const route = ["today", "capture", "reading", "actions", "search"].includes(hash)
-      ? hash : "today";
+    const route = ["today", "capture", "reading", "actions", "search"].includes(
+      hash,
+    )
+      ? hash
+      : "today";
     state.route = route;
 
     $$("[data-surface]").forEach((s) => {
@@ -388,16 +520,19 @@
       if (a.dataset.route === route) a.setAttribute("aria-current", "page");
     });
 
-    if (route === "today")   renderToday();
+    if (route === "today") renderToday();
     if (route === "reading") renderReading();
     if (route === "actions") renderActionsFull();
-    if (route === "search")  renderSearch();
+    if (route === "search") renderSearch();
     if (route === "capture") {
       const f = $("#capture-field");
       if (f) f.focus();
     }
 
-    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+    window.scrollTo({
+      top: 0,
+      behavior: "instant" in window ? "instant" : "auto",
+    });
   }
 
   /* ---------------------------------------------------------------------------
@@ -435,7 +570,7 @@
   }
 
   function rerenderCurrent() {
-    if (state.route === "today")       renderToday();
+    if (state.route === "today") renderToday();
     else if (state.route === "actions") renderActionsFull();
   }
 
@@ -451,7 +586,7 @@
 
     let savedLabel = "saved";
     try {
-      const r = await fetch("/capture" + location.search, {
+      const r = await apiFetch("/capture", {
         method: "POST",
         headers: { "Content-Type": "text/plain; charset=utf-8" },
         body: text,
@@ -490,15 +625,37 @@
     showToast(`✓ captured — the system owns "later"`, { duration: 2500 });
   }
 
+  async function openNote(path) {
+    try {
+      const r = await apiFetch("/api/open-note", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ path }),
+      });
+      if (!r.ok) throw new Error(`open failed (${r.status})`);
+      showToast(`opened ${path}`, { duration: 2500 });
+    } catch (e) {
+      showToast(`couldn't open ${path} — service unreachable`, {
+        duration: 3500,
+      });
+    }
+  }
+
   /// Resurface: not-now (silent, no-renag) or let-it-go (forever-exit).
   async function dismissResurface(kind) {
     const card = TODAY && TODAY.resurface;
     if (!card || !card.path) return;
 
     try {
-      const r = await fetch("/api/resurface" + location.search, {
+      const r = await apiFetch("/api/resurface", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ path: card.path, action: kind }),
       });
       if (!r.ok) throw new Error(`resurface failed (${r.status})`);
@@ -564,7 +721,7 @@
 
     document.addEventListener("click", (e) => {
       const t = e.target.closest(
-        "[data-done-toggle], [data-resurface], [data-more-toggle], [data-go], [data-path]"
+        "[data-done-toggle], [data-resurface], [data-more-toggle], [data-go], [data-path]",
       );
       if (!t) return;
 
@@ -578,7 +735,8 @@
       } else if (t.dataset.go) {
         location.hash = `#${t.dataset.go}`;
       } else if (t.dataset.path) {
-        showToast(`→ ${t.dataset.path} (mockup: would open the note)`, { duration: 2500 });
+        e.preventDefault();
+        openNote(t.dataset.path);
       }
     });
 
@@ -610,7 +768,7 @@
   function init() {
     wire();
     router();
-    loadToday();   // fetch live data; re-renders today when it lands
+    loadToday(); // fetch live data; re-renders today when it lands
   }
 
   if (document.readyState === "loading") {

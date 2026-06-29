@@ -493,6 +493,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .card__title a { text-decoration: none; color: inherit; }
 .card__title a:hover { color: var(--ochre-deep); }
+.card__title-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+.card__title-button:hover { color: var(--ochre-deep); }
 .card__why {
   font-family: var(--mono);
   font-size: 0.72rem;

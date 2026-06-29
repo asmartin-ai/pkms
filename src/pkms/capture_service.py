@@ -9,6 +9,7 @@ Surfaces (the static shell is open; all data routes are token-gated):
   GET  /api/today     today_view() as JSON — token-gated (the app's only data source)
   GET  /capture-page  the original minimal capture form (kept as a side door)
   POST /capture       append a capture to vault/inbox/ (phone tile, web box)
+  POST /api/open-note open a vault markdown note locally — token-gated
   GET  /health        liveness, no token
 
 Why /web/* is open: the shell (index.html, app.js, styles.css, sw.js) contains
@@ -22,10 +23,12 @@ Resolution order: explicit --token / PKMS_CAPTURE_TOKEN env, else
 """
 
 import json
+import os
 import secrets
+import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, cast
+from typing import cast, override
 from urllib.parse import parse_qs, urlparse
 
 from .capture import write_capture
@@ -75,8 +78,37 @@ def resolve_token(root: Path, token: str | None = None) -> str:
         return token_file.read_text(encoding="utf-8").strip()
     token_file.parent.mkdir(parents=True, exist_ok=True)
     generated = secrets.token_urlsafe(24)
-    token_file.write_text(generated, encoding="utf-8")
+    _ = token_file.write_text(generated, encoding="utf-8")
     return generated
+
+
+def _safe_vault_file(vault: Path, path_key: object) -> Path | None:
+    """Resolve a vault-relative markdown path without allowing traversal."""
+    if not path_key:
+        return None
+    rel = Path(str(path_key))
+    if rel.is_absolute() or ".." in rel.parts:
+        return None
+    target = (vault / rel).resolve()
+    vault_root = vault.resolve()
+    if not target.is_relative_to(vault_root) or not target.is_file() or target.suffix != ".md":
+        return None
+    return target
+
+
+def _open_note_file(path: Path) -> None:
+    """Open a note in the user's default markdown app/editor."""
+    if os.name == "nt":
+        os.startfile(path)  # type: ignore[attr-defined]  # noqa: S606 — local user action
+        return
+
+    editor = os.environ.get("EDITOR")
+    if editor:
+        _ = subprocess.Popen([editor, str(path)])  # noqa: S603 — explicit editor + local path
+    elif open_cmd := os.environ.get("PKMS_OPEN_COMMAND"):
+        _ = subprocess.Popen([open_cmd, str(path)])  # noqa: S603 — user-provided local opener
+    else:
+        _ = subprocess.Popen(["xdg-open", str(path)])  # noqa: S603,S607 — local desktop opener
 
 
 def make_server(
@@ -86,13 +118,13 @@ def make_server(
         raise ValueError("capture service requires a token — refusing to start open")
 
     class Handler(BaseHTTPRequestHandler):
-        def _send(self, code: int, body: str, ctype: str = "text/plain; charset=utf-8"):
+        def _send(self, code: int, body: str, ctype: str = "text/plain; charset=utf-8") -> None:
             data = body.encode("utf-8")
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
-            self.wfile.write(data)
+            _ = self.wfile.write(data)
 
         def _authed(self) -> bool:
             query = parse_qs(urlparse(self.path).query)
@@ -101,7 +133,7 @@ def make_server(
                 or query.get("token", [""])[0] == token
             )
 
-        def do_GET(self):
+        def do_GET(self) -> None:
             path = urlparse(self.path).path
             if path == "/health":
                 return self._send(200, "ok")
@@ -166,9 +198,9 @@ def make_server(
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
-            self.wfile.write(data)
+            _ = self.wfile.write(data)
 
-        def do_POST(self):
+        def do_POST(self) -> None:
             path_val = urlparse(self.path).path
             if path_val == "/capture":
                 if not self._authed():
@@ -180,9 +212,10 @@ def make_server(
                 ctype = self.headers.get("Content-Type", "")
                 if "json" in ctype:
                     try:
-                        capture_payload = json.loads(raw)
+                        capture_payload = cast(object, json.loads(raw))
                         if isinstance(capture_payload, dict):
-                            text = str(capture_payload.get("text", raw))
+                            payload = cast(dict[str, object], capture_payload)
+                            text = str(payload.get("text", raw))
                     except json.JSONDecodeError:
                         pass
                 elif "form-urlencoded" in ctype:
@@ -200,12 +233,12 @@ def make_server(
                 length = int(self.headers.get("Content-Length", 0))
                 raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
                 try:
-                    data = json.loads(raw)
+                    resurface_payload = cast(object, json.loads(raw))
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     return self._send(400, "invalid json")
-                if not isinstance(data, dict):
+                if not isinstance(resurface_payload, dict):
                     return self._send(400, "invalid json")
-                payload = cast(dict[str, Any], data)
+                payload = cast(dict[str, object], resurface_payload)
                 path_key = payload.get("path")
                 action = payload.get("action")
                 if not path_key or not action:
@@ -213,11 +246,8 @@ def make_server(
                 if action not in {"not-now", "let-go"}:
                     return self._send(400, "unknown action")
 
-                rel = Path(str(path_key))
-                if rel.is_absolute() or ".." in rel.parts:
-                    return self._send(400, "invalid path")
-                target = (vault / rel).resolve()
-                if not target.is_relative_to(vault.resolve()) or not target.is_file():
+                target = _safe_vault_file(vault, path_key)
+                if target is None:
                     return self._send(404, "not found")
                 safe_path = target.relative_to(vault.resolve()).as_posix()
 
@@ -229,9 +259,30 @@ def make_server(
                     _ = resurface_let_go(vault, safe_path)
                 body = json.dumps({"ok": True, "action": action, "path": safe_path})
                 self._send(200, body, "application/json; charset=utf-8")
+            elif path_val == "/api/open-note":
+                if not self._authed():
+                    return self._send(403, "bad token")
+                length = int(self.headers.get("Content-Length", 0))
+                raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
+                try:
+                    open_note_payload = cast(object, json.loads(raw))
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    return self._send(400, "invalid json")
+                if not isinstance(open_note_payload, dict):
+                    return self._send(400, "invalid json")
+                payload = cast(dict[str, object], open_note_payload)
+                target = _safe_vault_file(vault, payload.get("path"))
+                if target is None:
+                    return self._send(404, "not found")
+
+                _open_note_file(target)
+                safe_path = target.relative_to(vault.resolve()).as_posix()
+                body = json.dumps({"ok": True, "path": safe_path})
+                self._send(200, body, "application/json; charset=utf-8")
             else:
                 return self._send(404, "not found")
 
+        @override
         def log_message(self, format: str, *args: object) -> None:  # quiet default request logging
             pass
 
