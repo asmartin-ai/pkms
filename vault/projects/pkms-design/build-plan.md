@@ -2,7 +2,7 @@
 title: PKMS build plan — Phase 4 vertical slices
 tags: [pkms-design, build-plan, adhd]
 created: 2026-06-12
-modified: 2026-06-17
+modified: 2026-06-29
 status: in-progress
 ---
 
@@ -298,6 +298,11 @@ when picked up.
   PKMS vault. Coordination point with content-hoarder (the triage inbox / system of record
   for raw saves — [[40-handoff-content-hoarder]]); must preserve the sacred zero-decision
   capture path (classification happens after the dump, never as a prompt at capture time).
+- **Inbox surface in the new-tab/PWA** *(Kenja, 2026-06-29)* — show recent
+  `vault/inbox/` captures as a calm surface/card row, not just the "N new to fold in"
+  count. Must preserve inbox-as-progress copy: no backlog pile, no unread badge, and each
+  item should offer one gentle action (open, fold later, or start `/fold`). Reactivation:
+  when returning to frontend polish after the reading/open-note path is stable.
 
 ## Icebox (Phase 3 carries + later additions)
 
