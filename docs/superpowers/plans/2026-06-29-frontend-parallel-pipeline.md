@@ -1,6 +1,9 @@
 # Frontend parallel pipeline plan
 
-> Date: 2026-06-29  
+> Snapshot as of 2026-06-29. Historical execution plan and outcome; temporary
+> sandbox branches/worktrees were removed after merge. Verify live repo state with
+> `git status -sb`, `git branch -vv`, and `git worktree list` rather than this note.
+
 Role split: GPT-5.5/Zed acts as orchestrator, reviewer, integrator, and corrector.
 > Goal: make the new-tab frontend real, not just a shell: capture writes files, reading/recognition surfaces load real data, and resurface actions persist.
 
@@ -24,23 +27,18 @@ Role split: GPT-5.5/Zed acts as orchestrator, reviewer, integrator, and correcto
 
 Because the `aider-delegate` wrapper is known to reject linked git worktrees that have a `.git` file, DeepSeek executor runs will use local nested clones under the project directory, excluded from the main repo. We still use separate branches for every lane, and an integration worktree for reviewed changes.
 
-Planned local-only ignored paths:
+Planned local-only ignored paths were generic `.worktrees/` linked worktrees and
+`.delegates/` full local clones, added to `.git/info/exclude` only. They were
+not committed and were removed after merge.
 
-```text
-PKMS/.worktrees/        # linked worktrees for GPT-5.5/integration lanes
-PKMS/.delegates/        # full local clones for aider-delegate executor lanes
-```
+Temporary lanes:
 
-Add these to `.git/info/exclude`, not `.gitignore`, unless we intentionally decide the convention should be tracked.
-
-Branches:
-
-| Lane | Location | Branch | Owner | Purpose |
-|---|---|---|---|---|
-| Integration | `PKMS/.worktrees/frontend-pipeline` | `orchestrate/frontend-pipeline` | GPT-5.5 | Merge reviewed lane diffs and run final validation |
-| T1 | `PKMS/.worktrees/t1-web-capture` | `feat/web-capture-real` | GPT-5.5 / optional GPT-5.4 subagent | Make web capture actually POST to `/capture` |
-| T2 | `PKMS/.delegates/t2-reading` | `delegate/t2-reading-surfaces` | DeepSeek direct `deepseek-v4-pro` | Backend/read surfaces for reading queue + recognition cards |
-| T3 | `PKMS/.delegates/t3-resurface` | `delegate/t3-resurface-actions` | OpenModel.ai `deepseek-v4-flash` | Persist resurface not-now / let-go actions |
+| Lane | Owner | Purpose |
+|---|---|---|
+| Integration | GPT-5.5 | Merge reviewed lane diffs and run final validation |
+| T1 | GPT-5.5 / optional GPT-5.4 subagent | Make web capture actually POST to `/capture` |
+| T2 | DeepSeek direct `deepseek-v4-pro` | Backend/read surfaces for reading queue + recognition cards |
+| T3 | OpenModel.ai `deepseek-v4-flash` | Persist resurface not-now / let-go actions |
 
 Executor sandboxes:
 
@@ -78,10 +76,10 @@ flowchart TD
 Steps:
 
 1. Confirm clean main working tree.
-2. Add `.worktrees/` and `.delegates/` to `.git/info/exclude`.
-3. Create integration worktree/branch from `main`.
-4. Create T1 worktree/branch from `main`.
-5. Create T2/T3 nested clones under `.delegates/`, each on its own branch.
+2. Add local sandbox dirs to `.git/info/exclude`.
+3. Create temporary integration worktree/branch from `main`.
+4. Create temporary T1 worktree/branch from `main`.
+5. Create T2/T3 nested clones under the ignored delegate sandbox, each on its own branch.
 6. Run baseline:
    ```sh
    .venv/Scripts/python.exe -m pytest tests/test_web_assets.py tests/test_web_ext.py tests/test_capture_service.py -q
@@ -215,7 +213,7 @@ Fallbacks:
 Owner: GPT-5.5.
 
 ⏱ Size: 45–90 min  
-▶ First action: import T1, T2, and T3 reviewed diffs into `orchestrate/frontend-pipeline`.  
+▶ First action: import T1, T2, and T3 reviewed diffs into the temporary integration branch.  
 ✓ Done when: final branch has one coherent implementation and focused tests pass.
 
 Integration order:
@@ -265,7 +263,7 @@ A reviewed integration branch with:
 
 ## Outcome — 2026-06-29
 
-Integrated on `orchestrate/frontend-pipeline` and then merged to `main`.
+Integrated via a temporary branch and then merged to `main`; the temporary branches were deleted.
 
 - T1 landed directly: `src/pkms/web/app.js` now POSTs captures to `/capture`,
   preserves text on failure, and refreshes `/api/today` after a real save.
@@ -276,4 +274,4 @@ Integrated on `orchestrate/frontend-pipeline` and then merged to `main`.
   and wired `/api/resurface` to existing dismiss/let-go mechanics.
 - Follow-up correction fixed Windows extended-path SQLite URI handling in
   `pkms promote` tests (`//?/O:/...` → `file:/O:/...`).
-- Validation: full suite passed with `172 passed` on the integration branch.
+- Validation: full suite passed with `172 passed` before merge and again on `main`.
