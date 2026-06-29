@@ -130,6 +130,16 @@ def make_server(
 
                 body = json.dumps(today_view(vault, index_dir))
                 self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/reading-queue":
+                from .today import reading_queue
+
+                body = json.dumps(reading_queue(vault))
+                self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/recognition-cards":
+                from .today import recognition_cards
+
+                body = json.dumps(recognition_cards(vault, index_dir))
+                self._send(200, body, "application/json; charset=utf-8")
             else:
                 self._send(404, "not found")
 
