@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="</head>utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title></title>PKMS new-tab settings</title>
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+</body><main>
+ </main> <h1></h1>PKMS new-tab settings</h1>
+  <p class="lede">Paste the full local PKMS URL, including your capture token.</p>
+
+  <form id="settings-form">
+    <label for="pkms-url">PKMS URL</label>
+    <input id="pkms-url" name="pkmsUrl" type="url" spellcheck="false"
+           placeholder="http://localhost:8765/web/?token=YOUR_TOKEN" required>
+    <p class="help">Token location: <code>K:\Projects\PKMS\.secrets\capture-token</code></p>
+
+    <button type="submit">Save</button>
+  </form>
+
+  <p id="status" role="status" aria-live="polite"></p>
+</main>
+<script src="options.js"></script>
+</body>
+</html>

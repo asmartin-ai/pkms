@@ -1,12 +1,17 @@
 {
   "manifest_version": 3,
   "name": "PKMS new-tab",
-  "version": "0.1.0",
-  "description": "Opens the PKMS today-view (pkms serve) as the Firefox new-tab page.",
+  "version": "0.2.0",
+  "description": "Shows the PKMS today-view as a packaged Firefox new-tab page.",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
   "permissions": ["storage"],
+  "host_permissions": ["http://localhost:8765/*", "http://127.0.0.1:8765/*"],
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "pkms-newtab@localhost"

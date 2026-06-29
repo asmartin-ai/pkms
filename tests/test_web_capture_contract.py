@@ -12,6 +12,6 @@ WEB = Path(__file__).resolve().parents[1] / "src" / "pkms" / "web"
 
 def test_web_capture_posts_to_capture_endpoint():
     js = (WEB / "app.js").read_text(encoding="utf-8")
-    assert 'fetch("/capture' in js or "fetch('/capture" in js
+    assert 'apiFetch("/capture"' in js or 'fetch("/capture' in js or "fetch('/capture" in js
     assert 'method: "POST"' in js or "method: 'POST'" in js
     assert "loadToday()" in js

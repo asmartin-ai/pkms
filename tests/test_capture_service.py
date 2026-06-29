@@ -56,6 +56,18 @@ def _get_no_redirect(url):
         return e.code, e.headers.get("Location", "")
 
 
+def _post_json(url, payload):
+    data = json.dumps(payload).encode("utf-8")
+    req = Request(
+        url,
+        data=data,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    with urlopen(req, timeout=5) as r:  # noqa: S310 — loopback only
+        return r.status, json.loads(r.read().decode("utf-8"))
+
+
 def test_health_needs_no_token(service):
     status, body, _ = _get(service + "/health")
     assert status == 200 and body == "ok"
@@ -113,6 +125,14 @@ def test_web_app_js_fetches_api_today(service):
     assert "inbox_new: 3" not in body, "app.js still carries inlined fake data"
 
 
+def test_web_app_opens_note_paths(service):
+    """Reading/search links call the local open-note endpoint, not a mock toast."""
+    status, body, ctype = _get(f"{service}/web/app.js?token={TOKEN}")
+    assert status == 200 and "text/javascript" in ctype
+    assert "/api/open-note" in body
+    assert "mockup: would open the note" not in body
+
+
 def test_web_static_assets_served_with_correct_types(service):
     """styles.css, app.js, manifest.webmanifest, icon.svg serve with right content-types."""
     cases = [
@@ -165,6 +185,39 @@ def test_capture_from_web_lands_in_inbox(service, vault):
     text = files[0].read_text(encoding="utf-8")
     assert "a thought from the web" in text
     assert "source: web" in text
+
+
+def test_open_note_opens_vault_markdown(monkeypatch, vault, index_dir):
+    opened = []
+
+    def fake_open(path):
+        opened.append(path)
+
+    monkeypatch.setattr("pkms.capture_service._open_note_file", fake_open)
+    index_vault(vault, index_dir)
+    server = make_server(vault, index_dir, "127.0.0.1", 0, TOKEN)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    service_url = f"http://{server.server_address[0]}:{server.server_address[1]}"
+    try:
+        status, body = _post_json(
+            f"{service_url}/api/open-note?token={TOKEN}",
+            {"path": "resources/beta.md"},
+        )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+    assert status == 200
+    assert body == {"ok": True, "path": "resources/beta.md"}
+    assert opened == [vault / "resources" / "beta.md"]
+
+
+def test_open_note_rejects_traversal(service):
+    with pytest.raises(HTTPError) as exc:
+        _post_json(f"{service}/api/open-note?token={TOKEN}", {"path": "../README.md"})
+    assert exc.value.code == 404
 
 
 def test_make_server_refuses_without_token(vault, index_dir):

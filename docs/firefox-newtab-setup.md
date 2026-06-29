@@ -3,10 +3,9 @@
 The PKMS today-view lives as your Firefox new-tab page — an ambient briefing
 seen on every tab-open. This doc sets it up.
 
-> **Delivery shape (decision G-N2):** redirector-only. The extension points the
-> new tab at your running `pkms serve` instance; no page is bundled. This keeps
-> the source of truth in one place (`src/pkms/web/`) and lets edits ship without
-> re-signing an add-on.
+> **Delivery shape:** packaged new-tab shell. The extension owns the top-level
+> new-tab document so Firefox keeps the address bar clean, while live data still
+> comes from your running `pkms serve` instance via token-gated JSON APIs.
 
 ## Prerequisites
 
@@ -19,7 +18,7 @@ Quick liveness check — should return `ok` with no token:
 curl http://localhost:8765/health
 ```
 
-## 1. Load the redirector extension
+## 1. Load the new-tab extension
 
 See [`src/pkms/web_ext/README.md`](../src/pkms/web_ext/README.md) — load
 `manifest.json` as a temporary add-on via `about:debugging`. (For a permanent
@@ -28,18 +27,24 @@ an unsigned dev build in Firefox Developer Edition / via Enterprise policy.)
 
 ## 2. Set the URL
 
-The redirector reads `pkmsUrl` from extension local storage. Set it once in the
-Browser Console (Ctrl+Shift+J):
+The extension stores the PKMS base URL and token in extension local storage.
+Set it once from the extension settings page:
 
-```js
-browser.storage.local.set({ pkmsUrl: "http://localhost:8765/web/?token=YOUR_TOKEN" })
-```
+1. Open `about:addons`.
+2. Find **PKMS new-tab**.
+3. Open **Preferences** / **Options**.
+4. Paste the full URL:
+
+   ```text
+   http://localhost:8765/web/?token=YOUR_TOKEN
+   ```
 
 Replace `YOUR_TOKEN` with the contents of `.secrets/capture-token`.
 
 Open a new tab (Ctrl+T). You should see the today-view poster with the
 re-entry lede and live data from `/api/today`, `/api/reading-queue`, and
-`/api/recognition-cards`.
+`/api/recognition-cards`. The URL bar stays on the extension new-tab page; the
+token is sent as `X-Capture-Token`, not shown in the address.
 
 ## Mobile (Pixel 6, over tailnet)
 
@@ -51,17 +56,16 @@ network).
 
 ## Troubleshooting
 
-- **"token required"** — the stored `pkmsUrl` is missing `?token=…`. Re-run the
-  storage snippet with the full URL including the query string.
-- **Blank tab / redirect loop** — `pkms serve` isn't running, or the URL is
+- **"token required"** — the stored token is missing. Re-open the extension
+  settings page and save the full URL including `?token=…`.
+- **Blank tab / service error** — `pkms serve` isn't running, or the URL is
   wrong. Check `http://localhost:8765/health`.
-- **Stale data after a capture** — the page re-fetches `/api/today` on save; if
-  it doesn't, hard-refresh once (the SW may be serving a cached *shell* — but
-  data is always fetched live, never cached).
-- **Reading/resurface actions do nothing** — check that the stored URL includes
-  the token. The shell loads without it, but `/api/reading-queue`,
-  `/api/recognition-cards`, `/api/resurface`, `/api/today`, and `/capture` are
-  token-gated.
+- **Stale UI after editing extension assets** — temporary add-ons need a reload
+  from `about:debugging` after packaged `newtab.html`, `styles.css`, or `app.js`
+  changes.
+- **Reading/resurface actions do nothing** — check that the saved URL includes
+  the token. `/api/reading-queue`, `/api/recognition-cards`, `/api/resurface`,
+  `/api/today`, `/api/open-note`, and `/capture` are token-gated.
 - **"temporary add-on" disappears on restart** — expected for load-unpacked.
   Re-load from `about:debugging`, or move to a signed/Developer Edition install.
 
@@ -69,13 +73,11 @@ network).
 
 ```
 Firefox new tab
-   │  chrome_url_overrides.newtab → newtab.html
+   │  chrome_url_overrides.newtab → packaged newtab.html
    ▼
-newtab.html ──loads──► newtab.js
-   │  reads storage.local.pkmsUrl → location.replace(...)
+moz-extension://…/newtab.html ──loads──► packaged app.js + styles.css
+   │  reads storage.local.pkmsBaseUrl + pkmsToken
+   │  fetches http://localhost:8765/api/* with X-Capture-Token
    ▼
-http://localhost:8765/web/?token=…   (capture_service serves src/pkms/web/)
-   │  page fetches /api/today + read-only queues; POSTs capture/resurface actions
-   ▼
-PKMS today-view poster  ◄── sw.js caches the shell only (offline-ready)
+PKMS today-view poster  ◄── live data from pkms serve
 ```
