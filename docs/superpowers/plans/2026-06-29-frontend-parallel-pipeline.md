@@ -262,3 +262,18 @@ A reviewed integration branch with:
 3. Persistent resurface actions.
 4. Focused and full test results recorded.
 5. Delegate diffs either integrated, corrected, or explicitly rejected with reasons.
+
+## Outcome — 2026-06-29
+
+Integrated on `orchestrate/frontend-pipeline` and then merged to `main`.
+
+- T1 landed directly: `src/pkms/web/app.js` now POSTs captures to `/capture`,
+  preserves text on failure, and refreshes `/api/today` after a real save.
+- T2 delegated to DeepSeek direct `deepseek-v4-pro`: accepted after manual
+  review; added token-gated `/api/reading-queue` and `/api/recognition-cards`.
+- T3 delegated to OpenModel.ai `deepseek-v4-flash`: partially accepted after
+  cleanup; removed an out-of-scope `run_tests.bat`, hardened path/JSON handling,
+  and wired `/api/resurface` to existing dismiss/let-go mechanics.
+- Follow-up correction fixed Windows extended-path SQLite URI handling in
+  `pkms promote` tests (`//?/O:/...` → `file:/O:/...`).
+- Validation: full suite passed with `172 passed` on the integration branch.
