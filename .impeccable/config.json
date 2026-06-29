@@ -1,0 +1,13 @@
+{
+  "detector": {
+    "ignoreFiles": [
+      ".agents/**",
+      ".venv/**",
+      "spike/**",
+      "src/pkms/web_ext/**"
+    ],
+    "designSystem": {
+      "enabled": true
+    }
+  }
+}
