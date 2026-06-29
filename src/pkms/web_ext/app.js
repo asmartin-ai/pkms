@@ -227,7 +227,7 @@
     if (!action) {
       // Nothing owed — the calm win state (fresh install, cleared, weekend).
       return {
-        html: `Nothing's owed today. Come back when something sparks.`,
+        html: `Nothing is asking for you right now.`,
         lines: [],
       };
     }
@@ -278,22 +278,14 @@
       subEl.hidden = true;
     }
 
-    // ── Lead action — the single biggest, warmest affordance ──
-    const lead = TODAY.next_actions[0];
-    const leadBody = $("#lead-action-body");
-    const leadSize = $("#lead-action-size");
-    if (lead && !state.doneNotes.has(lead.note)) {
-      leadBody.innerHTML = `<span class="lead-action__verb">▶</span>${esc(lead.first_action || lead.text)}`;
-      leadSize.textContent = lead.size ? `⏱ ${lead.size}` : "";
-      $("#lead-action").hidden = false;
-    } else {
-      $("#lead-action").hidden = true;
-    }
+    // ── Lead continuation — primary action opens context; completion stays secondary. ──
+    renderLeadContinuation();
 
-    // ── Shelf: to fold in, pebbles, resurface ──
+    // ── Context rail: fold in, read next, still curious, done today ──
     renderFold();
-    renderPebbles();
+    renderNextRead();
     renderResurface();
+    renderPebbles();
 
     // ── Optional blocks (density-gated) ──
     renderRecognitionCards();
@@ -316,6 +308,61 @@
     } else {
       foldEl.innerHTML = `<span>nothing new to fold in.</span>`;
     }
+  }
+
+  function renderNextRead() {
+    const el = $("#next-read");
+    if (!el) return;
+    const item = READING_QUEUE[0] || TODAY.next_read;
+    if (!item) {
+      el.className = "next-read next-read--empty";
+      el.innerHTML = "nothing queued to read.";
+      return;
+    }
+
+    el.className = "next-read";
+    const cost = item.minutes
+      ? `<span class="next-read__cost">⏱ ~${esc(item.minutes)} min</span>`
+      : "";
+    const title = item.path
+      ? `<button class="next-read__title" type="button" data-path="${esc(item.path)}">${esc(item.title)}</button>`
+      : `<span class="next-read__title">${esc(item.title)}</span>`;
+    el.innerHTML = `${title}${cost}`;
+  }
+
+  function renderLeadContinuation() {
+    const panel = $("#lead-continuation");
+    const label = $("#lead-action-label");
+    const title = $("#lead-action-title");
+    const body = $("#lead-action-body");
+    const meta = $("#lead-action-meta");
+    const secondary = $("#lead-action-secondary");
+    if (!panel || !label || !title || !body || !meta || !secondary) return;
+
+    const lead = TODAY.next_actions[0];
+    panel.hidden = false;
+
+    if (lead && !state.doneNotes.has(lead.note)) {
+      panel.dataset.mode = "continue";
+      label.textContent = "continue";
+      title.textContent = lead.title ? `Open ${lead.title}` : "Open the note";
+      body.innerHTML = `<span class="lead-continuation__verb">▶</span>${esc(lead.first_action || lead.text)}`;
+      meta.textContent = [lead.size ? `⏱ ${lead.size}` : "", lead.note || ""]
+        .filter(Boolean)
+        .join(" · ");
+      secondary.hidden = false;
+      return;
+    }
+
+    panel.dataset.mode = "capture";
+    label.textContent = "nothing queued";
+    title.textContent = "Capture a thought";
+    body.innerHTML = `<span class="lead-continuation__verb">+</span>Nothing needs an action right now. Add the thing that just sparked.`;
+    meta.textContent =
+      TODAY.inbox_new > 0
+        ? `${TODAY.inbox_new} safe to fold in later`
+        : "the system owns later";
+    secondary.hidden = true;
   }
 
   function renderRecognitionCards() {
@@ -557,7 +604,7 @@
       state.doneNotes.add(note);
       const all = [...TODAY.next_actions, ...MORE_ACTIONS];
       const label = all.find((a) => a.note === note)?.title || "done";
-      showToast(`✓ ${label} — a pebble for today`, {
+      showToast(`✓ ${label} — counted for today`, {
         action: "undo",
         onAction: () => {
           state.doneNotes.delete(note);
@@ -714,9 +761,24 @@
       b.addEventListener("click", () => setDensity(b.dataset.density));
     });
 
+    const navSearch = $(".nav-search");
+    if (navSearch) {
+      navSearch.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const navInput = navSearch.querySelector(".nav-search__input");
+        const searchInput = $("#search-input");
+        if (navInput && searchInput) searchInput.value = navInput.value;
+        location.hash = "#search";
+      });
+    }
+
     $("#lead-action").addEventListener("click", () => {
       const lead = TODAY.next_actions[0];
-      if (lead) toggleDone(lead.note);
+      if (lead && !state.doneNotes.has(lead.note)) {
+        openNote(lead.note);
+      } else {
+        location.hash = "#capture";
+      }
     });
 
     document.addEventListener("click", (e) => {
