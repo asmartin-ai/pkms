@@ -1,294 +1,221 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-        />
-        <meta
-            name="description"
-            content="PKMS — an ambient briefing on every new tab. Recognize and act, never manage a pile."
-        />
-        <meta name="theme-color" content="#f6f1e8" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="PKMS — an ambient briefing on every new tab. Recognize and act, never manage a pile.">
+  <meta name="theme-color" content="#f6f1e8">
 
-        <title>today · pkms</</title>
-        title>
+  <title>today · pkms</title>
 
-        <!--
+  <!--
     Type: Fraunces (serif display) + Inter (humanist sans) + JetBrains Mono.
     Same stack as the daily-edition mockup — the aesthetic is continuous; the
     delivery vehicle (Firefox new-tab poster) is what changed. Production would
     self-host; the mockup loads from Google Fonts and degrades gracefully offline.
   -->
-        <!--
+  <!--
     Type: Cormorant Garamond (serif display) + Barlow (humanist sans) + Fira Code (mono).
     Selected via local-LLM-delegated research — see spike/newtab-firefox/TYPEFACE-RESEARCH.md.
     Same load pattern as the prior Fraunces+Inter+JetBrains stack; degrades to system
     fonts offline via the CSS stacks in styles.css.
   -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Barlow:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap"
-            rel="stylesheet"
-        />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Barlow:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body class="density-calm">
-        <!-- ──────────────────────────────────────────────────────────────────────
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="density-calm">
+
+  <!-- ──────────────────────────────────────────────────────────────────────
        The Firefox new-tab poster. Default surface = #today.
        Wide viewports: a full-bleed editorial poster, glanced at per tab-open.
        Narrow viewports (≤48rem / mobile PWA): reflows to a card-stack.
        ────────────────────────────────────────────────────────────────────── -->
 
-        <div class="poster" id="app">
-            <!-- ── Top bar — sparse masthead. Date as quiet mono metadata (not a hero);
+  <div class="poster" id="app">
+
+    <!-- ── Top bar — sparse masthead. Date as quiet mono metadata (not a hero);
          the one knob opposite. No greeting, no clock, no focus word — those are
          Momentum idioms; the lede below is this page's re-entry anchor (§7). ── -->
-            <header class="topbar">
-                <div class="masthead">
-                    <div class="masthead__title">today <em>· pkms</em></div>
-                    <div class="masthead__meta" id="masthead-date">—</div>
-                </div>
-                <div
-                    class="salience"
-                    role="group"
-                    aria-label="How much to show"
-                >
-                    <span class="salience__label">show</span>
-                    <button data-density="calm" aria-pressed="true">
-                        calm
-                    </button>
-                    <button data-density="more" aria-pressed="false">
-                        more
-                    </button>
-                    <button data-density="everything" aria-pressed="false">
-                        everything
-                    </button>
-                </div>
-            </header>
+    <header class="topbar">
+      <div class="masthead">
+        <div class="masthead__title">today <em>· pkms</em></div>
+        <div class="masthead__meta" id="masthead-date">—</div>
+      </div>
+      <div class="salience" role="group" aria-label="How much to show">
+        <span class="salience__label">show</span>
+        <button data-density="calm"       aria-pressed="true">calm</button>
+        <button data-density="more"       aria-pressed="false">more</button>
+        <button data-density="everything" aria-pressed="false">everything</button>
+      </div>
+    </header>
 
-            <!-- Hash-route nav. Capture is first-class (its own ramp).
-         On the poster this reads as a quiet utility row, not a primary nav. -->
-            <nav class="nav" aria-label="Surfaces">
-                <a href="#today" data-route="today">today</a>
-                <a href="#capture" data-route="capture">capture</a>
-                <a href="#reading" data-route="reading">reading</a>
-                <a href="#actions" data-route="actions">actions</a>
-                <span class="nav__spacer"></span>
-                <a
-                    href="#search"
-                    data-route="search"
-                    aria-label="find — the fallback"
-                    >find</a
-                >
-            </nav>
+    <!-- Command desk: the persistent ramp before any route chrome. -->
+    <nav class="nav" aria-label="PKMS command desk">
+      <form class="nav-search" action="#search" role="search">
+        <span class="nav-search__prefix">⌕</span>
+        <input class="nav-search__input" type="search" aria-label="Find or capture in PKMS" placeholder="find a note, capture a thought…">
+        <button class="nav-search__submit" type="submit" data-go="search">find</button>
+      </form>
+      <div class="nav__links" aria-label="Surfaces">
+        <a href="#today"   data-route="today">today</a>
+        <a href="#capture" data-route="capture">capture</a>
+        <a href="#reading" data-route="reading">reading</a>
+        <a href="#actions" data-route="actions">actions</a>
+      </div>
+    </nav>
 
-            <!-- ════════════════════════════════════════════════════════════════════
+    <!-- ════════════════════════════════════════════════════════════════════
          TODAY — the poster / centerpiece
          ════════════════════════════════════════════════════════════════════ -->
-            <section data-surface="today" id="today" class="surface">
-                <!-- Error banner — shown only if /api/today can't be reached (§4 ambient disclosure). -->
-                <p class="error-banner" id="error-banner" hidden></p>
+    <section data-surface="today" id="today" class="surface">
 
-                <!-- The poster body: the re-entry lede is the glance-anchor.
+      <!-- Error banner — shown only if /api/today can't be reached (§4 ambient disclosure). -->
+      <p class="error-banner" id="error-banner" hidden></p>
+
+      <!-- The poster body: the re-entry lede is the glance-anchor.
            "Yesterday you were in Alpha, drafting the intro" IS the greeting —
            it does the re-entry job (§7) without a Momentum-style hero salutation. -->
-                <div class="poster-body">
-                    <p class="lede" id="lede">
-                        <!-- "Yesterday you were in <strong>…</strong>…" -->
-                    </p>
-                    <div class="lede__sub" id="lede-sub">
-                        <!-- up to 4 breadcrumb lines -->
-                    </div>
+      <div class="poster-body">
+        <p class="lede" id="lede"><!-- "Yesterday you were in <strong>…</strong>…" --></p>
+        <div class="lede__sub" id="lede-sub"><!-- up to 4 breadcrumb lines --></div>
 
-                    <button class="lead-action" id="lead-action" type="button">
-                        <span class="lead-action__prompt">the next thing</span>
-                        <span class="lead-action__body" id="lead-action-body"
-                            ><!-- ▶ open the outline file --></span
-                        >
-                        <span class="lead-action__size" id="lead-action-size"
-                            ><!-- ⏱ 30m --></span
-                        >
-                    </button>
-                </div>
+        <div class="lead-continuation" id="lead-continuation" hidden>
+          <button class="lead-continuation__primary" id="lead-action" type="button">
+            <span class="lead-continuation__label" id="lead-action-label">continue</span>
+            <span class="lead-continuation__title" id="lead-action-title"><!-- Continue Alpha --></span>
+            <span class="lead-continuation__body" id="lead-action-body"><!-- ▶ open the outline file --></span>
+            <span class="lead-continuation__meta" id="lead-action-meta"><!-- ⏱ 30m · projects/foo.md --></span>
+          </button>
+          <div class="lead-continuation__secondary" id="lead-action-secondary" hidden>
+            <button class="lead-continuation__link" type="button" data-go="actions">view actions</button>
+          </div>
+        </div>
+      </div>
 
-                <!-- The ambient shelf — quiet, secondary, lower visual weight.
-           Three columns on wide viewports; a stacked card list on mobile. -->
-                <div class="shelf">
-                    <!-- "To fold in" — inbox as forward-only progress, never a count. -->
-                    <div class="shelf__cell">
-                        <div class="shelf__kicker">to fold in</div>
-                        <div class="fold" id="fold">
-                            <!-- "1 / 3" + "3 new to fold in" -->
-                        </div>
-                    </div>
+      <!-- The context rail — quiet, secondary, lower visual weight.
+           Glanceable state without a dashboard wall. -->
+      <div class="shelf">
+        <!-- "To fold in" — inbox as forward-only progress, never a count. -->
+        <div class="shelf__cell">
+          <div class="shelf__kicker">to fold in</div>
+          <div class="fold" id="fold"><!-- "1 / 3" + "3 new to fold in" --></div>
+        </div>
 
-                    <!-- Today's pebbles — wins-only, forward-only, resets without debt. -->
-                    <div class="shelf__cell">
-                        <div class="shelf__kicker">today's pebbles</div>
-                        <div class="pebbles" id="pebbles">
-                            <!-- dots + caption -->
-                        </div>
-                    </div>
+        <!-- Reading queue — one queued read, never a pile. -->
+        <div class="shelf__cell">
+          <div class="shelf__kicker">read next</div>
+          <div class="next-read" id="next-read"><!-- queued read --></div>
+        </div>
 
-                    <!-- The single resurface question — one ambient prompt, ever. -->
-                    <div
-                        class="shelf__cell shelf__cell--resurface"
-                        id="resurface-cell"
-                        hidden
-                    >
-                        <div class="shelf__kicker shelf__kicker--sage">
-                            still curious?
-                        </div>
-                        <div class="resurface" id="resurface">
-                            <!-- question + why + actions -->
-                        </div>
-                    </div>
-                </div>
+        <!-- The single resurface question — one ambient prompt, ever. -->
+        <div class="shelf__cell shelf__cell--resurface" id="resurface-cell" hidden>
+          <div class="shelf__kicker shelf__kicker--sage">still curious?</div>
+          <div class="resurface" id="resurface"><!-- question + why + actions --></div>
+        </div>
 
-                <!-- Recognition rail (hidden in calm mode) — curated reading + resurface. -->
-                <div class="rail block--optional">
-                    <div class="rail__kicker">worth a glance</div>
-                    <div class="cards" id="recognition-cards">
-                        <!-- reading + resurface cards -->
-                    </div>
-                </div>
+        <!-- Today's wins — forward-only, resets without debt. -->
+        <div class="shelf__cell">
+          <div class="shelf__kicker">done today</div>
+          <div class="pebbles" id="pebbles"><!-- dots + caption --></div>
+        </div>
+      </div>
 
-                <!-- Next actions (hidden in calm mode) — one per note, ⏱ ▶ ✓ anatomy. -->
-                <div class="actions-block block--optional">
-                    <div class="actions-block__kicker">
-                        one next action per note
-                    </div>
-                    <ul class="actions" id="actions">
-                        <!-- list -->
-                    </ul>
-                    <div class="more-notes" id="more-notes" hidden>
-                        <!-- "4 more one click away" -->
-                    </div>
-                </div>
+      <!-- Recognition rail (hidden in calm mode) — curated reading + resurface. -->
+      <div class="rail block--optional">
+        <div class="rail__kicker">worth a glance</div>
+        <div class="cards" id="recognition-cards"><!-- reading + resurface cards --></div>
+      </div>
 
-                <!-- The PAGE CLEARED celebration (the one loud moment). -->
-                <div class="cleared is-hidden" id="cleared">
-                    <div class="cleared__stamp">PAGE CLEARED</div>
-                    <div class="cleared__sub">nothing owed. go well.</div>
-                    <div
-                        class="pebbles cleared__pebbles"
-                        id="cleared-pebbles"
-                    ></div>
-                </div>
+      <!-- Next actions (hidden in calm mode) — one per note, ⏱ ▶ ✓ anatomy. -->
+      <div class="actions-block block--optional">
+        <div class="actions-block__kicker">one next action per note</div>
+        <ul class="actions" id="actions"><!-- list --></ul>
+        <div class="more-notes" id="more-notes" hidden><!-- "4 more one click away" --></div>
+      </div>
 
-                <!-- Closing: invitation, never assignment. -->
-                <p class="invitation">come back when something sparks.</p>
-            </section>
+      <!-- The PAGE CLEARED celebration (the one loud moment). -->
+      <div class="cleared is-hidden" id="cleared">
+        <div class="cleared__stamp">PAGE CLEARED</div>
+        <div class="cleared__sub">nothing owed. go well.</div>
+        <div class="pebbles cleared__pebbles" id="cleared-pebbles"></div>
+      </div>
 
-            <!-- ════════════════════════════════════════════════════════════════════
+      <!-- Closing: invitation, never assignment. -->
+      <p class="invitation">come back when something sparks.</p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
          CAPTURE — overlay-style on desktop, full-screen on mobile.
          Never loads the app; never opens a feed. (§1)
          ════════════════════════════════════════════════════════════════════ -->
-            <section
-                data-surface="capture"
-                id="capture"
-                class="surface surface--capture"
-                hidden
-            >
-                <div class="capture">
-                    <p class="capture__hint">
-                        drop it here. the system owns "later."
-                    </p>
-                    <textarea
-                        class="capture__field"
-                        id="capture-field"
-                        placeholder="whatever just crossed your mind…"
-                        autofocus
-                        aria-label="Capture box"
-                    ></textarea>
-                    <div class="capture__meta">
-                        <span
-                            ><span class="capture__kbd">⌘/Ctrl</span> +
-                            <span class="capture__kbd">Enter</span> to save ·
-                            <span class="capture__kbd">Esc</span> to clear</span
-                        >
-                        <span id="capture-status">unsaved</span>
-                    </div>
-                    <button class="capture__back" type="button" data-go="today">
-                        ← back to today
-                    </button>
-                </div>
-            </section>
+    <section data-surface="capture" id="capture" class="surface surface--capture" hidden>
+      <div class="capture">
+        <p class="capture__hint">drop it here. the system owns "later."</p>
+        <textarea
+          class="capture__field"
+          id="capture-field"
+          placeholder="whatever just crossed your mind…"
+          autofocus
+          aria-label="Capture box"></textarea>
+        <div class="capture__meta">
+          <span><span class="capture__kbd">⌘/Ctrl</span> + <span class="capture__kbd">Enter</span> to save · <span class="capture__kbd">Esc</span> to clear</span>
+          <span id="capture-status">unsaved</span>
+        </div>
+        <button class="capture__back" type="button" data-go="today">← back to today</button>
+      </div>
+    </section>
 
-            <!-- ════════════════════════════════════════════════════════════════════
+    <!-- ════════════════════════════════════════════════════════════════════
          READING QUEUE — promoted long-reads, consume-cost pills.
          ════════════════════════════════════════════════════════════════════ -->
-            <section
-                data-surface="reading"
-                id="reading-surface"
-                class="surface"
-                hidden
-            >
-                <div class="block">
-                    <div class="block__kicker">reading queue</div>
-                    <ul class="reading-list" id="reading-list"></ul>
-                </div>
-            </section>
+    <section data-surface="reading" id="reading-surface" class="surface" hidden>
+      <div class="block">
+        <div class="block__kicker">reading queue</div>
+        <ul class="reading-list" id="reading-list"></ul>
+      </div>
+    </section>
 
-            <!-- ════════════════════════════════════════════════════════════════════
+    <!-- ════════════════════════════════════════════════════════════════════
          ACTIONS — full next-actions list.
          ════════════════════════════════════════════════════════════════════ -->
-            <section
-                data-surface="actions"
-                id="actions-surface"
-                class="surface"
-                hidden
-            >
-                <div class="block">
-                    <div class="block__kicker">one next action per note</div>
-                    <ul class="actions" id="actions-full"></ul>
-                </div>
-            </section>
+    <section data-surface="actions" id="actions-surface" class="surface" hidden>
+      <div class="block">
+        <div class="block__kicker">one next action per note</div>
+        <ul class="actions" id="actions-full"></ul>
+      </div>
+    </section>
 
-            <!-- ════════════════════════════════════════════════════════════════════
+    <!-- ════════════════════════════════════════════════════════════════════
          SEARCH — recognition-first picker; free-text is the secondary input.
          On a new-tab page the browser's address bar is the "search"; ours is
          explicitly the secondary, recognition-first path (§5).
          ════════════════════════════════════════════════════════════════════ -->
-            <section
-                data-surface="search"
-                id="search-surface"
-                class="surface"
-                hidden
-            >
-                <div class="search">
-                    <label class="search__label" for="search-input"
-                        >find — the fallback, not the front door</label
-                    >
-                    <p class="search__pointer">point at the one you mean:</p>
-                    <ul class="search__candidates" id="search-candidates">
-                        <!-- recent notes -->
-                    </ul>
-                    <input
-                        type="text"
-                        class="search__input"
-                        id="search-input"
-                        placeholder="…or type a word if none of those is it"
-                        aria-label="free-text search"
-                    />
-                    <p class="search__fallback-note">
-                        free-text is the secondary path — recognition usually
-                        beats recall here.
-                    </p>
-                </div>
-            </section>
+    <section data-surface="search" id="search-surface" class="surface" hidden>
+      <div class="search">
+        <label class="search__label" for="search-input">find — the fallback, not the front door</label>
+        <p class="search__pointer">point at the one you mean:</p>
+        <ul class="search__candidates" id="search-candidates"><!-- recent notes --></ul>
+        <input
+          type="text"
+          class="search__input"
+          id="search-input"
+          placeholder="…or type a word if none of those is it"
+          aria-label="free-text search">
+        <p class="search__fallback-note">free-text is the secondary path — recognition usually beats recall here.</p>
+      </div>
+    </section>
 
-            <!-- Reusable undo toast (for "let it go," capture, done-toggle) -->
-            <div class="toast" id="toast" role="status" aria-live="polite">
-                <span class="toast__msg" id="toast-msg">—</span>
-                <button class="toast__action" id="toast-action">undo</button>
-            </div>
-        </div>
+    <!-- Reusable undo toast (for "let it go," capture, done-toggle) -->
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast__msg" id="toast-msg">—</span>
+      <button class="toast__action" id="toast-action">undo</button>
+    </div>
 
-        <script src="app.js" defer></script>
-    </body>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
 </html>
