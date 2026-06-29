@@ -24,7 +24,8 @@ def service(vault, index_dir):
     server = make_server(vault, index_dir, "127.0.0.1", 0, TOKEN)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    host, port = server.server_address
+    host = server.server_address[0]
+    port = server.server_address[1]
     try:
         yield f"http://{host}:{port}"
     finally:
@@ -41,9 +42,11 @@ def _get(url):
 def _get_no_redirect(url):
     """GET that does NOT follow redirects, returning (status, location_header)."""
     import urllib.request
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *a, **k):
             return None
+
     no_redir = urllib.request.build_opener(_NoRedirect)
     try:
         with no_redir.open(url, timeout=5) as r:  # noqa: S310 — loopback only
@@ -98,7 +101,7 @@ def test_web_index_html_served(service):
     assert "text/html" in ctype
     assert "pkms" in body.lower()
     # the page loads app.js (Task 4 wires app.js to fetch /api/today).
-    assert 'app.js' in body
+    assert "app.js" in body
 
 
 def test_web_app_js_fetches_api_today(service):
@@ -154,8 +157,7 @@ def test_capture_page_side_door_still_served(service):
 
 
 def test_capture_from_web_lands_in_inbox(service, vault):
-    req = Request(f"{service}/capture?token={TOKEN}", data=b"a thought from the web",
-                  method="POST")
+    req = Request(f"{service}/capture?token={TOKEN}", data=b"a thought from the web", method="POST")
     with urlopen(req, timeout=5) as r:  # noqa: S310 — loopback only
         assert r.status == 200
     files = list((vault / "inbox").glob("*.md"))

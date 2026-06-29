@@ -10,38 +10,57 @@
   "use strict";
 
   /* ---------------------------------------------------------------------------
-     1. LIVE DATA — fetched from /api/today (the app's only data source).
-     Token rides in location.search (?token=...). Shape is the exact contract
-     from today.py:172-184; the mockup's inlined fake JSON is gone.
-     Overflow actions, recognition cards, reading queue, pebbles, recent notes
-     are proposed endpoints (see DATA-CONTRACT.md). Until those ship, the
-     optional surfaces stay empty and calm mode (the default) hides them.
+     1. LIVE DATA — fetched from token-gated /api/* endpoints.
+     Token rides in location.search (?token=...). /api/today remains the
+     required core payload; reading queue + recognition cards are read-only
+     auxiliary surfaces loaded from the same service.
      --------------------------------------------------------------------------- */
   let TODAY = null;          // populated by loadToday()
   const MORE_ACTIONS = [];   // populated when /api/next-actions ships
-  const RECOGNITION_CARDS = [];
-  const READING_QUEUE = [];
+  let RECOGNITION_CARDS = [];
+  let READING_QUEUE = [];
   const PEBBLES = { count: 0, goal: null, entries: [] };
   const RECENT_NOTES = [];
 
   /// MAX_NOTES_SHOWN mirrors today.py:15.
   const MAX_NOTES_SHOWN = 8;
 
+  async function fetchJson(path) {
+    const r = await fetch(path + location.search, {
+      headers: { Accept: "application/json" },
+    });
+    if (!r.ok) throw new Error(`${path} failed (${r.status})`);
+    return await r.json();
+  }
+
   /// Fetch /api/today and render. The capture service serves this at the same
   /// origin as /web/, so the fetch is same-origin + token-gated via ?token=...
   async function loadToday() {
     try {
-      const r = await fetch("/api/today" + location.search, {
-        headers: { Accept: "application/json" },
-      });
-      if (r.status === 403) return showError("token required — open with ?token=..."  );
-      if (!r.ok) return showError("couldn't load today (" + r.status + ")");
-      TODAY = await r.json();
+      TODAY = await fetchJson("/api/today");
       // pebbles derive from done_today until /api/pebbles ships
       PEBBLES.count = TODAY.done_today || 0;
       if (state.route === "today") renderToday();
+      loadAuxiliarySurfaces();
     } catch (e) {
-      showError("couldn't reach the service — is pkms serve running?");
+      showError(e.message.includes("403")
+        ? "token required — open with ?token=..."
+        : "couldn't reach the service — is pkms serve running?");
+    }
+  }
+
+  async function loadAuxiliarySurfaces() {
+    try {
+      const [reading, recognition] = await Promise.all([
+        fetchJson("/api/reading-queue"),
+        fetchJson("/api/recognition-cards"),
+      ]);
+      READING_QUEUE = reading;
+      RECOGNITION_CARDS = recognition;
+      if (state.route === "today") renderToday();
+      if (state.route === "reading") renderReading();
+    } catch (e) {
+      console.warn(e);
     }
   }
 
@@ -312,6 +331,10 @@
      --------------------------------------------------------------------------- */
   function renderReading() {
     const el = $("#reading-list");
+    if (!READING_QUEUE.length) {
+      el.innerHTML = `<li class="reading-item">nothing queued right now.</li>`;
+      return;
+    }
     el.innerHTML = READING_QUEUE.map((r) => {
       const cost = r.minutes
         ? `<span class="reading-item__cost">⏱ ~${r.minutes} min</span>`
@@ -417,21 +440,40 @@
   }
 
   /// Capture save — Cmd/Ctrl+Enter. Never loads the app.
-  function saveCapture() {
+  async function saveCapture() {
     const field = $("#capture-field");
     const text = field.value.trim();
     if (!text) return;
 
-    const stem = new Date().toISOString().slice(0, 10);
-    const slug = text.toLowerCase().slice(0, 30).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const filename = `${stem}-${slug || "note"}.md`;
+    const status = $("#capture-status");
+    field.disabled = true;
+    if (status) status.textContent = "saving…";
 
-    const wrap = $(".capture");
+    let savedLabel = "saved";
+    try {
+      const r = await fetch("/capture" + location.search, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+        body: text,
+      });
+      const body = await r.text();
+      if (!r.ok) throw new Error(body || `capture failed (${r.status})`);
+      savedLabel = body || savedLabel;
+    } catch (e) {
+      field.disabled = false;
+      field.focus();
+      if (status) status.textContent = "not saved yet";
+      showToast("not saved yet — service unreachable", { duration: 3500 });
+      return;
+    }
+
     const confirm = document.createElement("div");
     confirm.className = "capture__confirm";
-    confirm.innerHTML = `<span class="glyph">✓</span> saved<small>${esc(filename)}</small>`;
+    confirm.innerHTML = `<span class="glyph">✓</span> saved<small>${esc(savedLabel)}</small>`;
     field.replaceWith(confirm);
-    $("#capture-status").textContent = "saved ✓";
+    if (status) status.textContent = "saved ✓";
+
+    await loadToday();
 
     setTimeout(() => {
       const newField = document.createElement("textarea");
@@ -442,26 +484,37 @@
       newField.autofocus = true;
       confirm.replaceWith(newField);
       newField.focus();
-      $("#capture-status").textContent = "unsaved";
+      if (status) status.textContent = "unsaved";
     }, 1500);
 
     showToast(`✓ captured — the system owns "later"`, { duration: 2500 });
   }
 
-  /// Resurface: not-now (silent, no-renag) or let-it-go (forever-exit, reversible).
-  function dismissResurface(kind) {
+  /// Resurface: not-now (silent, no-renag) or let-it-go (forever-exit).
+  async function dismissResurface(kind) {
+    const card = TODAY && TODAY.resurface;
+    if (!card || !card.path) return;
+
+    try {
+      const r = await fetch("/api/resurface" + location.search, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ path: card.path, action: kind }),
+      });
+      if (!r.ok) throw new Error(`resurface failed (${r.status})`);
+    } catch (e) {
+      showToast("not changed yet — service unreachable", { duration: 3500 });
+      return;
+    }
+
     state.resurfaceDismissed = true;
+    TODAY.resurface = null;
     renderResurface();
 
     if (kind === "let-go") {
-      showToast(`let go. you can undo if not.`, {
-        action: "keep it",
-        onAction: () => {
-          state.resurfaceDismissed = false;
-          renderResurface();
-        },
-        duration: 5000,
-      });
+      showToast("let go — asking stops", { duration: 3500 });
+    } else {
+      showToast("rested — it won't come up for a while", { duration: 3500 });
     }
   }
 
