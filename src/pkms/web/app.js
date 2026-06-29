@@ -417,21 +417,40 @@
   }
 
   /// Capture save — Cmd/Ctrl+Enter. Never loads the app.
-  function saveCapture() {
+  async function saveCapture() {
     const field = $("#capture-field");
     const text = field.value.trim();
     if (!text) return;
 
-    const stem = new Date().toISOString().slice(0, 10);
-    const slug = text.toLowerCase().slice(0, 30).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const filename = `${stem}-${slug || "note"}.md`;
+    const status = $("#capture-status");
+    field.disabled = true;
+    if (status) status.textContent = "saving…";
 
-    const wrap = $(".capture");
+    let savedLabel = "saved";
+    try {
+      const r = await fetch("/capture" + location.search, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+        body: text,
+      });
+      const body = await r.text();
+      if (!r.ok) throw new Error(body || `capture failed (${r.status})`);
+      savedLabel = body || savedLabel;
+    } catch (e) {
+      field.disabled = false;
+      field.focus();
+      if (status) status.textContent = "not saved yet";
+      showToast("not saved yet — service unreachable", { duration: 3500 });
+      return;
+    }
+
     const confirm = document.createElement("div");
     confirm.className = "capture__confirm";
-    confirm.innerHTML = `<span class="glyph">✓</span> saved<small>${esc(filename)}</small>`;
+    confirm.innerHTML = `<span class="glyph">✓</span> saved<small>${esc(savedLabel)}</small>`;
     field.replaceWith(confirm);
-    $("#capture-status").textContent = "saved ✓";
+    if (status) status.textContent = "saved ✓";
+
+    await loadToday();
 
     setTimeout(() => {
       const newField = document.createElement("textarea");
@@ -442,7 +461,7 @@
       newField.autofocus = true;
       confirm.replaceWith(newField);
       newField.focus();
-      $("#capture-status").textContent = "unsaved";
+      if (status) status.textContent = "unsaved";
     }, 1500);
 
     showToast(`✓ captured — the system owns "later"`, { duration: 2500 });
