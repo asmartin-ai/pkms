@@ -28,6 +28,9 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .capture import write_capture
+from .db import connect
+from .resurface import dismiss as resurface_dismiss
+from .resurface import let_go as resurface_let_go
 
 CAPTURE_PAGE = """<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -165,29 +168,63 @@ def make_server(
             self.wfile.write(data)
 
         def do_POST(self):
-            if urlparse(self.path).path != "/capture":
-                return self._send(404, "not found")
-            if not self._authed():
-                return self._send(403, "bad token")
-            length = int(self.headers.get("Content-Length", 0))
-            raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
-            # accept raw text, form-encoded 'text=', or JSON {"text": ...}
-            text = raw
-            ctype = self.headers.get("Content-Type", "")
-            if "json" in ctype:
-                try:
-                    text = str(json.loads(raw).get("text", raw))
-                except (json.JSONDecodeError, AttributeError):
-                    pass
-            elif "form-urlencoded" in ctype:
-                text = parse_qs(raw).get("text", [raw])[0]
-            if not text.strip():
-                return self._send(400, "empty capture")
+            path_val = urlparse(self.path).path
+            if path_val == "/capture":
+                if not self._authed():
+                    return self._send(403, "bad token")
+                length = int(self.headers.get("Content-Length", 0))
+                raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
+                # accept raw text, form-encoded 'text=', or JSON {"text": ...}
+                text = raw
+                ctype = self.headers.get("Content-Type", "")
+                if "json" in ctype:
+                    try:
+                        text = str(json.loads(raw).get("text", raw))
+                    except (json.JSONDecodeError, AttributeError):
+                        pass
+                elif "form-urlencoded" in ctype:
+                    text = parse_qs(raw).get("text", [raw])[0]
+                if not text.strip():
+                    return self._send(400, "empty capture")
 
-            query = parse_qs(urlparse(self.path).query)
-            source = query.get("source", ["web"])[0]
-            saved = write_capture(text, vault, source=source)
-            self._send(200, f"saved ✓ {saved.name}")
+                query = parse_qs(urlparse(self.path).query)
+                source = query.get("source", ["web"])[0]
+                saved = write_capture(text, vault, source=source)
+                self._send(200, f"saved ✓ {saved.name}")
+            elif path_val == "/api/resurface":
+                if not self._authed():
+                    return self._send(403, "bad token")
+                length = int(self.headers.get("Content-Length", 0))
+                raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
+                try:
+                    data = json.loads(raw)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    return self._send(400, "invalid json")
+                path_key = data.get("path")
+                action = data.get("action")
+                if not path_key or not action:
+                    return self._send(400, "missing path or action")
+                if action not in {"not-now", "let-go"}:
+                    return self._send(400, "unknown action")
+
+                rel = Path(str(path_key))
+                if rel.is_absolute() or ".." in rel.parts:
+                    return self._send(400, "invalid path")
+                target = (vault / rel).resolve()
+                if not target.is_relative_to(vault.resolve()) or not target.is_file():
+                    return self._send(404, "not found")
+                safe_path = target.relative_to(vault.resolve()).as_posix()
+
+                if action == "not-now":
+                    conn = connect(index_dir)
+                    resurface_dismiss(conn, safe_path)
+                    conn.close()
+                else:
+                    resurface_let_go(vault, safe_path)
+                body = json.dumps({"ok": True, "action": action, "path": safe_path})
+                self._send(200, body, "application/json; charset=utf-8")
+            else:
+                return self._send(404, "not found")
 
         def log_message(self, *args):  # quiet default request logging
             pass
