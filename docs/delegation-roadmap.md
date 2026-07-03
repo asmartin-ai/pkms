@@ -31,6 +31,7 @@ new-tab/PWA front end in `src/pkms/web/` (packaged Firefox copy in
 | Doc | What it binds |
 |---|---|
 | `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` | Every surface, flow, copy line, and mechanic. Non-negotiable. |
+| `K:\Projects\adhd-design-language\VISUAL-LANGUAGE.md` | Shared visual layer ("Hearth", **Accepted 2026-07-03**): token schema, lamp/bench modes, component grammar. Lamplight is its lamp-mode reference — lands unchanged. Ratified G-B: PKMS swaps Atkinson→Lexend and Plex Mono→JetBrains Mono, plus Hearth token renames, riding the next scheduled front-end packet (token-level; no dedicated repaint). |
 | `AGENTS.md` (repo root) | Repo rules, vault layout, commands, conventions. |
 | `vault/projects/pkms-design/decisions.md` | The 10 closed design gates (G1–G10). Do not relitigate; a packet that seems to need a gate reopened goes back to Kenja. |
 | `vault/projects/pkms-design/build-plan.md` | Slice history, backlog, icebox with reactivation conditions. |
