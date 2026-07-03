@@ -56,6 +56,33 @@ def test_options_page_saves_pkms_url_parts():
     assert "pkmsToken" in js
 
 
+def test_web_ext_is_exact_packaged_copy():
+    """src/pkms/web/ is the source; web_ext/ is a packaged copy. app.js,
+    styles.css, and icon.svg are byte-identical, and newtab.html is index.html
+    minus exactly two blocks: the manifest <link> and the inline service-worker
+    registration <script>. Any other drift means the sync step was skipped."""
+    import re
+
+    web = EXT.parent / "web"
+    for name in ("app.js", "styles.css", "icon.svg"):
+        assert (web / name).read_bytes() == (EXT / name).read_bytes(), (
+            f"web_ext/{name} must be byte-identical to web/{name} — re-run the sync"
+        )
+
+    index_html = (web / "index.html").read_bytes().decode("utf-8")
+    expected, n_manifest = re.subn(r"[ \t]*<link rel=\"manifest\"[^>]*>\r?\n", "", index_html)
+    expected, n_sw = re.subn(
+        r"[ \t]*<script>\s*//[^\n]*\n(?:[^<]*serviceWorker[^<]*)</script>\r?\n",
+        "",
+        expected,
+        flags=re.DOTALL,
+    )
+    assert n_manifest == 1 and n_sw == 1, "index.html lost its manifest link or SW block"
+    assert (EXT / "newtab.html").read_bytes().decode("utf-8") == expected, (
+        "newtab.html must be index.html minus the manifest link + SW registration"
+    )
+
+
 def test_ext_readme_documents_install():
     """The README must explain load-unpacked install + setting the URL."""
     readme = (EXT / "README.md").read_text(encoding="utf-8")
