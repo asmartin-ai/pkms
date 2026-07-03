@@ -4,41 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="PKMS — an ambient briefing on every new tab. Recognize and act, never manage a pile.">
-  <meta name="theme-color" content="#f6f1e8">
+  <meta name="theme-color" content="#211b15">
 
+  <!-- PWA manifest — installable on the Pixel; same page, mobile-first. -->
   <title>today · pkms</title>
 
   <!--
-    Type: Fraunces (serif display) + Inter (humanist sans) + JetBrains Mono.
-    Same stack as the daily-edition mockup — the aesthetic is continuous; the
-    delivery vehicle (Firefox new-tab poster) is what changed. Production would
-    self-host; the mockup loads from Google Fonts and degrades gracefully offline.
-  -->
-  <!--
-    Type: Cormorant Garamond (serif display) + Barlow (humanist sans) + Fira Code (mono).
-    Selected via local-LLM-delegated research — see spike/newtab-firefox/TYPEFACE-RESEARCH.md.
-    Same load pattern as the prior Fraunces+Inter+JetBrains stack; degrades to system
-    fonts offline via the CSS stacks in styles.css.
+    "Lamplight" — the page is a desk at night with one lamp on. Exactly one
+    lit object per surface (today → the lead action, capture → the field);
+    everything else stays dim. Direction: docs/redesign/fable-directions.md.
+
+    Type: Bricolage Grotesque (display) + Atkinson Hyperlegible (body — a face
+    designed for legibility) + IBM Plex Mono (metadata). Loaded from Google
+    Fonts like the previous stack; degrades to system fonts offline via the
+    CSS stacks in styles.css.
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Barlow:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="density-calm">
 
   <!-- ──────────────────────────────────────────────────────────────────────
-       The Firefox new-tab poster. Default surface = #today.
-       Wide viewports: a full-bleed editorial poster, glanced at per tab-open.
-       Narrow viewports (≤48rem / mobile PWA): reflows to a card-stack.
+       The new-tab / PWA shell. Default surface = #today.
+       Mobile-first: the Pixel-6 single column IS the layout; wide viewports
+       just give the desk more room. One lit object per surface — the lamp.
        ────────────────────────────────────────────────────────────────────── -->
 
   <div class="poster" id="app">
 
-    <!-- ── Top bar — sparse masthead. Date as quiet mono metadata (not a hero);
-         the one knob opposite. No greeting, no clock, no focus word — those are
-         Momentum idioms; the lede below is this page's re-entry anchor (§7). ── -->
+    <!-- ── Top bar — quiet masthead; date as dim mono metadata (not a hero);
+         the one knob beside it. No greeting, no clock, no focus word — those
+         are Momentum idioms; the lede below does the re-entry job (§7). ── -->
     <header class="topbar">
       <div class="masthead">
         <div class="masthead__title">today <em>· pkms</em></div>
@@ -68,20 +67,25 @@
     </nav>
 
     <!-- ════════════════════════════════════════════════════════════════════
-         TODAY — the poster / centerpiece
+         TODAY — the desk. The lede is the dim room; the lead action is
+         the one lit object.
          ════════════════════════════════════════════════════════════════════ -->
     <section data-surface="today" id="today" class="surface">
 
-      <!-- Error banner — shown only if /api/today can't be reached (§4 ambient disclosure). -->
+      <!-- Error banner — shown only if /api/today can't be reached. Lamp-lit
+           attention, never red (§4 ambient disclosure). -->
       <p class="error-banner" id="error-banner" hidden></p>
 
-      <!-- The poster body: the re-entry lede is the glance-anchor.
-           "Yesterday you were in Alpha, drafting the intro" IS the greeting —
-           it does the re-entry job (§7) without a Momentum-style hero salutation. -->
+      <!-- The re-entry lede is the glance-anchor. "Yesterday you were in
+           Alpha, drafting the intro" IS the greeting — it does the re-entry
+           job (§7) without a Momentum-style hero salutation. -->
       <div class="poster-body">
         <p class="lede" id="lede"><!-- "Yesterday you were in <strong>…</strong>…" --></p>
         <div class="lede__sub" id="lede-sub"><!-- up to 4 breadcrumb lines --></div>
 
+        <!-- THE LAMP: the signature element. The soft pool of light falls on
+             this card and nothing else. Primary action = open/continue
+             context, never mark-done (§10 contract). -->
         <div class="lead-continuation" id="lead-continuation" hidden>
           <button class="lead-continuation__primary" id="lead-action" type="button">
             <span class="lead-continuation__label" id="lead-action-label">continue</span>
@@ -95,8 +99,8 @@
         </div>
       </div>
 
-      <!-- The context rail — quiet, secondary, lower visual weight.
-           Glanceable state without a dashboard wall. -->
+      <!-- The shelf — objects on the desk. Quiet, dim, glanceable state
+           without a dashboard wall. -->
       <div class="shelf">
         <!-- "To fold in" — inbox as forward-only progress, never a count. -->
         <div class="shelf__cell">
@@ -112,7 +116,7 @@
 
         <!-- The single resurface question — one ambient prompt, ever. -->
         <div class="shelf__cell shelf__cell--resurface" id="resurface-cell" hidden>
-          <div class="shelf__kicker shelf__kicker--sage">still curious?</div>
+          <div class="shelf__kicker shelf__kicker--moss">still curious?</div>
           <div class="resurface" id="resurface"><!-- question + why + actions --></div>
         </div>
 
@@ -136,7 +140,8 @@
         <div class="more-notes" id="more-notes" hidden><!-- "4 more one click away" --></div>
       </div>
 
-      <!-- The PAGE CLEARED celebration (the one loud moment). -->
+      <!-- The PAGE CLEARED celebration (the one loud moment — the room
+           brightens, fern-lit). -->
       <div class="cleared is-hidden" id="cleared">
         <div class="cleared__stamp">PAGE CLEARED</div>
         <div class="cleared__sub">nothing owed. go well.</div>
@@ -148,8 +153,8 @@
     </section>
 
     <!-- ════════════════════════════════════════════════════════════════════
-         CAPTURE — overlay-style on desktop, full-screen on mobile.
-         Never loads the app; never opens a feed. (§1)
+         CAPTURE — the lamp moves to the field. Fast, focused, feed-free;
+         never loads the app. (§1)
          ════════════════════════════════════════════════════════════════════ -->
     <section data-surface="capture" id="capture" class="surface surface--capture" hidden>
       <div class="capture">
