@@ -6,7 +6,9 @@
 // app.js/styles.css changed and sw.js didn't — a footgun for an iterated tool.)
 // /api/today is network-only (always-fresh data; if offline, the page shows
 // its error banner — sync is never load-bearing for correctness, §9).
-const CACHE = "pkms-shell-v1";
+// v2: the "Lamplight" redesign (2026-07-02) — bump so installed PWAs pick up
+// the new shell instead of serving the stale Log Book II look from cache.
+const CACHE = "pkms-shell-v2";
 const SHELL = [
   "/web/",
   "/web/index.html",

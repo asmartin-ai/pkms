@@ -512,7 +512,7 @@
     el.innerHTML = READING_QUEUE.map((r) => {
       const cost = r.minutes
         ? `<span class="reading-item__cost">⏱ ~${r.minutes} min</span>`
-        : `<span class="reading-item__cost" style="background:transparent;color:var(--ink-faint);">long read</span>`;
+        : `<span class="reading-item__cost" style="border:0;padding:0;color:var(--bone-faint);">long read</span>`;
       return `
         <li class="reading-item">
           <h3 class="reading-item__title"><a href="#" data-path="${esc(r.path)}">${esc(r.title)}</a></h3>
