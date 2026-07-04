@@ -191,6 +191,11 @@ def make_server(
                 # error. Guard at the route so the endpoint never 500s.
                 body = json.dumps(search(q, index_dir) if q.strip() else [])
                 self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/inbox-items":
+                from .today import inbox_items
+
+                body = json.dumps(inbox_items(vault))
+                self._send(200, body, "application/json; charset=utf-8")
             else:
                 self._send(404, "not found")
 
