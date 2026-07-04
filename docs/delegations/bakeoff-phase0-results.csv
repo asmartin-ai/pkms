@@ -1,0 +1,16 @@
+run_id,task_id,tier,executor_model,executor_id,run_n,
+orch_tok_in,orch_tok_out,orch_usd,
+exec_tok_in,exec_tok_out,exec_usd,
+wallclock_s,gate_pass,quality_verdict,first_shot,retries,notes
+phase0-F1,F1,T12_pro,deepseek-v4-pro,deepseek-direct,1,
+,,,
+5.2k_sent,2.2k_received,0.0078,
+,pass,pass,true,0,"smoke; oracle hash unchanged; 1 edit; F1 2/2 + full suite green"
+phase0-F2,F2,T12_pro,deepseek-v4-pro,deepseek-direct,1,
+,,,
+6.3k_sent,6.5k_received,0.0084,
+,pass,pass,true,0,"smoke; oracle hash unchanged; 1 edit; F2 4/4 + existing tasks 11/11 green"
+phase0-F3,F3,T12_pro,deepseek-v4-pro,deepseek-direct,1,
+,,,
+5.2k_sent,967_received,0.0031,
+,pass,pass,true,0,"smoke; oracle hash unchanged; 1 edit; F3 5/5 + existing search tests green"
