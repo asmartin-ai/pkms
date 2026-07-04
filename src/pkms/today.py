@@ -7,7 +7,7 @@ Copy rules: no backlog counts, no overdue framing, empty state reads as a win
 """
 
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -225,3 +225,36 @@ def today_view(vault: Path, index_dir: Path, *, record_offer: bool = False) -> J
         "next_actions": actions[:MAX_NOTES_SHOWN],
         "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),
     }
+
+
+def recent_notes(vault: Path, index_dir: Path, *, limit: int = 8) -> list[JsonDict]:
+    """Recently touched notes (recognition-first picker candidates).
+
+    Reuses the index for the candidate set (title + path); mtime from disk is the
+    sort key — ground truth, not index-derivable. The index is regenerable
+    (`indexed_at` resets on every reindex, `modified` frontmatter is often
+    empty), so file mtime is the only honest recency signal. Read-only,
+    side-effect-free: never writes the index or the vault.
+    """
+    if not (index_dir / "pkms.db").exists():
+        return []
+    from .db import connect
+
+    conn = connect(index_dir)
+    rows = conn.execute("SELECT path, title FROM notes").fetchall()
+    conn.close()
+    out: list[JsonDict] = []
+    for r in rows:
+        p = vault / r["path"]
+        if not p.is_file():
+            continue
+        mtime = p.stat().st_mtime
+        out.append(
+            {
+                "title": r["title"],
+                "path": Path(r["path"]).as_posix(),
+                "last_touched": datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+            }
+        )
+    out.sort(key=lambda e: str(e["last_touched"]), reverse=True)
+    return out[:limit]
