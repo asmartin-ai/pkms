@@ -38,13 +38,14 @@ Full results: `docs/delegations/bakeoff-phase1-results.{md,csv}`. Total executor
 
 ## Next 1–3 actions (literal first step)
 
-1. **Kenja reviews the bakeoff verdict** (`docs/delegations/bakeoff-phase1-results.md`). If the
-   routing table is accepted, wire `minimax/minimax-m3` as the default executor in the
+1. **Wire the bakeoff routing table into `orchestrator-mode`.** Kenja accepted the
+   non-Pro verdict. Wire `minimax/minimax-m3` as the default executor in the
    orchestrator-mode routing table (`~/.agents/skills/orchestrator-mode/`) and the
-   aider-delegate defaults. **Literal first step:** open the results MD §"Phase 3 — routing table".
-2. **K1 merge (Kenja's action):** merge `feat/uiux-redesign` → `main`; rewrite `DESIGN.md` for
-   the Lamplight system. Then `bakeoff/phase1` can be deleted (its 3 revert commits are
-   bakeoff-only; the F-batch fixes already shipped on `feat/uiux-redesign` via `c541b73`).
+   aider-delegate defaults. **Literal first step:** open `docs/delegations/bakeoff-phase1-results.md`
+   §"Phase 3 — routing table" and mirror it into the skill.
+2. **Draft Phase 4 bakeoff plan** for Pro models on harder tasks (multi-file refactor,
+   ambiguous spec, larger read context). Kenja: "simple coding tasks are overkill for those
+   models — we need to feed them more complex planning or orchestration tasks."
 3. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
    email-in + Discord bot per `build-plan.md` slice 8.
 
@@ -64,12 +65,10 @@ Voice ramp · Discord resurfacing mirror · career-ops dashboard (post-P5) · pr
 
 ## Branch state
 
-- `feat/uiux-redesign` — agent commits + Kenja's publication-safety scrub + bakeoff Phase 0 smoke
-  (F-batch oracles + 3 fixes + ZenMux cross-check), all merged via `c541b73`. Suite **402**. Not
-  pushed, not merged to `main` (rides your K1 review).
-- `bakeoff/phase1` — the bakeoff branch (off `feat/uiux-redesign`, 3 revert commits `4f8867e`
-  `b59e801` `5a916f0`). Suite at reverted baseline **393 pass / 9 RED** (F-batch RED oracles).
-  Untracked: `docs/delegations/bakeoff-phase1-results.{csv,md}`. Delete after K1 merge + your
-  review of the verdict; the F-batch fixes already ship via `feat/uiux-redesign`.
-- Derivable: `git status -sb`, `git log --oneline cb1db2e..feat/uiux-redesign`,
-  `git log --oneline feat/uiux-redesign..bakeoff/phase1`.
+- `main` — the Lamplight redesign + bakeoff Phase 0/1/2 + type fixes are all
+  merged here and pushed to `origin/main`. Suite **402 green**, 0 type-checker
+  errors. The `feat/uiux-redesign` and `bakeoff/phase1` branches were deleted
+  after the merge (their commits are preserved in main's history).
+- Derivable: `git status -sb`, `git log --oneline cb1db2e..main`,
+  `git branch -vv`. The F-batch fixes shipped via the `c541b73` merge commit
+  (historical); the Lamplight merge is `5bf7f15`; the type fixes are `137215c`.
