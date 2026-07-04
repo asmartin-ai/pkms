@@ -12,7 +12,10 @@ Endpoints:
                             is regenerable and `modified` frontmatter is often empty).
   GET /api/search?q=     — literal-by-default free-text search hitting search.search().
                             Returns [{path, title, excerpt}], no result counts.
-                            FTS5 operators in the query are LITERAL text (B4 contract).
+                            FTS5 operators in the query are LITERAL text (B4 contract):
+                            a plain query is sanitized to quoted tokens joined by
+                            implicit AND, so "foo OR bar" requires all of foo, OR,
+                            bar to appear — it does NOT run as a boolean OR.
 
 Both endpoints are token-gated (403 without), read-only, side-effect-free.
 """
@@ -130,19 +133,37 @@ def test_search_endpoint_is_token_gated(service):
     assert exc.value.code == 403
 
 
-def test_search_endpoint_returns_literal_matches(service):
-    """The endpoint is literal-by-default (B4 contract): 'foo OR bar' is text, not a boolean op."""
-    status, body, ctype = _json(f"{service}/api/search?q=foo%20OR%20bar&token={TOKEN}")
+def test_search_endpoint_preserves_literal_by_default_contract(service):
+    """The endpoint is literal-by-default (B4 contract).
+
+    `search.search()` with `raw=False` sanitizes the query to quoted tokens joined
+    by FTS5 implicit AND. So "foo OR bar" is three literal tokens (foo, OR, bar)
+    that ALL must appear — it does NOT run as a boolean OR. Only notes containing
+    every token surface; the boolean OR would surface notes with foo OR bar alone.
+    """
+    # alpha.md body contains "Alpha references [[beta]] and [[gamma|the gamma note]]."
+    # — it contains "Alpha" and "references" but NOT "OR" or "foobar". Use a query
+    # whose literal-token form the test vault can satisfy: "Alpha references" both
+    # appear in alpha.md, so the sanitized "Alpha" "references" matches it.
+    status, body, ctype = _json(f"{service}/api/search?q=Alpha%20references&token={TOKEN}")
     assert status == 200
     assert "application/json" in ctype
     assert isinstance(body, list)
-    # alpha.md contains "foo OR bar appear together" — a literal match.
-    # beta.md contains "foo appears here" — also a literal match for the "foo" token.
-    # Both should surface; the boolean OR would NOT surface beta (bar absent).
     paths = {r["path"] for r in body}
-    assert "resources/beta.md" in paths, (
-        "literal-by-default broken: 'foo OR bar' must match notes containing the literal text, "
-        "not run FTS5 OR. beta contains 'foo' and should match."
+    assert "projects/alpha.md" in paths, (
+        "literal-by-default: 'Alpha references' sanitized to quoted tokens "
+        "must match alpha.md (contains both tokens)."
+    )
+    # And the boolean-OR trap: a query like "Alpha OR beta" must NOT run as a
+    # boolean OR — it requires literal tokens Alpha, OR, beta. No note contains
+    # the literal token "OR" as a word, so this returns []. If the endpoint passed
+    # raw=True (or didn't sanitize), it would surface notes with Alpha or beta.
+    status2, body2, _ = _json(f"{service}/api/search?q=Alpha%20OR%20beta&token={TOKEN}")
+    assert status2 == 200
+    # No note in the conftest vault contains the literal word "OR", so the
+    # implicit-AND of "Alpha" "OR" "beta" matches nothing.
+    assert body2 == [], (
+        f"literal-by-default broken: 'Alpha OR beta' must NOT run as boolean OR. got: {body2}"
     )
 
 
