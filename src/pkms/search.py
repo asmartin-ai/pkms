@@ -20,6 +20,8 @@ def _sanitize(query: str) -> str:
 
 
 def search(query: str, index_dir: Path, limit: int = 20, raw: bool = False) -> list[dict]:
+    if not query.strip():
+        return []
     conn = connect(index_dir)
     if raw:
         try:
