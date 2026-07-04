@@ -215,6 +215,24 @@
                     </div>
                 </div>
 
+                <!-- Inbox surface (hidden in calm mode) — recent captures as
+                     recognition, framed as progress ("safe here until folded").
+                     Never a pile: no count badges, no urgency cues, each item one
+                     gentle action (open). Design §3/§6 — the empty state is a
+                     reward, the surfaced state is recognition, never a wall. -->
+                <div
+                    class="inbox-surface block--optional"
+                    id="inbox-surface"
+                    hidden
+                >
+                    <div class="inbox-surface__kicker">
+                        safe here until folded
+                    </div>
+                    <ul class="inbox-surface__items" id="inbox-items">
+                        <!-- recent captures from /api/inbox-items -->
+                    </ul>
+                </div>
+
                 <!-- Next actions (hidden in calm mode) — one per note, ⏱ ▶ ✓ anatomy. -->
                 <div class="actions-block block--optional">
                     <div class="actions-block__kicker">

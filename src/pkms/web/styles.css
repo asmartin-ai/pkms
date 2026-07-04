@@ -733,6 +733,58 @@ button {
 .card--resurface .card__kind {
     color: var(--moss);
 }
+
+/* Inbox surface — recent captures as recognition (never a pile). Density-gated
+   (the .block--optional wrapper in index.html hides it in calm mode). Calm
+   row shape: preview + quiet source/touched meta, one gentle action (open). */
+.inbox-surface {
+    margin-top: var(--block-gap);
+}
+.inbox-surface__kicker {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--bone-faint);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+.inbox-surface__kicker::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--hairline);
+}
+.inbox-surface__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.inbox-surface__item {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--body);
+    font-size: var(--step-0);
+    color: var(--bone);
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: background var(--dur-fast) var(--ease);
+}
+.inbox-surface__item:hover {
+    background: var(--night-raised);
+}
+.inbox-surface__preview {
+    display: block;
+    line-height: 1.4;
+}
+.inbox-surface__meta {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--bone-faint);
+    margin-top: 0.15rem;
+}
 .card__title {
     font-family: var(--display);
     font-size: var(--step-1);

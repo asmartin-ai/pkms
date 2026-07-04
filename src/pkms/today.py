@@ -258,3 +258,49 @@ def recent_notes(vault: Path, index_dir: Path, *, limit: int = 8) -> list[JsonDi
         )
     out.sort(key=lambda e: str(e["last_touched"]), reverse=True)
     return out[:limit]
+
+
+def inbox_items(vault: Path, *, limit: int = 10) -> list[JsonDict]:
+    """Recent inbox captures — recognition of what's waiting, never a pile.
+
+    Returns one entry per capture (preview, source, captured ISO, path),
+    newest-first, capped at `limit` (the recognition-over-pile guard — design
+    §3/§6). The preview is the FIRST LINE of the capture body (truncated) so
+    the surface shows recognition cues, never a full content dump — the body
+    is personal text. Read-only, side-effect-free: never writes the inbox or
+    the index. Empty/missing inbox → [] (the empty state is a reward).
+    """
+    inbox = vault / "inbox"
+    if not inbox.is_dir():
+        return []
+    import frontmatter
+
+    out: list[JsonDict] = []
+    for p in sorted(inbox.glob("*.md"), reverse=True):
+        try:
+            post = frontmatter.load(p)
+        except Exception:
+            # A malformed capture shouldn't 500 the surface — skip it.
+            continue
+        body = post.content.strip()
+        first_line = next(
+            (ln.strip() for ln in body.splitlines() if ln.strip()),
+            "",
+        )
+        # Truncate the preview so a long first line doesn't become a wall.
+        if len(first_line) > 120:
+            first_line = first_line[:117].rstrip() + "…"
+        out.append(
+            {
+                "preview": first_line,
+                "source": str(post.metadata.get("source", "")),
+                "captured": str(post.metadata.get("captured", "")),
+                "path": Path(p.relative_to(vault)).as_posix(),
+            }
+        )
+        if len(out) >= limit:
+            break
+    # Sort newest-first by captured timestamp; the glob's reverse() is a
+    # fallback when captured is missing (the filename is timestamp-prefixed).
+    out.sort(key=lambda e: str(e["captured"]), reverse=True)
+    return out[:limit]
