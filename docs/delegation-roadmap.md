@@ -189,6 +189,12 @@ direction conversation with Kenja, not silent rework.
 ✓ Done-when: branch merged by Kenja (or his fix list executed and re-reviewed),
 `DESIGN.md` matches shipped reality, suite green at or above baseline.
 
+**Status (2026-07-04, agent):** lede__sub doubled-marker nit fixed and committed
+(`8b00796` — strip leading `- ` at render time in app.js, sw cache v2→v3, web_ext
+re-synced). Suite green at 372. **K1 (device verdict) still blocks the rest of P0**
+(merge + DESIGN.md rewrite happen after Kenja's review). Branch `feat/uiux-redesign`
+carries the fix; not merged.
+
 ### P1 — Slice-7 close-out: prove it on the Pixel
 ⏱ medium sitting · depends: P0 merged · branch `feat/pixel-proof`
 ▶ Write `docs/pixel-pwa-setup.md`: exact steps for Kenja — tailscale serve
@@ -203,6 +209,13 @@ edges), standalone-display safe-areas (already padded via `env()` — verify),
 keyboard-overlap on the capture field, PWA offline shell behavior (SW v2+).
 ✓ Done-when: all three device actions demonstrated by Kenja and any fixes
 landed; `build-plan.md` slice-7 row flipped to ✓ with a dated note.
+
+**Status (2026-07-04, agent):** `docs/pixel-pwa-setup.md` written and committed
+(`3589839`) — tailscale serve mapping, Chrome-on-Android install, token handling
+(URL form, cached at install; cleaner localStorage path is icebox), the three
+slice-7 device actions, failure-mode table (gesture-nav deadzones, keyboard-
+overlap, SW cache, theme-color), build-plan row flip procedure. **K1 + the live
+run still block close-out.** Agent side is done; everything remaining needs Kenja.
 
 ### P2 — Web surface completion (recognition-first search + inbox surface)
 ⏱ one heavy sitting · depends: P0 · branch `feat/web-surfaces`
@@ -229,6 +242,28 @@ clean); keep all JS/design work first-party.
 ✓ Done-when: search shows real recent-note candidates + literal results from
 live data; inbox items visible at density=more with design-language-clean
 copy; new endpoint tests + updated web tests green; web_ext re-synced.
+
+**Status (2026-07-04, agent):** BOTH halves shipped and committed.
+- (a) search candidates: `GET /api/recent-notes` (`ee658c2`) — recently-touched
+  notes (title, vault-relative `/` path, last-touched ISO), capped 8, mtime-sorted
+  desc (index for candidate set, mtime is ground truth — `indexed_at` resets on
+  every reindex, `modified` frontmatter is often empty). `GET /api/search?q=` —
+  literal-by-default via search.search() (B4 contract preserved); empty/whitespace
+  q → 200 [] (guards the FTS5 empty-query syntax error). Frontend wired (`1b10530`):
+  RECENT_NOTES mock → real data, debounced free-text input → #search-results,
+  quiet "last touched" relative label (_fmtTouched), no result counts.
+- (b) inbox surface: `GET /api/inbox-items` (`0c1c5ba`) — recent captures (preview
+  = FIRST LINE of body, truncated to 120 chars — recognition cues only, never a
+  full content dump; source, captured ISO, path), capped 10, newest-first. Empty/
+  missing inbox → []. Frontend: density-gated `#inbox-surface` block between the
+  recognition rail and the actions block; renderInbox() hides on empty (empty state
+  is a reward); each item one gentle action (open via the existing data-path
+  handler). No count badges, no urgency cues (design §3/§6).
+- Aider delegation of the (a) backend to DeepSeek-direct Pro hit the M6 8K output
+  cap (analysis paralysis on the literal-search edge case); implemented directly
+  with the spec as the guide. Delegation spec kept at `docs/delegations/p2-search-endpoints.md`.
+- Suite: 372 → 391 (+3 B6 guards, +9 P2-search oracle, +7 P2-inbox oracle).
+  web_ext re-synced byte-identical (test_web_ext.py asserts). SW cache v2 → v5.
 
 ### P3 — Slice 8: side-door batch (email-in + Discord bot)
 ⏱ medium-heavy sitting · depends: K4 + K5 · branch `feat/side-doors`
@@ -306,6 +341,11 @@ coordination notes with the content-hoarder session, slice-shaped spec.
 
 - **M1 — B6 CRLF strip**: `rstrip("\r")` in `tasks.extract_tasks` (or `\r?$`
   anchor) + the oracle sketched in sweep-findings §3. XS; fine inline.
+  **Status (2026-07-04, agent):** investigated — B6 is NOT a live bug. The regex
+  anchor does leak `\r` at the capture level, but `extract_tasks` `.strip()` and
+  `task_hash` `.strip()` both mitigate it. Added `tests/test_line_endings.py` as a
+  regression guard pinning the mitigation (`755179b`). NOT a usable bakeoff oracle
+  (already green); the bakeoff plan's Phase 0 needs fresh RED oracles (its F-batch).
 - **M2 — I4 ruff rule policy**: deliberate pass enabling
   `["E","F","I","S","UP","B"]` with per-file S101 ignores for tests and
   judged noqas (~345 findings — judgment work, not mechanical; do not
