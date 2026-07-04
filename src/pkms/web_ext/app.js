@@ -272,7 +272,11 @@
     $("#lede").innerHTML = lede.html;
     const subEl = $("#lede-sub");
     if (lede.lines.length) {
-      subEl.innerHTML = `<ul>${lede.lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+      // Strip a leading markdown bullet ("- ") so the CSS `—` ::before isn't
+      // doubled into "— - text" when a daily-note breadcrumb section uses
+      // "- " bullets. Keep the CSS marker; never add a JS-side bullet.
+      const stripBullet = (l) => l.replace(/^-\s+/, "");
+      subEl.innerHTML = `<ul>${lede.lines.map((l) => `<li>${esc(stripBullet(l))}</li>`).join("")}</ul>`;
       subEl.hidden = false;
     } else {
       subEl.hidden = true;
