@@ -17,9 +17,12 @@ one-time token dance is docs/keep-setup.md. Behavior rules:
   rebuilds guilt.
 """
 
+from __future__ import annotations
+
 import json
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 from .capture import write_capture
 from .ocr import extract_text
@@ -29,6 +32,7 @@ STATE = "keep-state.json"
 
 
 # --- secrets / ledger ---
+
 
 def read_secret(root: Path, name: str) -> str | None:
     p = root / ".secrets" / name
@@ -51,8 +55,10 @@ def append_ledger(index_dir: Path, note_ids: list[str]) -> None:
 
 # --- keep client (seam: tests inject a fake) ---
 
+
 def make_keep(email: str, token: str, index_dir: Path):
     import gkeepapi
+
     keep = gkeepapi.Keep()
     state = None
     state_path = index_dir / STATE
@@ -77,7 +83,8 @@ def _download(url: str, dest: Path) -> None:
 
 # --- ingest ---
 
-def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep=None) -> dict:
+
+def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep: Any = None) -> dict[str, Any]:
     """Pull new Keep notes into vault/inbox/. Returns a report dict the CLI
     renders as one quiet line. Inject `keep` in tests."""
     email = read_secret(root, "keep-email")
@@ -86,6 +93,7 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep=None) -> dict:
         return {"setup_needed": True}
 
     if keep is None:
+        assert email is not None and token is not None  # narrowed by the setup_needed guard above
         keep = make_keep(email, token, index_dir)
 
     ledger = load_ledger(index_dir)
@@ -129,22 +137,28 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep=None) -> dict:
     return report
 
 
-def render_report(report: dict) -> str:
+def render_report(report: dict[str, Any]) -> str:
     """One quiet, honest line (§4) — the CLI prints it dim."""
     if report.get("setup_needed"):
         return "keep isn't connected yet — docs/keep-setup.md has the one-time setup (~5 min)"
     if "baseline" in report:
-        return (f"keep connected ✓ — {report['baseline']} existing notes stay in Keep; "
-                "new ones flow in from here")
+        return (
+            f"keep connected ✓ — {report['baseline']} existing notes stay in Keep; "
+            "new ones flow in from here"
+        )
     bits = []
     if report["new"]:
         bits.append(f"{report['new']} keep note{'s' if report['new'] != 1 else ''} in")
     if report["images"]:
         bits.append(f"{report['images']} image{'s' if report['images'] != 1 else ''} read")
     if report["ocr_missing"]:
-        bits.append(f"{report['ocr_missing']} image{'s' if report['ocr_missing'] != 1 else ''} "
-                    "saved unread (tesseract missing)")
+        bits.append(
+            f"{report['ocr_missing']} image{'s' if report['ocr_missing'] != 1 else ''} "
+            "saved unread (tesseract missing)"
+        )
     if report["media_failed"]:
-        bits.append(f"{report['media_failed']} image download{'s' if report['media_failed'] != 1 else ''} "
-                    "failed — they stay in Keep")
+        bits.append(
+            f"{report['media_failed']} image download{'s' if report['media_failed'] != 1 else ''} "
+            "failed — they stay in Keep"
+        )
     return " · ".join(bits) if bits else "keep: nothing new"

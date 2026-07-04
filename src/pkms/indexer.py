@@ -15,7 +15,7 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> dict:
+def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> dict[str, int]:
     conn = connect(index_dir)
     stats = {"notes": 0, "links": 0, "tasks": 0}
     seen: set[str] = set()
