@@ -49,12 +49,18 @@ Every run:
 - **No T3 (Flash) data yet.** Only Pro-tier executor exercised. The price-to-performance
   question (does Flash beat Pro on this workload at ~3× cheaper?) is the whole point and
   needs Phase 1.
-- **Token reporting cross-check:** the 3 DeepSeek-direct runs can't be cross-checked on
-  ZenMux (different endpoint). The ZenMux run (F3-via-ZenMux, ts 2026-07-04T17:47:21Z) is the
-  cross-check data point — **Kenja verifies the ZenMux dashboard $ for that call**. If it
-  matches the Pro-line math (5.2k × $0.435/M in + 2.6k × $0.87/M out ≈ $0.0045), aider-delegate's
-  token counter is trustworthy for the real bakeoff. If it diverges, the real bakeoff's $/task
-  column has to come from the dashboard, not aider-delegate (plan §6 token-counting-bug pitfall).
+- **Token reporting cross-check (RESOLVED 2026-07-04):** the 3 DeepSeek-direct runs can't be
+  cross-checked on ZenMux (different endpoint). The ZenMux run (F3-via-ZenMux, generationId
+  `3ad28c9f…`, ts 2026-07-04T17:47:21Z) was cross-checked by Kenja against the dashboard:
+  - aider-delegate stdout: 5.2k sent, 2.6k received
+  - ZenMux dashboard: `prompt: 5151`, `completion: 2569`, `realAmount: 0.004475715`
+  - Predicted (Pro line $0.435/$0.87 per M): (5151 × 0.435 + 2569 × 0.87) / 1M = $0.004476
+  - **MATCH to the 7th decimal.** aider-delegate's in-harness token counter is trustworthy;
+  the only gap is `cost_reported: null` on raw-`--api-base` runs (M18 — missing
+  model-metadata entry for the doubled-prefix id). For the real bakeoff, the orchestrator
+  computes $ from the reported tokens × the known Pro/Flash rate — no per-run dashboard
+  lookup needed. Side-data captured: throughput 75.96 tok/s, generationTime 33.82s — useful
+  for the `wallclock_s` column in the real bakeoff's results CSV.
 
 ## Phase 0 checklist status (plan §10)
 
@@ -65,9 +71,11 @@ Every run:
       The plan acknowledged this; F-batch replaces it.
 - [x] Smoke aider-delegate → DeepSeek-direct pipeline (3 runs, all green).
 - [x] Smoke aider-delegate → ZenMux raw endpoint (1 run, F3 fix reproduced byte-identical;
-      ts 2026-07-04T17:47:21Z for the dashboard cross-check). **Kenja verifies the dashboard
-      $ for that call vs the Pro-line math (~$0.0045 expected).** GATES trustworthy $/task
-      reporting in the real bakeoff.
+      ts 2026-07-04T17:47:21Z, generationId 3ad28c9f…). **CROSS-CHECK PASSED 2026-07-04**
+      (Kenja): aider-delegate stdout 5.2k sent / 2.6k received vs ZenMux dashboard prompt 5151 /
+      completion 2569 / realAmount $0.004475715 — matches predicted $0.004476 to the 7th decimal.
+      aider-delegate's token counter is trustworthy for the real bakeoff; orchestrator computes
+      $ from tokens × known rate (no per-run dashboard lookup needed).
 - [ ] Wire T3 + T1/T2 executor models into aider-delegate provider config (setup for real run).
 - [ ] Seed results CSV — header + these 4 smoke rows in `bakeoff-phase0-results.csv` (done as
       a template; the real CSV lives wherever the fresh bakeoff session puts it).

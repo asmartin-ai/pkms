@@ -23,13 +23,13 @@ two planning docs. Commit history: `git log --oneline cb1db2e..feat/uiux-redesig
 - **K1** — Lamplight device verdict (Firefox ext new tab + Pixel PWA). Gates: P0 merge + `DESIGN.md` rewrite + the P1 live run. The branch is ready; the nit is fixed.
 - **K4** — Pick email-in address shape (plus-alias+label vs dedicated). Gates P3.
 - **K5** — Discord bot token + invite. Gates P3.
-- **bakeoff token cross-check** — verify the ZenMux dashboard $ for the call at
-  **2026-07-04T17:47:21Z** (F3 oracle re-fixed via ZenMux raw endpoint; 5.2k sent,
-  2.6k received; Pro line $0.435/$0.87/M → ~$0.0045 expected). If it matches,
-  aider-delegate's in-harness token counter is trustworthy for the real bakeoff; if it
-  diverges, the $/task column has to come from the dashboard, not aider-delegate
-  (plan §6 token-counting-bug pitfall). ~2 min on your dashboard. **Gates the real bakeoff's
-  $ reporting.**
+- **bakeoff token cross-check** — DONE 2026-07-04. ZenMux dashboard for the 17:47:21Z
+  call (generationId `3ad28c9f…`): prompt 5151 / completion 2569 / realAmount $0.004475715.
+  Matches aider-delegate's 5.2k sent / 2.6k received and the predicted $0.004476 (Pro line
+  $0.435/$0.87/M). **aider-delegate's token counter is trustworthy** — the real bakeoff
+  can compute $ from reported tokens × the known rate, no per-run dashboard lookup needed.
+  (Side-data: throughput 75.96 tok/s, generationTime 33.82s — useful for the `wallclock_s`
+  column in the real bakeoff's results CSV.)
 - (K2, K3, K6 — not blocking the next packet.)
 
 ## Next 1–3 actions (literal first step)
