@@ -56,11 +56,19 @@ Every run:
   - ZenMux dashboard: `prompt: 5151`, `completion: 2569`, `realAmount: 0.004475715`
   - Predicted (Pro line $0.435/$0.87 per M): (5151 × 0.435 + 2569 × 0.87) / 1M = $0.004476
   - **MATCH to the 7th decimal.** aider-delegate's in-harness token counter is trustworthy;
-  the only gap is `cost_reported: null` on raw-`--api-base` runs (M18 — missing
-  model-metadata entry for the doubled-prefix id). For the real bakeoff, the orchestrator
-  computes $ from the reported tokens × the known Pro/Flash rate — no per-run dashboard
-  lookup needed. Side-data captured: throughput 75.96 tok/s, generationTime 33.82s — useful
-  for the `wallclock_s` column in the real bakeoff's results CSV.
+    the only gap is `cost_reported: null` on raw-`--api-base` runs (M18 — missing
+    model-metadata entry for the doubled-prefix id). For the real bakeoff, the orchestrator
+    computes $ from the reported tokens × the known Pro/Flash rate — no per-run dashboard
+    lookup needed. Side-data captured: throughput 75.96 tok/s, generationTime 33.82s — useful
+    for the `wallclock_s` column in the real bakeoff's results CSV.
+
+> **Skill updates M17/M18/G1 — DONE 2026-07-04 (follow-up session).** The findings above are
+> now baked into `agent-hub/skills/aider-headless-delegate/SKILL.md` (+37 lines): M17 (the
+> `zai` preset ≠ ZenMux — use raw `--api-base https://zenmux.ai/api/anthropic`), M18
+> (`cost_reported: null` on raw-`--api-base` → compute $ from stdout tokens × known rate;
+> counter cross-checked to the 7th decimal, one cross-check per provider is sufficient),
+> and G1 (a ZenMux raw-`--api-base` recipe block). The real bakeoff session can rely on
+> these instead of re-deriving the ZenMux invocation from scratch.
 
 ## Phase 0 checklist status (plan §10)
 

@@ -20,7 +20,10 @@ two planning docs. Commit history: `git log --oneline cb1db2e..feat/uiux-redesig
 
 ## Blocked on Kenja (surface, don't wait)
 
-- **K1** — Lamplight device verdict (Firefox ext new tab + Pixel PWA). Gates: P0 merge + `DESIGN.md` rewrite + the P1 live run. The branch is ready; the nit is fixed.
+- **K1** — Lamplight device verdict: **APPROVED 2026-07-04**. The merge `feat/uiux-redesign` →
+  `main` is Kenja's action (agents never merge to main). The `DESIGN.md` rewrite happens after
+  the merge. The bakeoff does NOT wait for the merge — it runs on the branch (or off `main`
+  once merged; the fresh session verifies which).
 - **K4** — Pick email-in address shape (plus-alias+label vs dedicated). Gates P3.
 - **K5** — Discord bot token + invite. Gates P3.
 - **bakeoff token cross-check** — DONE 2026-07-04. ZenMux dashboard for the 17:47:21Z
@@ -29,23 +32,33 @@ two planning docs. Commit history: `git log --oneline cb1db2e..feat/uiux-redesig
   $0.435/$0.87/M). **aider-delegate's token counter is trustworthy** — the real bakeoff
   can compute $ from reported tokens × the known rate, no per-run dashboard lookup needed.
   (Side-data: throughput 75.96 tok/s, generationTime 33.82s — useful for the `wallclock_s`
-  column in the real bakeoff's results CSV.)
+  column in the real bakeoff's results CSV.) Phase 0's one cross-check per provider is
+  sufficient — no Phase 1 cross-check needed (Kenja confirmed 2026-07-04).
+- **skill fixes M17/M18/G1** — DONE 2026-07-04 + committed in `agent-hub` (Kenja approved).
+  Wrote M17 (`zai` preset ≠ ZenMux — use raw `--api-base https://zenmux.ai/api/anthropic`),
+  M18 (`cost_reported: null` on raw-`--api-base` → compute $ from stdout tokens × known
+  rate; counter cross-checked to the 7th decimal, one cross-check per provider is sufficient),
+  and G1 (ZenMux raw-`--api-base` recipe block) into `agent-hub/skills/aider-headless-delegate/SKILL.md`
+  (+37 lines). The G1 recipe is the load-bearing ZenMux invocation for the bakeoff.
+- **bakeoff Phase 1 primer** — DONE 2026-07-04. `docs/delegations/bakeoff-phase1-primer.md`
+  (180 lines): self-contained handoff for the fresh session. Covers state-at-start, oracle
+  reuse decision (recommends Option A — revert 3 F-batch fixes on `bakeoff/phase1`), the
+  6 T3 + 4 T1/T2 models to wire, the G1 invocation recipe, results CSV schema, phasing +
+  kill-fast gates, and what-NOT-to-do.
 - (K2, K3, K6 — not blocking the next packet.)
 
 ## Next 1–3 actions (literal first step)
 
-1. **Get K1 from Kenja** (the device verdict). The agent side of P0 is done; the merge and
-   `DESIGN.md` rewrite happen after his review. If he says "merge as-is," merge
-   `feat/uiux-redesign` → `main` (his action — agents never merge to main themselves) and
-   rewrite `DESIGN.md` to document the Lamplight system.
-2. **If K1 has fixes:** apply them as a follow-up on `feat/uiux-redesign`, re-review, then merge.
-3. **Real bakeoff (fresh session):** the Phase 0 smoke is done; the real T3×N sweep needs a
-   fresh session per plan §5 symmetry rules. First step in that session: revert the 3 F-batch
-   fixes on a new `bakeoff/phase1` branch (to reuse the oracles — 3 small commits) OR author a
-   new F-batch; then wire the 6 T3 + 4 T1/T2 models into `aider-delegate` provider config; then
-   run Phase 1 (T3 × 3-4 tasks × 6 models × 2-3 runs). Gated by the bakeoff token cross-check
-   above (else $/task is untrustworthy).
-4. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
+1. **Run the bakeoff (fresh session).** Phase 0 is smoke-complete and fully unblocked:
+   K1 approved, token cross-check passed, skill fixes committed, primer written. The fresh
+   session reads `docs/delegations/bakeoff-phase1-primer.md` + the plan + the skill, verifies
+   state per primer §1, picks the oracle-reuse option (primer §2 recommends Option A — revert
+   the 3 F-batch fixes on `bakeoff/phase1`), wires the 6 T3 models, and runs Phase 1.
+   **Literal first step:** open `docs/delegations/bakeoff-phase1-primer.md` and follow §1.
+2. **K1 merge (Kenja's action):** merge `feat/uiux-redesign` → `main` and rewrite `DESIGN.md`
+   to document the Lamplight system. Does NOT gate the bakeoff — it runs on the branch (or off
+   `main` once merged; the fresh session verifies which).
+3. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
    email-in + Discord bot per `build-plan.md` slice 8.
 
 ## Open decisions
