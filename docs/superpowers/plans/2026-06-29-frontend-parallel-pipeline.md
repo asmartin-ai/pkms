@@ -273,5 +273,5 @@ Integrated via a temporary branch and then merged to `main`; the temporary branc
   cleanup; removed an out-of-scope `run_tests.bat`, hardened path/JSON handling,
   and wired `/api/resurface` to existing dismiss/let-go mechanics.
 - Follow-up correction fixed Windows extended-path SQLite URI handling in
-  `pkms promote` tests (`//?/O:/...` → `file:/O:/...`).
+  `pkms promote` tests (extended local-drive path → SQLite `file:` URI).
 - Validation: full suite passed with `172 passed` before merge and again on `main`.
