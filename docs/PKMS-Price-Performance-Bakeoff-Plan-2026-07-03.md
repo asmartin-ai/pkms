@@ -143,11 +143,11 @@ orchestration cost is separated.
 oracles. PKMS has a clean pytest discipline (130+ tests, prior RED-oracle pairs), making it
 the right substrate.
 
-**Baseline concern (must resolve before running):** PKMS is currently on `feat/uiux-redesign`
-with 44 test collection errors (pre-existing, unrelated to this bakeoff). The prior clean
-baseline was **145 passing on `main`** (per the 2026-06-18 harvest log). **Phase 0 must
-re-establish a clean baseline** — either off `main` or by fixing the collection errors on
-the redesign branch — before any bakeoff run.
+**Baseline concern (resolved 2026-07-04):** the original snapshot said PKMS was on
+`feat/uiux-redesign` with 44 test collection errors and a clean baseline of 145 on `main`.
+That snapshot is STALE — `feat/uiux-redesign` is now clean at **391 passing** (re-verified
+2026-07-04). Phase 0 proceeded off the 391 baseline on branch `bakeoff/phase0`; see the
+Phase 0 status in §7 for the full smoke results.
 
 ### Candidate tasks (hard-oracle, RED → fix pairs)
 
@@ -238,6 +238,25 @@ wallclock_s, gate_pass, quality_verdict, first_shot, retries, notes
     Human verifies each is red for the right reason with baselines held.
   - Confirm aider-delegate token reporting is accurate against ZenMux dashboard $ on one
     smoke run (T1 seed shape — a tiny CSV-style normalizer if needed, or just B6).
+
+  **Status (2026-07-04, agent — smoke-complete):** baseline concern is STALE — the "44
+  collection errors / 145 on main" snapshot no longer holds. `feat/uiux-redesign` is clean at
+  **391 passing** (re-verified 2026-07-04). B6 is NOT a usable oracle (already green per M1
+  status in `docs/delegation-roadmap.md`). 3 fresh F-batch RED oracles authored on
+  `bakeoff/phase0` (off the 391 baseline), all verified red-for-the-right-reason:
+  - F1 `pkms search --raw` CLI flag missing (cli.search doesn't expose search.search's raw=)
+  - F2 `extract_tasks()` doesn't surface paused-task `(wake: …)` condition as a field
+  - F3 `search.search("")` raises OperationalError (web guard papered over the library gap)
+  Smoke of `aider-delegate` → DeepSeek-direct Pro pipeline ran 3/3 fixes green, all
+  first-shot, 0 retries, total **$0.0193** (F1 $0.0078, F2 $0.0084, F3 $0.0031). Full suite
+  391 → 402 (+9 F-batch tests green, +2 from parametrization). Oracle hashes unchanged,
+  diff scope clean, no token-cap truncations. Results + verdict: `docs/delegations/bakeoff-phase0-results.md`.
+  **Remaining Phase 0 items (gate the real bakeoff):** (a) cross-check aider-delegate token
+  reporting vs ZenMux dashboard $ — needs Kenja's dashboard access; (b) wire T3 + T1/T2
+  executor models into aider-delegate provider config. The real Phase 1/2/3 sweep runs in a
+  FRESH session per §5 symmetry rules. The F-batch oracles are now consumed (green); the
+  fresh session either reverts these 3 fixes on a `bakeoff/phase1` branch to reuse them, or
+  authors a new F-batch.
 - **Phase 1 (T3 — the cheap tier, the main event):** run the 3–4 tasks × 6 T3 models × 2–3
   runs. This is the bulk of the data and the cheapest signal. Compute pass rate, median
   $/task, quality-to-cost ratio per model. Pick the T3 winner.
