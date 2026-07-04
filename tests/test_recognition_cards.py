@@ -21,8 +21,7 @@ contract below. Source of truth: vault/projects/pkms-design/sweep-findings-2026-
 
 from pkms.db import connect
 from pkms.indexer import index_vault
-
-from conftest import write_note
+from tests.conftest import write_note
 
 
 def _vault(tmp_path):
@@ -45,7 +44,8 @@ def _vault(tmp_path):
         write_note(
             vault / "resources" / f"old-{i}.md",
             f"An old idea {i} worth revisiting one day.\n",
-            title=f"Old Idea {i}", created="2026-01-01",
+            title=f"Old Idea {i}",
+            created="2026-01-01",
         )
     index_dir = tmp_path / ".index"
     index_vault(vault, index_dir)
