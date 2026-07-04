@@ -47,11 +47,11 @@ def index(verbose: bool = typer.Option(False, "--verbose", "-v")):
 
 
 @app.command()
-def search(query: str, limit: int = typer.Option(20, "--limit", "-n")):
+def search(query: str, limit: int = typer.Option(20, "--limit", "-n"), raw: bool = typer.Option(False, "--raw", help="Pass the query straight to FTS5 (boolean operators, prefixes). Power-user escape hatch; literal-by-default stays the contract.")):
     """Full-text search across all notes."""
     from .search import search as _search
 
-    results = _search(query, INDEX, limit=limit)
+    results = _search(query, INDEX, limit=limit, raw=raw)
     if not results:
         console.print("[yellow]No results.[/yellow]")
         return
