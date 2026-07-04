@@ -61,11 +61,10 @@ pkms serve            # Web service: capture endpoint + desktop today-view
 
 ## Start the desktop service
 
-Run the web service from the repo so it uses this checkout and the existing
-vault/index at `K:\Projects\PKMS\vault` and `K:\Projects\PKMS\.index\pkms.db`:
+Run the web service from the repo so it uses this checkout's `vault/` and
+`.index/pkms.db`:
 
 ```powershell
-cd K:\Projects\PKMS
 .\.venv\Scripts\python.exe -m pkms.cli serve
 ```
 
@@ -106,13 +105,13 @@ Then start the service again with the command above.
    Click **Load Temporary Add-on…** and select:
 
    ```text
-   K:\Projects\PKMS\src\pkms\web_ext\manifest.json
+   src\pkms\web_ext\manifest.json
    ```
 
 3. Get your capture token:
 
    ```powershell
-   Get-Content K:\Projects\PKMS\.secrets\capture-token
+   Get-Content .secrets\capture-token
    ```
 
 4. Open Firefox add-ons:
@@ -140,9 +139,9 @@ permanent-install options, see `docs/firefox-newtab-setup.md`.
 
 ## Agent instructions
 
-Repo-local agent rules live in `AGENTS.md`, layered on top of the global
-`C:/Users/Kenja/agent-hub/AGENTS.md`. `CLAUDE.md` is a compatibility shim that
-imports `AGENTS.md` for Claude Code.
+Repo-local agent rules live in `AGENTS.md`, layered on top of your global
+agent rules. `CLAUDE.md` is a compatibility shim that imports `AGENTS.md` for
+Claude Code.
 
 Project-local Claude skills still live under `.claude/skills/`:
 
@@ -153,6 +152,18 @@ Project-local Claude skills still live under `.claude/skills/`:
 
 ```powershell
 .venv\Scripts\python.exe -m pytest tests -q
+```
+
+## Publication safety
+
+PKMS is private-canonical by default: captures, daily notes, local vault state,
+indexes, exports, secrets, and machine paths must not be pushed raw. Before
+publishing or mirroring, read `docs/publication-safety.md` and build the
+allowlisted mirror:
+
+```powershell
+python scripts/build_public_mirror.py
+python scripts/check_publication_safety.py --history
 ```
 
 ## License

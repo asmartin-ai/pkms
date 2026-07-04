@@ -29,7 +29,7 @@ docker run --rm -it --entrypoint /bin/sh python:3 -c "pip install gpsoauth; pyth
 **No-docker variant** (uses the project venv; gpsoauth ships with gkeepapi):
 
 ```powershell
-K:\Projects\PKMS\.venv\Scripts\python.exe -c "import gpsoauth; print(gpsoauth.exchange_token(input('Email: '), input('OAuth Token: '), input('Android ID: ')))"
+.\.venv\Scripts\python.exe -c "import gpsoauth; print(gpsoauth.exchange_token(input('Email: '), input('OAuth Token: '), input('Android ID: ')))"
 ```
 
 Android ID: any 16-hex-char string works (e.g. `0123456789abcdef`).
@@ -38,8 +38,8 @@ The output dict's `Token` value (starts with `aas_et/`) is the master token.
 ## 2. Store it
 
 ```powershell
-Set-Content -NoNewline K:\Projects\PKMS\.secrets\keep-email "you@example.com"
-Set-Content -NoNewline K:\Projects\PKMS\.secrets\keep-master-token "aas_et/..."
+Set-Content -NoNewline .secrets\keep-email "you@example.com"
+Set-Content -NoNewline .secrets\keep-master-token "aas_et/..."
 ```
 
 (`.secrets/` is gitignored, same as the capture token.)
@@ -61,7 +61,7 @@ Once the first pull works, register the background pull (every 4 hours, silent,
 skips quietly when offline):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File K:\Projects\PKMS\scripts\register-keep-pull.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\register-keep-pull.ps1
 ```
 
 ## Notes & caveats

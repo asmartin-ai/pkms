@@ -18,8 +18,7 @@ parameter on today_view (most isolated + unit-testable), not a separate endpoint
 from pkms.db import connect
 from pkms.indexer import index_vault
 from pkms.today import today_view
-
-from conftest import write_note
+from tests.conftest import write_note
 
 
 def _vault_with_one_old_candidate(tmp_path):
@@ -29,7 +28,8 @@ def _vault_with_one_old_candidate(tmp_path):
     write_note(
         vault / "resources" / "old-idea.md",
         "An old idea worth revisiting one day.\n",
-        title="Old Idea", created="2026-01-01",
+        title="Old Idea",
+        created="2026-01-01",
     )
     index_dir = tmp_path / ".index"
     index_vault(vault, index_dir)
