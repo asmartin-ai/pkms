@@ -5,9 +5,10 @@
 ## What just happened
 
 Agent executed the unattended-executable packets from `docs/delegation-roadmap.md`
-on `feat/uiux-redesign`. Suite: **372 → 391**, no regressions. Six commits, all
-via pathspec (Kenja's 51 staged publication-safety deletions left strictly alone
-throughout — M4 respected).
+on `feat/uiux-redesign`, then staged and committed Kenja's in-flight
+publication-safety scrub plus two planning docs. Suite: **372 → 391**, no
+regressions. 11 commits total on the branch since `cb1db2e` (main). Commit
+history is derivable: `git log --oneline cb1db2e..HEAD`.
 
 | Commit | Packet | What |
 |---|---|---|
@@ -16,8 +17,12 @@ throughout — M4 respected).
 | `ce02f52` | P2 RED | RED oracle for `/api/recent-notes` + `/api/search?q=` |
 | `ee658c2` | P2(a) backend | Two endpoints; `recent_notes()` + search route (literal-by-default) |
 | `1b10530` | P2(a) frontend | Wire search surface: real candidates + debounced free-text results; sw v3→v4 |
-| `3589839` | P1 doc | `docs/pixel-pwa-setup.md` (slice-7 install + verification steps for Kenja) |
+| `3589839` | P1 doc | `docs/pixel-pwa-setup.md` + delegation spec |
 | `0c1c5ba` | P2(b) | `/api/inbox-items` + density-gated inbox surface; sw v4→v5 |
+| `279c85c` | bookkeeping | Packet status lines in delegation-roadmap + this NEXT.md |
+| `3b243fb` | publication safety | Allowlist mirror scripts/doc/tests, path scrub, `spike/` removal (71 files) |
+| `2e39fd8` | design input | Fable UI/UX redesign brief (the input behind Lamplight) |
+| `3fb04b1` | planning | Two bakeoff plans (price-performance + thinking-compression) |
 
 Status lines appended under P0, P1, P2, M1 in `docs/delegation-roadmap.md`.
 
@@ -47,4 +52,9 @@ Voice ramp · Discord resurfacing mirror · career-ops dashboard (post-P5) · pr
 
 ## Branch state
 
-`feat/uiux-redesign` (HEAD `0c1c5ba`) — agent commits + Kenja's in-flight publication-safety scrub (staged, untouched). NOT pushed, NOT merged. The 51 staged `spike/` deletions + `exports/phase2-reading-bundle.md` are Kenja's; the agent never swept them into a commit (the pathspec discipline held across all six commits).
+`feat/uiux-redesign` — agent commits + Kenja's publication-safety scrub (now
+committed together in `3b243fb`). Branch state is derivable: `git status -sb`,
+`git log --oneline cb1db2e..HEAD`. Not pushed, not merged (agents never merge to
+main themselves). The publication-safety commit landed the 51 `spike/` deletions
++ `exports/phase2-reading-bundle.md` as part of the coherent scrub — they are no
+longer staged separately.
