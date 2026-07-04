@@ -14,8 +14,13 @@ delegation each (smoke of the `aider-delegate` → DeepSeek-direct pipeline on P
 | F1 | `pkms search --raw` CLI flag missing (`No such option: --raw`) | ✓ | DeepSeek V4 Pro | $0.0078 | 1 | pass | pass |
 | F2 | `extract_tasks()` no `wake` field (`KeyError: 'wake'`) | ✓ | DeepSeek V4 Pro | $0.0084 | 1 | pass | pass |
 | F3 | `search.search("")` raises `OperationalError: fts5: syntax error near ""` | ✓ | DeepSeek V4 Pro | $0.0031 | 1 | pass | pass |
+| F3 (ZenMux) | same oracle, ZenMux endpoint | ✓ | DeepSeek V4 Pro (via ZenMux) | **see dashboard** | 1 | pass | pass |
 
-**Total executor cost:** $0.0193. **Total:** 3 edits across 3 disjoint files (`cli.py`, `tasks.py`, `search.py`).
+**Total executor cost (DeepSeek-direct):** $0.0193. **ZenMux cross-check run:** cost unreported
+by aider (no model-metadata entry for the doubled-prefix id); find on ZenMux dashboard by
+timestamp **2026-07-04T17:47:21Z** (5.2k sent, 2.6k received; Pro line $0.435/$0.87 per M).
+**Total:** 3 edits across 3 disjoint files (`cli.py`, `tasks.py`, `search.py`); the ZenMux
+run reproduced the F3 fix byte-identically.
 **Baseline:** 391 → 402 passing (+9 F-batch tests green, +2 incidental from F-batch parametrization).
 
 ## Verification (per `aider-headless-delegate` 4-check protocol)
@@ -44,22 +49,27 @@ Every run:
 - **No T3 (Flash) data yet.** Only Pro-tier executor exercised. The price-to-performance
   question (does Flash beat Pro on this workload at ~3× cheaper?) is the whole point and
   needs Phase 1.
-- **Token reporting not cross-checked** against the ZenMux dashboard $ — the plan §10
-  Phase-0 checkbox for that needs Kenja's dashboard access. Aider-delegate's in-harness
-  counter is the only source for these 3 runs.
+- **Token reporting cross-check:** the 3 DeepSeek-direct runs can't be cross-checked on
+  ZenMux (different endpoint). The ZenMux run (F3-via-ZenMux, ts 2026-07-04T17:47:21Z) is the
+  cross-check data point — **Kenja verifies the ZenMux dashboard $ for that call**. If it
+  matches the Pro-line math (5.2k × $0.435/M in + 2.6k × $0.87/M out ≈ $0.0045), aider-delegate's
+  token counter is trustworthy for the real bakeoff. If it diverges, the real bakeoff's $/task
+  column has to come from the dashboard, not aider-delegate (plan §6 token-counting-bug pitfall).
 
 ## Phase 0 checklist status (plan §10)
 
 - [x] Clean PKMS test baseline (391 on `feat/uiux-redesign` — the plan's "44 collection
       errors / 145 on main" baseline concern is STALE; the redesign branch is clean).
-- [x] Author fresh F-batch RED oracles (3) — all verified red-for-right-reason.
+- [x] Author fresh F-batch RED oracles (3) — all verified red-for-the-right-reason.
 - [x] B6 RED oracle — NOT usable (already green, per M1 status in delegation-roadmap.md).
       The plan acknowledged this; F-batch replaces it.
 - [x] Smoke aider-delegate → DeepSeek-direct pipeline (3 runs, all green).
-- [ ] Confirm aider-delegate token reporting matches ZenMux dashboard $ (needs Kenja's
-      dashboard access — the only Phase 0 item that gates the real bakeoff's $ reporting).
+- [x] Smoke aider-delegate → ZenMux raw endpoint (1 run, F3 fix reproduced byte-identical;
+      ts 2026-07-04T17:47:21Z for the dashboard cross-check). **Kenja verifies the dashboard
+      $ for that call vs the Pro-line math (~$0.0045 expected).** GATES trustworthy $/task
+      reporting in the real bakeoff.
 - [ ] Wire T3 + T1/T2 executor models into aider-delegate provider config (setup for real run).
-- [ ] Seed results CSV — header + these 3 smoke rows in `bakeoff-phase0-results.csv` (done as
+- [ ] Seed results CSV — header + these 4 smoke rows in `bakeoff-phase0-results.csv` (done as
       a template; the real CSV lives wherever the fresh bakeoff session puts it).
 - [ ] Run Phase 1 (T3 × 3-4 tasks × 6 models × 2-3 runs) — fresh session.
 - [ ] Run Phase 2 (T1/T2 × 3-4 models × 2-3 runs) — fresh session, after Phase 1.
