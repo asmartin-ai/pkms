@@ -6,9 +6,11 @@
 // app.js/styles.css changed and sw.js didn't — a footgun for an iterated tool.)
 // /api/today is network-only (always-fresh data; if offline, the page shows
 // its error banner — sync is never load-bearing for correctness, §9).
+// v3: lede__sub breadcrumb bullet-strip (2026-07-04) — bump so installed
+// PWAs pick up the new app.js instead of the stale v2 shell from cache.
 // v2: the "Lamplight" redesign (2026-07-02) — bump so installed PWAs pick up
 // the new shell instead of serving the stale Log Book II look from cache.
-const CACHE = "pkms-shell-v2";
+const CACHE = "pkms-shell-v3";
 const SHELL = [
   "/web/",
   "/web/index.html",
@@ -19,15 +21,24 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(SHELL))
+      .catch(() => {}),
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
+        ),
+      ),
   );
   self.clients.claim();
 });
@@ -44,19 +55,24 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     (async () => {
       const cached = await caches.match(e.request);
-      const network = fetch(e.request).then((r) => {
-        if (r.ok) {
-          const copy = r.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-        }
-        return r;
-      }).catch(() => null);
+      const network = fetch(e.request)
+        .then((r) => {
+          if (r.ok) {
+            const copy = r.clone();
+            caches
+              .open(CACHE)
+              .then((c) => c.put(e.request, copy))
+              .catch(() => {});
+          }
+          return r;
+        })
+        .catch(() => null);
       if (cached) {
         // Revalidate in the background; serve stale now.
         network.catch(() => {});
         return cached;
       }
       return (await network) || caches.match("/web/index.html");
-    })()
+    })(),
   );
 });
