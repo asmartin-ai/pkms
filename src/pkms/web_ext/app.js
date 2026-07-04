@@ -21,6 +21,7 @@
   let READING_QUEUE = [];
   const PEBBLES = { count: 0, goal: null, entries: [] };
   let RECENT_NOTES = []; // populated by loadRecentNotes() -> /api/recent-notes
+  let INBOX_ITEMS = []; // populated by loadAuxiliarySurfaces -> /api/inbox-items
 
   let PKMS_BASE_URL = "";
   let PKMS_TOKEN = "";
@@ -140,14 +141,16 @@
 
   async function loadAuxiliarySurfaces() {
     try {
-      const [reading, recognition, recent] = await Promise.all([
+      const [reading, recognition, recent, inbox] = await Promise.all([
         fetchJson("/api/reading-queue"),
         fetchJson("/api/recognition-cards"),
         fetchJson("/api/recent-notes"),
+        fetchJson("/api/inbox-items"),
       ]);
       READING_QUEUE = reading;
       RECOGNITION_CARDS = recognition;
       RECENT_NOTES = recent;
+      INBOX_ITEMS = inbox;
       if (state.route === "today") renderToday();
       if (state.route === "reading") renderReading();
       if (state.route === "search") renderSearch();
@@ -290,6 +293,7 @@
 
     // ── Context rail: fold in, read next, still curious, done today ──
     renderFold();
+    renderInbox();
     renderNextRead();
     renderResurface();
     renderPebbles();
@@ -315,6 +319,36 @@
     } else {
       foldEl.innerHTML = `<span>nothing new to fold in.</span>`;
     }
+  }
+
+  /// The inbox surface — recent captures as recognition (NOT a pile). Density-gated
+  /// (visible at more/everything, hidden in calm — the `.block--optional` wrapper
+  /// in index.html handles the visibility; this function only renders the items
+  /// when the surface exists and has data). The fold block above carries the
+  /// progress copy ("N new to fold in"); this surface is the recognition expansion
+  /// — each item one gentle action (open). No count badges, no urgency, no shame
+  /// ("you haven't folded in N days" is forbidden). Empty inbox hides the surface.
+  function renderInbox() {
+    const surface = $("#inbox-surface");
+    if (!surface) return;
+    const ul = $("#inbox-items");
+    if (!ul) return;
+    // INBOX_ITEMS comes from /api/inbox-items (loadAuxiliarySurfaces). When the
+    // fetch hasn't landed yet or the inbox is empty, hide the surface — the
+    // empty state is a reward, never a hole.
+    if (!INBOX_ITEMS || INBOX_ITEMS.length === 0) {
+      surface.hidden = true;
+      ul.innerHTML = "";
+      return;
+    }
+    ul.innerHTML = INBOX_ITEMS.map(
+      (it) => `
+      <li class="inbox-surface__item" data-path="${esc(it.path)}">
+        <span class="inbox-surface__preview">${esc(it.preview || "(empty capture)")}</span>
+        <small class="inbox-surface__meta">${esc(it.source || "")}${it.captured ? ` · ${esc(_fmtTouched(it.captured))}` : ""}</small>
+      </li>`,
+    ).join("");
+    surface.hidden = false;
   }
 
   function renderNextRead() {
