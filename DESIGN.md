@@ -2,120 +2,196 @@
 
 ## System Overview
 
-PKMS uses an editorial product interface: a Firefox new-tab/PWA poster that behaves like a calm briefing rather than a dashboard. The source UI lives in `src/pkms/web/` and is packaged into the Firefox extension under `src/pkms/web_ext/`.
+PKMS uses **Lamplight**: a Firefox new-tab/PWA poster designed as a desk at night
+with one lamp on. The room stays dim and warm; a soft amber glow falls on exactly
+one object per surface — the lead action on today, the capture field on capture.
+Light is the hierarchy, so "one next action" is enforced by the page's physics
+rather than by copy. The source UI lives in `src/pkms/web/` and is packaged into
+the Firefox extension under `src/pkms/web_ext/` (byte-identical copy, pinned by a
+parity test).
 
-The design is intentionally not a generic productivity app. It uses a warm paper ground, restrained accent colors, serif-led hierarchy for re-entry prose, and compact product controls for actions. The page should feel like a trusted desk note: readable, finite, and forgiving.
+The design is intentionally not a generic productivity app. It is a calm briefing
+that foregrounds re-entry prose and one next action, with restraint everywhere
+else. It should feel like a trusted desk note: readable, finite, and forgiving.
+
+- **Design lineage.** Lamplight is the lamp-mode reference of the shared ADHD
+  design language (`K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md`,
+  `VISUAL-LANGUAGE.md` "Hearth" canon, accepted 2026-07-03). It lands unchanged
+  as PKMS's visual layer. Build report: `docs/redesign/fable-report.md`;
+  direction pick rationale: `docs/redesign/fable-directions.md`.
+- **Scope.** This document describes the shipped Lamplight system on
+  `feat/uiux-redesign` (post-2026-07-02 redesign). When tokens or components
+  change, update this file in the same commit.
 
 ## Design Principles
 
-- Glance first: the first read should answer "where was I?" and "what is the next thing?" without scanning a task wall.
-- Warm but not decorative: texture, type, and color should support authored calm, not become visual noise.
-- One loud moment: completion can celebrate; everything else stays quiet.
-- Density is user-controlled: calm is the default, more/everything are opt-in.
-- Shame-free affordances: no red urgency, overdue treatment, streak pressure, or raw backlog badges.
+- **Glance first:** the first read answers "where was I?" and "what is the next
+  thing?" without scanning a task wall.
+- **Light is hierarchy:** one lamp per surface. The lead action and the capture
+  field are the only things fully lit; everything else holds still in the dim
+  room.
+- **Warm but not decorative:** texture, type, and color support authored calm,
+  not become visual noise.
+- **One loud moment:** completion can celebrate (fern stamp, pebbles); everything
+  else stays quiet.
+- **Density is user-controlled:** calm is the default; more/everything are
+  opt-in.
+- **Shame-free affordances:** no red urgency, overdue treatment, streak pressure,
+  or raw backlog badges.
 
 ## Color
 
-Current tokens are defined in `src/pkms/web/styles.css`.
+Tokens are defined in `src/pkms/web/styles.css` `:root`. The palette is a warm
+umber night (`--night` family) with a single amber lamp (`--lamp` family), moss
+resurface accents (`--moss`), and fern completion accents (`--fern`).
 
 | Role | Token | Value | Use |
 | --- | --- | --- | --- |
-| Ground | `--ground` | `#f6f1e8` | Main paper background |
-| Raised ground | `--ground-raised` | `#fbf7ee` | Panels, cards, elevated surfaces |
-| Sunken ground | `--ground-sunken` | `#efe8da` | Secondary fills and inset surfaces |
-| Primary ink | `--ink` | `#2a2520` | Main text |
-| Soft ink | `--ink-soft` | `#5c534a` | Secondary text |
-| Faint ink | `--ink-faint` | `#8a7f73` | Low-emphasis labels |
-| Rule | `--rule` | `#ddd3c2` | Borders and dividers |
-| Action accent | `--ochre` | `#b8762b` | Primary action and next-step accent |
-| Deep action accent | `--ochre-deep` | `#8f5a1d` | Links, hover, stronger action text |
-| Action wash | `--ochre-wash` | `#f3e6cf` | Soft action backgrounds |
-| Resurface accent | `--sage` | `#6b8e7f` | Curious question / resurface surface |
-| Deep resurface accent | `--sage-deep` | `#4f6e61` | Resurface text and borders |
-| Resurface wash | `--sage-wash` | `#e0e8e3` | Resurface backgrounds |
-| Completion | `--celebrate` | `#3f8f5b` | Completion pebbles and page-cleared state |
-| Deep completion | `--celebrate-deep` | `#2d6b43` | Strong completion text |
-| Completion wash | `--celebrate-wash` | `#d8ead9` | Completion backgrounds |
+| Night ground | `--night` | `#211b15` | Main background — the dim room |
+| Night raised | `--night-raised` | `#2b241c` | Panels, cards, elevated surfaces |
+| Night sunken | `--night-sunken` | `#1a1510` | Inset surfaces, wells |
+| Hairline | `--hairline` | `#3e352a` | Borders and dividers |
+| Hairline strong | `--hairline-strong` | `#55483a` | Emphasized borders |
+| Bone (primary text) | `--bone` | `#ede4d3` | Main text — the lit paper |
+| Bone dim | `--bone-dim` | `#b3a48c` | Secondary text |
+| Bone faint | `--bone-faint` | `#988b73` | Low-emphasis labels, inline long-read style |
+| Lamp | `--lamp` | `#eab04c` | The one bright accent — lead action, lamp fill |
+| Lamp bright | `--lamp-bright` | `#f6c979` | Hover/stronger lamp |
+| Lamp ink | `--lamp-ink` | `#241a0d` | Text on lamp fills (8.6:1 contrast) |
+| Lamp glow | `--lamp-glow` | `rgba(234,176,76,0.16)` | Soft lamp background wash |
+| Lamp wash | `--lamp-wash` | `rgba(234,176,76,0.1)` | Lighter lamp background |
+| Moss (resurface) | `--moss` | `#a3bd97` | Curious-question / resurface accent |
+| Moss wash | `--moss-wash` | `rgba(163,189,151,0.12)` | Resurface backgrounds |
+| Fern (completion) | `--fern` | `#8fce96` | Completion pebbles, page-cleared state |
+| Fern wash | `--fern-wash` | `rgba(143,206,150,0.12)` | Completion backgrounds |
 
-Never introduce red for normal task or backlog states. Error messages should use the existing ochre warning pattern unless a true destructive/error state requires a separate semantic treatment.
+**Lamp discipline.** Only one element per surface should carry lamp fill or lamp
+glow at a time. If two things are lit, the page is saying two things are next —
+fix the spec, not the CSS.
+
+Never introduce red for normal task or backlog states. Error messages should use
+the lamp/bone warning pattern unless a true destructive/error state requires a
+separate semantic treatment.
 
 ## Typography
 
-Current font tokens:
+Three families, each with offline-friendly fallback stacks. Loaded via Google
+Fonts (pre-existing pattern); self-hosting is a separate deferred decision.
 
-- Serif/display: `Cormorant Garamond`, falling back to Iowan/Georgia/serif.
-- Sans/product UI: `Barlow`, falling back to system sans.
-- Mono/metadata: `Fira Code`, falling back to SF Mono/Cascadia/Consolas.
+- **Display:** `Bricolage Grotesque` → Segoe UI / Helvetica Neue / Arial.
+- **Body:** `Atkinson Hyperlegible` → -apple-system / Segoe UI / Roboto / Arial.
+- **Mono/metadata:** `IBM Plex Mono` → Cascadia Code / SF Mono / Consolas.
+
+Fluid type scale (clamp-based, mobile-first — Pixel 6 column is the base, wide
+viewports are the enhancement):
+
+| Token | Range |
+| --- | --- |
+| `--step--1` | `clamp(0.8rem, 0.78rem + 0.1vw, 0.86rem)` |
+| `--step-0` | `clamp(0.98rem, 0.95rem + 0.15vw, 1.06rem)` |
+| `--step-1` | `clamp(1.15rem, 1.1rem + 0.25vw, 1.32rem)` |
+| `--step-2` | `clamp(1.4rem, 1.3rem + 0.5vw, 1.75rem)` |
+| `--step-3` | `clamp(1.75rem, 1.55rem + 1vw, 2.45rem)` |
+| `--step-4` | `clamp(2.2rem, 1.9rem + 1.6vw, 3.3rem)` |
 
 Usage:
 
-- The re-entry lede and card titles can use the serif to preserve the authored/editorial feel.
-- Controls, nav, labels, task rows, and dense metadata use the sans or mono.
-- Keep display letter-spacing at or above `-0.04em`; current headings use `-0.01em` and should stay restrained.
-- Body prose should stay within `--measure` where possible.
+- The re-entry lede and card titles use the display face to preserve the
+  authored/editorial feel.
+- Controls, nav, labels, task rows, and dense metadata use the body or mono.
+- Body prose should stay within `--measure: 38rem`.
 
 ## Layout
 
 Primary shell:
 
-- `.poster` centers content with `--poster-max: 64rem` and responsive `--gutter`.
-- Top bar has quiet masthead metadata and a single salience control.
+- `.poster` centers content at `--desk-max: 44rem` with a responsive
+  `--gutter: clamp(1.1rem, 0.6rem + 2.5vw, 2.5rem)`.
+- Top bar has quiet masthead metadata and a single salience control (density).
 - Hash-route nav exposes `today`, `capture`, `reading`, `actions`, and `find`.
-- Today surface prioritizes lede, lead action, shelf, optional recognition rail, optional actions, and completion stamp.
+- Today surface prioritizes lede, lead action, shelf, optional recognition rail,
+  optional actions, and completion stamp.
 
-Responsive behavior:
+Responsive behavior (mobile-first):
 
-- Wide viewport: editorial poster with shelf columns and optional rails.
-- Narrow/mobile: card stack with capture as a full-screen-feeling surface.
-- Avoid adding persistent sidebars or dashboard chrome unless a future surface truly needs it.
+- Narrow/Pixel-6 base: single column, card stack, capture as a full-screen-
+  feeling surface. Safe-area padding honored (`env(safe-area-inset-*)`).
+- Wide viewport: editorial poster; the desk widens, lamp glow stretches.
+- Avoid adding persistent sidebars or dashboard chrome unless a future surface
+  truly needs it.
+
+## Motion
+
+Motion is restrained and stateful. Tokens:
+
+- `--dur-fast: 140ms` (toggles, small state changes).
+- `--dur: 280ms` (navigation, surface swaps).
+- `--dur-warm: 700ms` (the lamp warming up on load — the one signature motion).
+- `--dur-stamp: 520ms` (completion stamp / pebbles).
+- `--ease: cubic-bezier(0.2, 0.7, 0.2, 1)`.
+
+Completion can have a stronger stamp/pebble animation; ordinary navigation should
+not choreograph page-load sequences. The lamp-warm on load is the one ambient
+motion that's allowed to read as "atmosphere."
+
+Always honor `prefers-reduced-motion` (test-pinned: the media query neutralizes
+all animations when set).
 
 ## Components
 
 ### Lede
 
-The lede is the glance anchor. It restores context without a generic greeting. It should read like a humane breadcrumb, not a motivational banner.
+The lede is the glance anchor. It restores context without a generic greeting.
+It should read like a humane breadcrumb, not a motivational banner.
 
 ### Lead action
 
-The lead action is the primary affordance for "the next thing." It should remain visually stronger than lists and rails. Its copy should start with a concrete first action when available.
+The lead action is the primary affordance for "the next thing." It is the **lamp
+element on the today surface** — the one object the lamp falls on. Its copy
+should start with a concrete first action when available. Visually it must remain
+stronger than lists and rails; nothing else on the surface competes with it.
 
 ### Shelf
 
-The shelf holds quiet secondary state: fold-in progress, win pebbles, and at most one resurface prompt. Shelf cells should remain low-pressure and non-dashboard-like.
+The shelf holds quiet secondary state: fold-in progress, win pebbles, and at most
+one resurface prompt. Shelf cells should remain low-pressure and
+non-dashboard-like. Moss is the resurface accent here, never lamp.
 
 ### Recognition cards
 
-Cards may show reading and resurface candidates, but should not become a generic card grid. Each card needs a specific reason or cost signal.
+Cards may show reading and resurface candidates, but should not become a generic
+card grid. Each card needs a specific reason or cost signal.
 
 ### Capture
 
-Capture must be fast, focused, and feed-free. The textarea gets the attention; everything else is secondary. Confirmation copy should reinforce that the system owns later.
+Capture must be fast, focused, and feed-free. The textarea is **the lamp element
+on the capture surface** — the one thing the lamp falls on. Everything else is
+secondary. Confirmation copy should reinforce that the system owns later.
 
 ### Reading queue
 
-Reading items show title, consume-cost, why, and queue date. Clicking opens the markdown note locally. Do not show unread counts or pile language.
+Reading items show title, consume-cost, why, and queue date. Clicking opens the
+markdown note locally. Do not show unread counts or pile language.
 
 ### Actions
 
-Actions are one per note by default. Full backlog views are allowed, but one click away and framed as recoverable context, not obligation.
+Actions are one per note by default. Full backlog views are allowed, but one
+click away and framed as recoverable context, not obligation.
 
 ### Toasts
 
-Toasts are ambient disclosure, not alert modals. Use them for save confirmation, undo, and local open feedback.
-
-## Motion
-
-Existing motion is restrained and stateful. Keep transitions around the existing `--dur-fast`, `--dur`, and `--dur-stamp` tokens. Completion can have a stronger stamp/pebble animation, but ordinary navigation should not choreograph page-load sequences.
-
-Always honor `prefers-reduced-motion`.
+Toasts are ambient disclosure, not alert modals. Use them for save confirmation,
+undo, and local open feedback.
 
 ## Interaction Rules
 
 - Capture save supports Ctrl/Cmd+Enter.
 - Density controls are the one sanctioned personalization surface.
-- Resurface actions must remain cheap and guilt-free: not now, let go, undo where relevant.
+- Resurface actions must remain cheap and guilt-free: not now, let go, undo
+  where relevant.
 - Opening a note is a local action routed through the token-gated service.
-- Extension new tab sends the token as `X-Capture-Token`; served PWA mode can use `?token=…`.
+- Extension new tab sends the token as `X-Capture-Token`; served PWA mode can
+  use `?token=…`.
 
 ## Anti-patterns To Avoid
 
@@ -126,18 +202,29 @@ Always honor `prefers-reduced-motion`.
 - Decorative glass, gradients, or identical card grids.
 - Settings screens that expose unnecessary knobs.
 - Modals as the first solution.
+- **Two lamp elements on one surface.** If the page is lighting two things, the
+  spec has lost the "one next action" thread — fix the content, not the styles.
 
 ## Source Files
 
-- Main PWA/new-tab source: `src/pkms/web/index.html`, `src/pkms/web/styles.css`, `src/pkms/web/app.js`
-- Packaged Firefox extension copy: `src/pkms/web_ext/newtab.html`, `src/pkms/web_ext/styles.css`, `src/pkms/web_ext/app.js`
-- Backend data/actions: `src/pkms/capture_service.py`, `src/pkms/today.py`
+- Main PWA/new-tab source: `src/pkms/web/index.html`, `src/pkms/web/styles.css`,
+  `src/pkms/web/app.js`, `src/pkms/web/sw.js`, `src/pkms/web/manifest.webmanifest`,
+  `src/pkms/web/icon.svg`.
+- Packaged Firefox extension copy: `src/pkms/web_ext/newtab.html`,
+  `src/pkms/web_ext/styles.css`, `src/pkms/web_ext/app.js`, `src/pkms/web_ext/icon.svg`.
+  Byte-identical to `src/pkms/web/` per the packaging rule (parity test-pinned).
+- Backend data/actions: `src/pkms/capture_service.py`, `src/pkms/today.py`.
 
 ## Detector Scope
 
-The Impeccable detector ignores are intentionally minimal and project-local. Each entry in `.impeccable/config.json` covers a path that would otherwise produce noise or duplicate design findings:
+The Impeccable detector ignores are intentionally minimal and project-local. Each
+entry in `.impeccable/config.json` covers a path that would otherwise produce
+noise or duplicate design findings:
 
 - `.agents/**` — agent-specific records not part of the codebase.
 - `.venv/**` — regenerable virtual environment.
 - `spike/**` — experimental files not under design review.
-- `src/pkms/web_ext/` — packaged copy of the source surface in `src/pkms/web/`. Detecting both would produce duplicate findings. As long as the extension remains a copy, this ignore entry stays. When the extension gets independent UI beyond packaging/settings, revisit this decision.
+- `src/pkms/web_ext/` — packaged copy of the source surface in `src/pkms/web/`.
+  Detecting both would produce duplicate findings. As long as the extension
+  remains a copy, this ignore entry stays. When the extension gets independent
+  UI beyond packaging/settings, revisit this decision.

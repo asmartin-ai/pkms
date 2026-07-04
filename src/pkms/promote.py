@@ -10,13 +10,27 @@ the system of record; save there first.
 """
 
 import json
+import os
 import re
 import sqlite3
 from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote
 
-HOARDER_DB = Path(r"K:\Projects\content-hoarder\data\app.db")
+JsonDict = dict[str, Any]
+Stats = dict[str, int]
+
+
+def _default_hoarder_db() -> Path:
+    override = os.environ.get("PKMS_HOARDER_DB")
+    if override:
+        return Path(override)
+    # Default to a sibling checkout without baking a user/machine-specific path into source.
+    return Path(__file__).resolve().parents[2].parent / "content-hoarder" / "data" / "app.db"
+
+
+HOARDER_DB = _default_hoarder_db()
 READING_DIR = ("resources", "reading")
 WPM = 200  # consume-cost estimate basis
 MAX_COMMENTS = 150  # keep notes readable; the full thread stays one click away
@@ -31,9 +45,9 @@ _BARE_ID_RE = re.compile(r"^(?:t3_)?([a-z0-9]{5,9})$", re.I)
 def _sqlite_readonly_uri(db_path: Path) -> str:
     """SQLite file: URI for read-only opens, including Windows extended paths.
 
-    pytest on this machine can hand us temp paths shaped like ``//?/O:/...``;
-    SQLite treats that as a URI authority and rejects it. For local drive paths,
-    SQLite wants ``file:/O:/...``.
+    pytest on Windows can hand us extended-length local drive paths. SQLite
+    treats that form as a URI authority and rejects it, so local drive paths are
+    normalized before URL-quoting.
     """
     path = db_path.resolve().as_posix()
     if re.match(r"^//[.?]/[A-Za-z]:/", path):
@@ -65,7 +79,7 @@ def extract_post_id(query: str) -> str | None:
     return None
 
 
-def fetch_thread(conn: sqlite3.Connection, post_id: str) -> dict | None:
+def fetch_thread(conn: sqlite3.Connection, post_id: str) -> JsonDict | None:
     row = conn.execute(
         """SELECT i.title, i.author, i.url, i.created_utc, i.saved_utc, i.metadata,
                   rt.thread_json
@@ -89,7 +103,7 @@ def fetch_thread(conn: sqlite3.Connection, post_id: str) -> dict | None:
     }
 
 
-def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list[dict]:
+def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list[JsonDict]:
     """Candidates among HYDRATED threads only — recognition over recall: show
     options, let the user say 'that one'."""
     like = f"%{terms}%"
@@ -102,7 +116,7 @@ def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list
     ).fetchall()
     # kind='post' only: the hoard also hydrates saved COMMENTS (t1_*), but promote
     # is keyed on the post id — saved-comment promotion is a later refinement.
-    out = []
+    out: list[JsonDict] = []
     for r in rows:
         meta = json.loads(r["metadata"] or "{}")
         out.append(
@@ -120,7 +134,7 @@ def _day(utc: int | None) -> str:
     return datetime.fromtimestamp(utc, tz=timezone.utc).date().isoformat() if utc else ""
 
 
-def _comment_lines(node: dict, depth: int, lines: list[str], stats: dict) -> None:
+def _comment_lines(node: JsonDict, depth: int, lines: list[str], stats: Stats) -> None:
     if stats["shown"] >= MAX_COMMENTS or depth > MAX_DEPTH:
         stats["omitted"] += 1 + _descendants(node)
         return
@@ -146,7 +160,7 @@ def _comment_lines(node: dict, depth: int, lines: list[str], stats: dict) -> Non
         _comment_lines(child, depth + 1, lines, stats)
 
 
-def _descendants(node: dict) -> int:
+def _descendants(node: JsonDict) -> int:
     if node.get("kind") != "t1":
         return int(node.get("data", {}).get("count") or 0)
     replies = node["data"].get("replies")
@@ -154,7 +168,7 @@ def _descendants(node: dict) -> int:
     return 1 + sum(_descendants(c) for c in children)
 
 
-def render_note(thread: dict, *, today: date | None = None) -> tuple[str, int]:
+def render_note(thread: JsonDict, *, today: date | None = None) -> tuple[str, int]:
     """Thread → (markdown note, reading minutes)."""
     today = today or date.today()
     listing = thread["thread_json"]
@@ -247,7 +261,7 @@ def write_note(note: str, title: str, vault: Path) -> Path:
     return path
 
 
-def promote(query: str, vault: Path, db_path: Path | None = None) -> dict:
+def promote(query: str, vault: Path, db_path: Path | None = None) -> JsonDict:
     """URL/id → {'note': Path, 'minutes': int} · search terms → {'candidates': [...]}.
     Unhoarded id → {'missing': id}. db_path resolves at call time so tests can
     point HOARDER_DB elsewhere."""

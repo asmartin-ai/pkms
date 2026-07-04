@@ -176,6 +176,26 @@ def make_server(
 
                 body = json.dumps(recognition_cards(vault, index_dir))
                 self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/recent-notes":
+                from .today import recent_notes
+
+                body = json.dumps(recent_notes(vault, index_dir))
+                self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/search":
+                q = parse_qs(urlparse(self.path).query).get("q", [""])[0]
+                from .search import search
+
+                # Empty/whitespace query → [] (the picker renders the empty state).
+                # search.search() sanitizes to quoted tokens, but an empty query
+                # sanitizes to the empty string, which FTS5 rejects with a syntax
+                # error. Guard at the route so the endpoint never 500s.
+                body = json.dumps(search(q, index_dir) if q.strip() else [])
+                self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/inbox-items":
+                from .today import inbox_items
+
+                body = json.dumps(inbox_items(vault))
+                self._send(200, body, "application/json; charset=utf-8")
             else:
                 self._send(404, "not found")
 

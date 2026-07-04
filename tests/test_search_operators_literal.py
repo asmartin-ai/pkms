@@ -8,11 +8,9 @@ literal text. It goes green once `search()` sanitizes by default (raw FTS behind
 an explicit flag) — see vault/projects/pkms-design/sweep-findings-2026-06-17.md (B4).
 """
 
-
 from pkms.indexer import index_vault
 from pkms.search import search
-
-from conftest import write_note
+from tests.conftest import write_note
 
 
 def test_or_in_a_plain_query_is_literal_not_a_boolean_operator(tmp_path):
@@ -20,12 +18,14 @@ def test_or_in_a_plain_query_is_literal_not_a_boolean_operator(tmp_path):
     write_note(
         vault / "resources" / "both.md",
         "foo OR bar appear together in this note.\n",
-        title="Both", created="2026-01-01",
+        title="Both",
+        created="2026-01-01",
     )
     write_note(
         vault / "resources" / "foo_only.md",
         "foo appears here but the second keyword does not.\n",
-        title="Foo Only", created="2026-01-01",
+        title="Foo Only",
+        created="2026-01-01",
     )
     index_dir = tmp_path / ".index"
     index_vault(vault, index_dir)

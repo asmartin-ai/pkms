@@ -1,0 +1,181 @@
+run_id,task_id,tier,executor_model,executor_id,run_n,
+orch_tok_in,orch_tok_out,orch_usd,
+exec_tok_in,exec_tok_out,exec_usd,
+wallclock_s,gate_pass,quality_verdict,first_shot,retries,notes
+p1-F1-dsv4flash-r1,F1,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,1,,,
+8900,1200,0.001582,
+18,pass,flag,true,0,"first-shot green; diff scope cli.py only; oracle hash unchanged; 1 minor nit: uses is_flag=True (Typer DeprecationWarning); wrapper did not auto-create run-branch (branch_created=null) — edited on bakeoff/phase1 directly, reset via git checkout after capture; tokens 8.9k sent/1.2k received from stdout"
+p1-F1-dsv4flash-r2,F1,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,2,,,
+8900,4200,0.002422,
+44,pass,pass,true,0,"first-shot green; cleaner than r1 (no is_flag deprecation); 8.8k cache hit on this run; same diff stat (6+/2-); variance note: 3.5x more output tokens than r1 — same prompt, different reasoning length; tokens 8.9k sent/4.2k received from stdout"
+p1-F1-minimax-m3-r1,F1,T3_flash,minimax-m3,minimax/minimax-m3,1,,,
+8600,242,0.001272,
+7,pass,pass,true,0,"first-shot green; fastest run yet (7s); minimal output (242 tok) — MiniMax prompt cache barely engaged (128 hit); diff stat 10+/2- (slightly larger — split raw Option across lines); full suite 394 passing (F1 fixed, F2/F3 still RED) — no regressions; tokens 8.6k sent/242 received"
+p1-F1-minimax-m3-r2,F1,T3_flash,minimax-m3,minimax/minimax-m3,2,,,
+8600,215,0.001264,
+8,pass,pass,true,0,"first-shot green; consistent with r1 (8s vs 7s, 215 vs 242 tok); 2.8k cache hit this run (vs 128 r1); diff 8+/2-; tokens 8.6k sent/215 received"
+p1-F1-qwen3.7-plus-r1,F1,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,1,,,
+9000,732,0.001465,
+21,pass,pass,true,0,"first-shot green; diff 6+/2- (same as dsv4flash); tokens 9.0k sent/732 received"
+p1-F1-step3.7-flash-r1,F1,T3_flash,step-3.7-flash,stepfun/step-3.7-flash,1,,,
+8900,1100,0.001554,
+17,pass,pass,true,0,"first-shot green; MINIMAL diff (2+/2- — kept function on one line, added raw kwarg inline); no context overflow on 256K ctx; tokens 8.9k sent/1.1k received"
+p1-F1-kat-coder-pro-v2-r1,F1,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,1,,,
+9000,220,0.001322,
+10,pass,pass,true,0,"first-shot green; minimal diff (2+/2-, raw kwarg inline); terse output (220 tok — even terser than minimax); coding-specialist lived up to billing on this simple task; tokens 9.0k sent/220 received"
+p1-F1-qwen3.6-flash-r1,F1,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,1,,,
+9000,2500,0.001960,
+24,fail,fail,false,0,"NO EDIT APPLIED — applied_edit_count=0, diff_stat empty, cli.py unchanged, F1 still RED. Model produced a valid-looking SEARCH/REPLACE block in its reasoning (visible in stdout_tail) but aider's diff parser did not accept it. Test command never ran. Possibly a formatting quirk in the REPLACE block (the block looks correct in the snippet). tokens 9.0k sent/2.5k received"
+p1-F1-qwen3.6-flash-r2,F1,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,2,,,
+9000,1300,0.001624,
+16,pass,pass,true,0,"first-shot green on retry; r1 was a flake (no edit applied); r2 applied cleanly with minimal diff (2+/2-); tokens 9.0k sent/1.3k received. Variance: qwen3.6-flash has a non-zero no-edit-application rate — watch on F2/F3."
+p1-F2-dsv4flash-r1,F2,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,1,,,
+10000,3100,0.002268,
+35,pass,pass,true,0,"first-shot green; 4/4 F2 tests pass; diff 6+ (wake=None default + paused-gated regex on raw + wake field in dict); correctly did NOT strip wake from text; full suite 397 pass/5 fail (F1+F3 still RED, no regressions); tokens 10k sent/3.1k received"
+p1-F2-minimax-m3-r1,F2,T3_flash,minimax-m3,minimax/minimax-m3,1,,,
+9900,710,0.001585,
+14,pass,pass,true,0,"first-shot green; 4/4 pass; diff 6+ (module-level _WAKE_RE + paused-gated + ternary wake field); cleaner pattern than dsv4flash (named regex constant); tokens 9.9k sent/710 received; aider summarizer warnings (post-run, irrelevant to gate)"
+p1-F2-qwen3.7-plus-r1,F2,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,1,,,
+10000,2800,0.002184,
+58,pass,pass,true,0,"first-shot green; 4/4 pass; diff 7+ (added module-level _WAKE_RE constant + wake field in dict); slowest run yet (58s); tokens 10k sent/2.8k received"
+p1-F2-step3.7-flash-r1,F2,T3_flash,step-3.7-flash,stepfun/step-3.7-flash,1,,,
+8994,0,0.001259,
+46,fail,fail,false,0,"TOKEN LIMIT HIT — 256K ctx model exhausted context on F2 (larger read: tasks.py + cli.py + tests). aider returned partial output, no edit applied (applied_edit_count=0, diff_stat empty). error: 'aider hit a token limit; output may be partial.' F2 still RED. This is the §6 kill-fast signal for step-3.7-flash on multi-file tasks. tokens 8.9k sent / 0 received. exec_usd computed with 0 out."
+p1-F2-kat-coder-pro-v2-r1,F2,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,1,,,
+10000,601,0.001568,
+23,pass,pass,true,0,"first-shot green; 4/4 pass; diff 7+ (module-level _WAKE_RE + paused-gated ternary wake field — same clean pattern as minimax); 256K ctx held on F2 (unlike step-3.7-flash); coding-specialist lived up to billing; full suite 397 pass/5 fail (F1+F3 RED, no regressions); tokens 10k sent/601 received"
+p1-F2-qwen3.6-flash-r1,F2,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,1,,,
+10000,2500,0.002100,
+22,pass,pass,true,0,"first-shot green; 4/4 pass; diff 8+ (inline regex + paused-gated wake field); F1 no-edit flake did NOT recur on F2 — clean application on first attempt; tokens 10k sent/2.5k received"
+p1-F3-dsv4flash-r1,F3,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,1,,,
+13000,1200,0.002156,
+16,pass,pass,true,0,"first-shot green; 5/5 F3 tests pass; MINIMAL diff (2+/0- — added `if not query.strip(): return []` at top of search() body, before any sanitization); full suite 397 pass/5 fail (F1+F2 RED, F3 green, no regressions); tokens 13k sent/1.2k received"
+p1-F3-minimax-m3-r1,F3,T3_flash,minimax-m3,minimax/minimax-m3,1,,,
+13000,198,0.001875,
+8,pass,pass,true,0,"first-shot green; 5/5 pass; diff 5+ (guard + 3-line explanatory comment about defense-in-depth with web route); terse output (198 tok — consistent with minimax's terse profile across F1/F2/F3); tokens 13k sent/198 received"
+p1-F3-qwen3.7-plus-r1,F3,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,1,,,
+13000,685,0.002012,
+20,pass,pass,true,0,"first-shot green; 5/5 pass; MINIMAL diff (2+/0- — same as dsv4flash); tokens 13k sent/685 received"
+p1-F3-step3.7-flash-r1,F3,T3_flash,step-3.7-flash,stepfun/step-3.7-flash,1,,,
+14000,1100,0.002268,
+21,pass,pass,true,0,"first-shot green; 5/5 pass; MINIMAL diff (2+/0-); NO token limit hit on F3 (simpler task, smaller read context than F2). Confirms §6 hypothesis: step-3.7-flash's 256K overflow on F2 was task-specific (large multi-file read), not systemic. Verdict for step-3.7-flash: OK for single-file simple tasks (F1, F3), context-overflow on multi-file tasks (F2). tokens 14k sent/1.1k received"
+p1-F3-kat-coder-pro-v2-r1,F3,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,1,,,
+13000,135,0.001858,
+9,pass,pass,true,0,"first-shot green; 5/5 pass; MINIMAL diff (2+/0-); terse (135 tok — even terser than minimax's 198); fastest F3 run (9s); 256K ctx held on F3 (simple task); tokens 13k sent/135 received"
+p1-F3-qwen3.6-flash-r1,F3,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,1,,,
+13000,1200,0.002156,
+14,pass,pass,true,0,"first-shot green; 5/5 pass; MINIMAL diff (2+/0-); no-edit flake did NOT recur on F3 (now 2/3 clean for qwen3.6-flash: F2, F3; F1 r1 flake looks increasingly like a one-off); tokens 13k sent/1.2k received"
+p1-F1-qwen3.7-plus-r2,F1,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,2,,,
+9000,918,0.001517,
+24,pass,pass,true,0,"first-shot green on r2; 2/2 pass; diff 6+/2- (same shape as r1); low variance vs r1 ($0.001465/21s vs $0.001517/24s); tokens 9.0k sent/918 received"
+p1-F1-step3.7-flash-r2,F1,T3_flash,step-3.7-flash,stepfun/step-3.7-flash,2,,,
+11000,2300,0.002184,
+28,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F1 (simple single-file task — no ctx overflow); diff 6+/2- (same shape as r1); variance: r2 used 2.3k output tok vs r1's 1.1k (longer reasoning, same result); tokens 11k sent/2.3k received"
+p1-F1-kat-coder-pro-v2-r2,F1,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,2,,,
+9000,199,0.001316,
+10,pass,pass,true,0,"first-shot green on r2; 2/2 pass; MINIMAL diff (2+/2- — most minimal F1 fix, raw kwarg inline no help text); ultra-terse (199 tok — even terser than minimax); LOWEST variance: r1 $0.001322/10s, r2 $0.001316/10s (near-identical); tokens 9.0k sent/199 received"
+p1-F2-dsv4flash-r2,F2,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,2,,,
+10000,2500,0.002100,
+26,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F2; diff 6+ (inline regex + paused-gated wake_val via if/else, no module-level constant — slightly different shape than r1 which used ternary); variance: r1 $0.002268/35s, r2 $0.002100/26s (consistent — both first-shot green, similar cost); tokens 10k sent/2.5k received"
+p1-F2-qwen3.6-flash-r2,F2,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,2,,,
+10000,3500,0.002380,
+28,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F2 (no flake either run); diff 8+ (inline regex + paused-gated wake field, same shape as r1); variance: r1 $0.002100/22s (2.5k out), r2 $0.002380/28s (3.5k out — more verbose reasoning, same result); qwen3.6 flake observed on F1 r1 only, NOT on F2 (2/2) or F3 (1/1); tokens 10k sent/3.5k received"
+p1-F3-dsv4flash-r2,F3,T3_flash,deepseek-v4-flash,deepseek/deepseek-v4-flash,2,,,
+13000,1000,0.002100,
+12,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F3; MINIMAL diff (2+/0- — same guard as r1); low variance: r1 $0.002156/16s (1.2k out), r2 $0.002100/12s (1.0k out); tokens 13k sent/1.0k received"
+p1-F3-minimax-m3-r2,F3,T3_flash,minimax-m3,minimax/minimax-m3,2,,,
+13000,188,0.001873,
+8,pass,pass,true,0,"first-shot green on r2; 2/2 pass; diff 5+ (guard + 3-line comment, same shape as r1); ULTRA-CONSISTENT: r1 $0.001875/8s/198tok, r2 $0.001873/8s/188tok (near-identical); minimax is the lowest-variance lowest-cost model in the T3 field; tokens 13k sent/188 received"
+p1-F3-qwen3.7-plus-r2,F3,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,2,,,
+13000,440,0.001943,
+16,pass,pass,true,0,"first-shot green on r2; 2/2 pass; MINIMAL diff (2+/0-); variance: r1 $0.002012/20s/685tok, r2 $0.001943/16s/440tok (consistent — both first-shot green, r2 terser); tokens 13k sent/440 received"
+p1-F3-step3.7-flash-r2,F3,T3_flash,step-3.7-flash,stepfun/step-3.7-flash,2,,,
+15000,674,0.002289,
+14,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F3 (simple task, no ctx overflow); MINIMAL diff (2+/0-); variance: r1 $0.002268/21s/1.1k out, r2 $0.002289/14s/674 out (consistent — both first-shot green); step-3.7 verdict: 2/2 on F1+F3 (simple single-file), 0/1 on F2 (ctx overflow on multi-file); tokens 15k sent/674 received"
+p1-F3-kat-coder-pro-v2-r2,F3,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,2,,,
+13000,155,0.001863,
+10,pass,pass,true,0,"first-shot green on r2; 2/2 pass; MINIMAL diff (2+/0-); ULTRA-CONSISTENT: r1 $0.001858/9s/135tok, r2 $0.001863/10s/155tok (near-identical); kat-coder is tied with minimax for lowest-variance + lowest-cost; tokens 13k sent/155 received"
+p1-F3-qwen3.6-flash-r2,F3,T3_flash,qwen3.6-flash,qwen/qwen3.6-flash,2,,,
+13000,1300,0.002184,
+15,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F3; MINIMAL diff (2+/0-); variance: r1 $0.002156/14s/1.2k out, r2 $0.002184/15s/1.3k out (consistent); qwen3.6-flake final tally: F1 r1 flake (r2 clean), F2 2/2 clean, F3 2/2 clean — flake rate 1/7 runs (14%), appears to be a rare transient not a systematic issue; tokens 13k sent/1.3k received"
+p1-F2-minimax-m3-r2,F2,T3_flash,minimax-m3,minimax/minimax-m3,2,,,
+9900,642,0.001566,
+22,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F2; diff 13+ (extracted _extract_wake helper fn — MORE verbose than r1's inline approach which was 6+); variance: r1 $0.001585/14s/inline, r2 $0.001566/22s/helper-fn (same cost band, different impl shape — minimax varies implementation style across runs while staying first-shot green); aider summarizer warnings (post-run, irrelevant); tokens 9.9k sent/642 received"
+p1-F2-qwen3.7-plus-r2,F2,T3_flash,qwen3.7-plus,qwen/qwen3.7-plus,2,,,
+10000,2800,0.002184,
+148,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F2; diff 7+ (module-level _WAKE_RE constant, same shape as r1); IDENTICAL tokens to r1 (10k/2.8k) but wallclock 148s vs r1's 58s — 2.5x API-side latency variance (not reasoning variance, since tokens are the same); qwen3.7-plus has the highest wallclock variance in the field; tokens 10k sent/2.8k received"
+p1-F2-kat-coder-pro-v2-r2,F2,T3_flash,kat-coder-pro-v2,kuaishou/kat-coder-pro-v2,2,,,
+10000,989,0.001677,
+26,pass,pass,true,0,"first-shot green on r2; 2/2 pass on F2; diff 8+ (module-level _WAKE_RE + inline paused-gated wake extraction, same shape as r1); variance: r1 $0.001568/23s/601tok, r2 $0.001677/26s/989tok (consistent — both first-shot green, r2 slightly more verbose); tokens 10k sent/989 received"
+p2-F1-dsv4pro-r1,F1,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,1,,,
+8800,1700,0.005307,
+29,pass,pass,true,0,"PHASE 2 (T1/T2 Pro tier, $0.435/$0.87/M). first-shot green; diff 6+/2- (added --raw flag + help text + ALSO added 'No results' early-return enhancement — slightly more verbose than minimal T3 fixes, within scope, no regressions); 3.4x cost of minimax F1 median ($0.001535) — confirms Pro price ratio; tokens 8.8k sent/1.7k received"
+p2-F1-glm5.2-r1,F1,T12_pro,glm-5.2,z-ai/glm-5.2,1,,,
+8400,1600,0.005046,
+29,pass,pass,true,0,"PHASE 2. first-shot green; diff 6+/2- (standard --raw flag + help text, no extra enhancements — cleaner than dsv4pro r1); self-delegation flag (glm-5.2 is the orchestrator family — plan §3 note); slightly cheaper than dsv4pro ($0.005046 vs $0.005307 — fewer output tok); 3.3x cost of minimax F1 median; tokens 8.4k sent/1.6k received"
+p2-F1-kimi-k2.7-code-r1,F1,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,1,,,
+8400,497,0.004086,
+10,pass,pass,true,0,"PHASE 2. first-shot green; diff 8+/2- (multi-line raw Option with help text — slightly more verbose than minimal); CHEAPEST Pro run ($0.004086 — 497 output tok, terse like kat-coder); FASTEST Pro run (10s — tied with kat-coder T3, coding specialist shines on simple tasks); 2.7x cost of minimax F1 median (smallest Pro premium); tokens 8.4k sent/497 received"
+p2-F1-qwen3.7-max-r1,F1,T12_pro,qwen3.7-max,qwen/qwen3.7-max,1,,,
+9000,1200,0.004959,
+30,pass,pass,true,0,"PHASE 2. first-shot green; diff 6+/2- (standard --raw flag + help text); all 4 Pro models pass F1 first-shot; 3.2x cost of minimax F1 median; tokens 9.0k sent/1.2k received"
+p2-F1-dsv4pro-r2,F1,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,2,,,
+8800,3000,0.006438,
+45,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F1; diff 6+/2- (SAME shape as r1 — includes 'No results' enhancement again, suggesting dsv4pro has a consistent inclination to add UX touches beyond the minimal fix); variance: r1 $0.005307/29s/1.7k out, r2 $0.006438/45s/3.0k out (r2 more verbose reasoning, ~$0.001 more expensive); dsv4pro is the most expensive + most variable Pro model on F1; tokens 8.8k sent/3.0k received"
+p2-F1-glm5.2-r2,F1,T12_pro,glm-5.2,z-ai/glm-5.2,2,,,
+8400,1800,0.005220,
+28,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F1; diff 6+/2- (standard --raw flag + help text, same shape as r1); low variance: r1 $0.005046/29s/1.6k out, r2 $0.005220/28s/1.8k out (consistent); glm-5.2 is the most consistent Pro model on F1; tokens 8.4k sent/1.8k received"
+p2-F1-kimi-k2.7-code-r2,F1,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,2,,,
+8400,212,0.003838,
+11,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F1; diff 6+/2- (more compact than r1's 8+); ULTRA-terse (212 output tok — even terser than r1's 497, terser than minimax T3); NEW CHEAPEST Pro run ($0.003838); LOW variance: r1 $0.004086/10s, r2 $0.003838/11s (consistent — kimi is the cheapest + fastest + lowest-variance Pro model); 2.5x cost of minimax F1 median (smallest Pro premium in the field); tokens 8.4k sent/212 received"
+p2-F1-qwen3.7-max-r2,F1,T12_pro,qwen3.7-max,qwen/qwen3.7-max,2,,,
+9000,927,0.004721,
+24,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F1; diff 6+/2- (same shape as r1); low variance: r1 $0.004959/30s/1.2k out, r2 $0.004721/24s/927 out (consistent — qwen3.7-max is steady); tokens 9.0k sent/927 received"
+p2-F2-dsv4pro-r1,F2,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,1,,,
+10000,4600,0.008352,
+72,pass,pass,true,0,"PHASE 2. first-shot green; 4/4 pass; diff 7+ (inline regex + paused-gated wake + explanatory comment); MOST EXPENSIVE run in the bakeoff ($0.008352 — 4.6k output tok, dsv4pro is verbose on F2); 5.3x cost of minimax F2 median ($0.001576); matches Phase 0 smoke ($0.0084 for F2 via DeepSeek-direct Pro); tokens 10k sent/4.6k received"
+p2-F2-glm5.2-r1,F2,T12_pro,glm-5.2,z-ai/glm-5.2,1,,,
+9600,3500,0.007221,
+49,pass,pass,true,0,"PHASE 2. first-shot green; 4/4 pass; diff 6+ (inline regex + paused-gated wake + comment referencing G4 design-language — model picked up the design-language ref from the test docstring); self-delegation flag (glm-5.2 is orchestrator family); cheaper than dsv4pro ($0.007221 vs $0.008352 — fewer output tok); 4.6x cost of minimax F2 median; tokens 9.6k sent/3.5k received"
+p2-F2-kimi-k2.7-code-r1,F2,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,1,,,
+9600,2000,0.005916,
+16,pass,pass,true,0,"PHASE 2. first-shot green; 4/4 pass; diff 4+ (MOST MINIMAL F2 fix in the bakeoff — single ternary: `wake_match = WAKE_RE.search(text) if state == 'paused' else None` + 3 dict lines); CHEAPEST + FASTEST Pro on F2 ($0.005916/16s vs dsv4pro $0.008352/72s, glm-5.2 $0.007221/49s); coding-specialist lives up to billing — terse + minimal + fast; 3.8x cost of minimax F2 median (smallest Pro premium on F2); tokens 9.6k sent/2.0k received"
+p2-F2-qwen3.7-max-r1,F2,T12_pro,qwen3.7-max,qwen/qwen3.7-max,1,,,
+10000,2900,0.006873,
+156,pass,pass,true,0,"PHASE 2. first-shot green; 4/4 pass; diff 9+ (module-level _WAKE_RE + inline paused-gated wake extraction); HIGHEST WALLCLOCK in the bakeoff (156s — qwen3.7-max has severe API latency variance on F2, same pattern as its T3 sibling qwen3.7-plus which hit 148s on F2 r2); cost in line with glm-5.2 ($0.006873 vs $0.007221); tokens 10k sent/2.9k received"
+p2-F2-dsv4pro-r2,F2,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,2,,,
+10000,5200,0.008874,
+85,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F2; diff 6+ (inline regex + paused-gated wake, no module-level constant — same shape as r1); NEW MOST EXPENSIVE run in the bakeoff ($0.008874 — 5.2k output tok, even more verbose than r1's 4.6k); variance: r1 $0.008352/72s, r2 $0.008874/85s (dsv4pro is consistently the most verbose + most expensive Pro model — reasoning length varies 1.7k-5.2k across runs); tokens 10k sent/5.2k received"
+p2-F2-glm5.2-r2,F2,T12_pro,glm-5.2,z-ai/glm-5.2,2,,,
+9600,3700,0.007395,
+63,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F2; diff 6+ (inline regex + paused-gated wake, same shape as r1); low variance: r1 $0.007221/49s/3.5k out, r2 $0.007395/63s/3.7k out (consistent — glm-5.2 is steady across F1+F2); tokens 9.6k sent/3.7k received"
+p2-F2-kimi-k2.7-code-r2,F2,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,2,,,
+9600,3400,0.007134,
+24,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F2; diff 7+ (module-level _WAKE_RE + inline paused-gated — MORE verbose than r1's 4+ minimal ternary); variance: r1 $0.005916/16s/2.0k out (minimal ternary), r2 $0.007134/24s/3.4k out (module-level constant) — kimi varies implementation style across runs (like minimax on T3), both first-shot green; kimi remains cheapest+fastest Pro on F2 by median ($0.006525); tokens 9.6k sent/3.4k received"
+p2-F2-qwen3.7-max-r2,F2,T12_pro,qwen3.7-max,qwen/qwen3.7-max,2,,,
+10000,2100,0.006177,
+44,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F2; diff 9+ (module-level _WAKE_RE + inline paused-gated, same shape as r1); variance: r1 $0.006873/156s/2.9k out, r2 $0.006177/44s/2.1k out — r1 had the API latency spike (156s = highest wallclock in bakeoff) but tokens were similar; qwen3.7-max has the highest wallclock variance in the Pro tier (same pattern as T3 sibling qwen3.7-plus); tokens 10k sent/2.1k received"
+p2-F3-dsv4pro-r1,F3,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,1,,,
+13000,2400,0.007743,
+34,pass,pass,true,0,"PHASE 2. first-shot green; 5/5 pass; MINIMAL diff (2+/0- — same guard as T3 models); dsv4pro is verbose even on simple F3 (2.4k output tok vs kimi's ~0.5k); 4.1x cost of minimax F3 median ($0.001874); tokens 13k sent/2.4k received"
+p2-F3-glm5.2-r1,F3,T12_pro,glm-5.2,z-ai/glm-5.2,1,,,
+12000,1100,0.006177,
+20,pass,pass,true,0,"PHASE 2. first-shot green; 5/5 pass; MINIMAL diff (2+/0- — guard + comment referencing §3 design-language, same pattern as F2 r1 where it referenced G4); cheaper than dsv4pro ($0.006177 vs $0.007743 — fewer output tok, fewer input tok); 3.3x cost of minimax F3 median; tokens 12k sent/1.1k received"
+p2-F3-kimi-k2.7-code-r1,F3,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,1,,,
+12000,179,0.005376,
+10,pass,pass,true,0,"PHASE 2. first-shot green; 5/5 pass; MINIMAL diff (2+/0-); ULTRA-terse (179 output tok — even terser than minimax T3's 188); CHEAPEST + FASTEST Pro F3 run ($0.005376/10s); 2.9x cost of minimax F3 median (smallest Pro premium on F3); kimi is the cheapest+fastest Pro model across all 3 tasks; tokens 12k sent/179 received"
+p2-F3-qwen3.7-max-r1,F3,T12_pro,qwen3.7-max,qwen/qwen3.7-max,1,,,
+13000,601,0.006178,
+19,pass,pass,true,0,"PHASE 2. first-shot green; 5/5 pass; MINIMAL diff (2+/0-); all 4 Pro models pass F3 first-shot; 3.3x cost of minimax F3 median; tokens 13k sent/601 received"
+p2-F3-dsv4pro-r2,F3,T12_pro,deepseek-v4-pro,deepseek/deepseek-v4-pro,2,,,
+13000,1600,0.007047,
+26,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F3; diff 7+ (4-line explanatory comment about defense-in-depth — dsv4pro verbose style, vs r1's minimal 2+); variance: r1 $0.007743/34s/2.4k out (minimal), r2 $0.007047/26s/1.6k out (verbose comment) — dsv4pro varies impl style but both first-shot green; dsv4pro is the most expensive Pro model on every task (median $0.0077 across F1/F2/F3); tokens 13k sent/1.6k received"
+p2-F3-glm5.2-r2,F3,T12_pro,glm-5.2,z-ai/glm-5.2,2,,,
+12000,643,0.005779,
+16,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F3; MINIMAL diff (2+/0- — no comment this time, vs r1's §3 comment); cheaper than r1 ($0.005779 vs $0.006177 — r2 terser 643 vs 1100 output tok); low variance across F1+F2+F3 (glm-5.2 is the most consistent Pro model); tokens 12k sent/643 received"
+p2-F3-kimi-k2.7-code-r2,F3,T12_pro,kimi-k2.7-code,moonshotai/kimi-k2.7-code,2,,,
+12000,237,0.005426,
+9,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F3; MINIMAL diff (2+/0-); FASTEST run in the bakeoff (9s); ULTRA-CONSISTENT: r1 $0.005376/10s/179tok, r2 $0.005426/9s/237tok (near-identical); kimi is the cheapest + fastest + lowest-variance Pro model across all 3 tasks (median $0.004955, median wall 10s); 2.9x cost of minimax F3 median (smallest Pro premium); tokens 12k sent/237 received"
+p2-F3-qwen3.7-max-r2,F3,T12_pro,qwen3.7-max,qwen/qwen3.7-max,2,,,
+13000,769,0.006324,
+23,pass,pass,true,0,"PHASE 2. first-shot green on r2; 2/2 pass on F3; MINIMAL diff (2+/0-); low variance: r1 $0.006178/19s/601tok, r2 $0.006324/23s/769tok (consistent — qwen3.7-max is steady on F3, unlike its F2 wallclock variance); tokens 13k sent/769 received. PHASE 2 COMPLETE: 4 Pro models × 3 tasks × 2 runs = 24 runs, all first-shot green, 0 failures."
