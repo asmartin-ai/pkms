@@ -34,6 +34,7 @@ MARKERS = {
 TASK_RE = re.compile(r"^- \[([ x?~pi])\] (.+)$", re.MULTILINE)
 _META_SPLIT = re.compile(r"([⏱▶✓])")
 _META_KEY = {"⏱": "size", "▶": "first_action", "✓": "done_when"}
+_WAKE_RE = re.compile(r"\(wake:\s*([^)]+)\)")
 
 RESHAPE_DAYS = 14  # G4: untouched this long → re-offered reshaped, never nagged
 
@@ -58,6 +59,11 @@ def extract_tasks(content: str) -> list[dict]:
     for m in TASK_RE.finditer(content):
         state = MARKERS[m.group(1)]
         raw = m.group(2).strip()
+        wake = None
+        if state == "paused":
+            wm = _WAKE_RE.search(raw)
+            if wm:
+                wake = wm.group(1).strip()
         text, meta = _split_meta(raw)
         out.append({
             "state": state,
@@ -66,6 +72,7 @@ def extract_tasks(content: str) -> list[dict]:
             "line": content[: m.start()].count("\n") + 1,
             "hash": task_hash(f"[{m.group(1)}] {raw}"),
             **meta,
+            "wake": wake,
         })
     return out
 
