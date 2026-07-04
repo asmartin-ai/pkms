@@ -20,7 +20,8 @@
   let RECOGNITION_CARDS = [];
   let READING_QUEUE = [];
   const PEBBLES = { count: 0, goal: null, entries: [] };
-  const RECENT_NOTES = [];
+  let RECENT_NOTES = []; // populated by loadRecentNotes() -> /api/recent-notes
+  let INBOX_ITEMS = []; // populated by loadAuxiliarySurfaces -> /api/inbox-items
 
   let PKMS_BASE_URL = "";
   let PKMS_TOKEN = "";
@@ -140,14 +141,19 @@
 
   async function loadAuxiliarySurfaces() {
     try {
-      const [reading, recognition] = await Promise.all([
+      const [reading, recognition, recent, inbox] = await Promise.all([
         fetchJson("/api/reading-queue"),
         fetchJson("/api/recognition-cards"),
+        fetchJson("/api/recent-notes"),
+        fetchJson("/api/inbox-items"),
       ]);
       READING_QUEUE = reading;
       RECOGNITION_CARDS = recognition;
+      RECENT_NOTES = recent;
+      INBOX_ITEMS = inbox;
       if (state.route === "today") renderToday();
       if (state.route === "reading") renderReading();
+      if (state.route === "search") renderSearch();
     } catch (e) {
       console.warn(e);
     }
@@ -272,7 +278,11 @@
     $("#lede").innerHTML = lede.html;
     const subEl = $("#lede-sub");
     if (lede.lines.length) {
-      subEl.innerHTML = `<ul>${lede.lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+      // Strip a leading markdown bullet ("- ") so the CSS `—` ::before isn't
+      // doubled into "— - text" when a daily-note breadcrumb section uses
+      // "- " bullets. Keep the CSS marker; never add a JS-side bullet.
+      const stripBullet = (l) => l.replace(/^-\s+/, "");
+      subEl.innerHTML = `<ul>${lede.lines.map((l) => `<li>${esc(stripBullet(l))}</li>`).join("")}</ul>`;
       subEl.hidden = false;
     } else {
       subEl.hidden = true;
@@ -283,6 +293,7 @@
 
     // ── Context rail: fold in, read next, still curious, done today ──
     renderFold();
+    renderInbox();
     renderNextRead();
     renderResurface();
     renderPebbles();
@@ -308,6 +319,36 @@
     } else {
       foldEl.innerHTML = `<span>nothing new to fold in.</span>`;
     }
+  }
+
+  /// The inbox surface — recent captures as recognition (NOT a pile). Density-gated
+  /// (visible at more/everything, hidden in calm — the `.block--optional` wrapper
+  /// in index.html handles the visibility; this function only renders the items
+  /// when the surface exists and has data). The fold block above carries the
+  /// progress copy ("N new to fold in"); this surface is the recognition expansion
+  /// — each item one gentle action (open). No count badges, no urgency, no shame
+  /// ("you haven't folded in N days" is forbidden). Empty inbox hides the surface.
+  function renderInbox() {
+    const surface = $("#inbox-surface");
+    if (!surface) return;
+    const ul = $("#inbox-items");
+    if (!ul) return;
+    // INBOX_ITEMS comes from /api/inbox-items (loadAuxiliarySurfaces). When the
+    // fetch hasn't landed yet or the inbox is empty, hide the surface — the
+    // empty state is a reward, never a hole.
+    if (!INBOX_ITEMS || INBOX_ITEMS.length === 0) {
+      surface.hidden = true;
+      ul.innerHTML = "";
+      return;
+    }
+    ul.innerHTML = INBOX_ITEMS.map(
+      (it) => `
+      <li class="inbox-surface__item" data-path="${esc(it.path)}">
+        <span class="inbox-surface__preview">${esc(it.preview || "(empty capture)")}</span>
+        <small class="inbox-surface__meta">${esc(it.source || "")}${it.captured ? ` · ${esc(_fmtTouched(it.captured))}` : ""}</small>
+      </li>`,
+    ).join("");
+    surface.hidden = false;
   }
 
   function renderNextRead() {
@@ -512,7 +553,7 @@
     el.innerHTML = READING_QUEUE.map((r) => {
       const cost = r.minutes
         ? `<span class="reading-item__cost">⏱ ~${r.minutes} min</span>`
-        : `<span class="reading-item__cost" style="background:transparent;color:var(--ink-faint);">long read</span>`;
+        : `<span class="reading-item__cost" style="border:0;padding:0;color:var(--bone-faint);">long read</span>`;
       return `
         <li class="reading-item">
           <h3 class="reading-item__title"><a href="#" data-path="${esc(r.path)}">${esc(r.title)}</a></h3>
@@ -535,15 +576,76 @@
   /* ---------------------------------------------------------------------------
      7. RENDER — Search (recognition-first picker)
      --------------------------------------------------------------------------- */
+  // Render a relative "last touched" label from an ISO timestamp. Quiet, never
+  // a count or urgency cue — "3d ago", "just now", "last week". Falls back to
+  // the date when older than a week. Design language: no red, no streaks.
+  function _fmtTouched(iso) {
+    if (!iso) return "";
+    const t = new Date(iso);
+    if (Number.isNaN(t.getTime())) return "";
+    const diffMs = Date.now() - t.getTime();
+    const sec = Math.max(0, Math.round(diffMs / 1000));
+    if (sec < 60) return "just now";
+    const min = Math.round(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.round(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.round(hr / 24);
+    if (day === 1) return "yesterday";
+    if (day < 7) return `${day}d ago`;
+    const wk = Math.round(day / 7);
+    if (wk === 1) return "last week";
+    if (wk < 5) return `${wk}w ago`;
+    // Older — show the date plainly.
+    return t.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
   function renderSearch() {
     const el = $("#search-candidates");
+    // Candidates come from /api/recent-notes (loadAuxiliarySurfaces). When the
+    // fetch failed or the vault is empty, render nothing — the empty state is a
+    // reward, not a hole. Never a count, never "you have no notes."
     el.innerHTML = RECENT_NOTES.map(
       (n) => `
       <li data-path="${esc(n.path)}">
         ${esc(n.title)}
-        <small>${esc(n.path)} · touched ${esc(n.touched)}</small>
+        <small>${esc(n.path)}${n.last_touched ? ` · ${esc(_fmtTouched(n.last_touched))}` : ""}</small>
       </li>`,
     ).join("");
+  }
+
+  // Debounced free-text search: typed -> /api/search?q= -> results list below the
+  // candidates. Recognition stays primary; results are the fallback. No result
+  // count is ever shown (the design language forbids piles/counts on the self).
+  let _searchTimer = null;
+  async function _runSearch(q) {
+    const ul = $("#search-results");
+    if (!ul) return;
+    const trimmed = q.trim();
+    if (!trimmed) {
+      // Empty input — hide results, leave candidates visible.
+      ul.hidden = true;
+      ul.innerHTML = "";
+      return;
+    }
+    try {
+      const results = await fetchJson(
+        `/api/search?q=${encodeURIComponent(trimmed)}`,
+      );
+      ul.innerHTML = (results || [])
+        .map(
+          (r) => `
+          <li data-path="${esc(r.path)}">
+            ${esc(r.title)}
+            <small>${esc(r.path)}${r.excerpt ? ` · ${esc(r.excerpt)}` : ""}</small>
+          </li>`,
+        )
+        .join("");
+      ul.hidden = false;
+    } catch (e) {
+      console.warn(e);
+      ul.hidden = true;
+    }
   }
 
   /* ---------------------------------------------------------------------------
@@ -769,6 +871,19 @@
         const searchInput = $("#search-input");
         if (navInput && searchInput) searchInput.value = navInput.value;
         location.hash = "#search";
+        // Trigger an immediate search on submit so the nav-submit -> #search
+        // handoff shows results for the just-typed term, not a stale input.
+        if (navInput && searchInput) _runSearch(searchInput.value);
+      });
+    }
+
+    // Free-text search input: debounced -> /api/search?q= -> #search-results.
+    // Recognition-first: candidates stay visible above; results render below.
+    const searchInput = $("#search-input");
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        if (_searchTimer) clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(() => _runSearch(searchInput.value), 250);
       });
     }
 

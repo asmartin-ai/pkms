@@ -1,14 +1,12 @@
 """Today-view: breadcrumb, inbox-as-progress copy, one action per note, no walls."""
 
-
 from typer.testing import CliRunner
 
 import pkms.cli as cli
 from pkms.capture import write_capture
 from pkms.indexer import index_vault
 from pkms.today import today_view
-
-from conftest import write_note
+from tests.conftest import write_note
 
 runner = CliRunner()
 
@@ -39,7 +37,9 @@ def test_breadcrumb_skips_frontmatter_and_headings(vault, index_dir):
 
 def test_breadcrumb_prefers_section_content_including_today(vault, index_dir):
     from datetime import date
+
     from pkms.daily import ensure_daily
+
     path, _ = ensure_daily(vault)  # today's own note — same-day re-entry counts
     text = path.read_text(encoding="utf-8")
     path.write_text(
@@ -56,6 +56,7 @@ def test_breadcrumb_prefers_section_content_including_today(vault, index_dir):
 
 def test_breadcrumb_empty_section_falls_back_to_legacy_tail(vault, index_dir):
     from pkms.daily import ensure_daily
+
     ensure_daily(vault)  # fresh template: breadcrumb slot holds only a comment
     crumb = today_view(vault, index_dir)["breadcrumb"]
     assert crumb["name"] == "2026-06-01"  # fixture's legacy note, by its tail
@@ -101,6 +102,7 @@ def test_next_actions_use_titles_and_strip_wikilinks(vault, index_dir):
 
 
 # --- CLI rendering & copy rules (design language §3) ---
+
 
 def _cli_project(vault, index_dir, monkeypatch):
     monkeypatch.setattr(cli, "VAULT", vault)

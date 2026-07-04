@@ -91,6 +91,39 @@ def test_command_desk_has_persistent_search_bar():
     assert "const navSearch" in js and 'location.hash = "#search"' in js
 
 
+def test_sw_cache_version_bumped_for_redesign():
+    """The Lamplight redesign changed the shell, so installed PWAs must not be
+    served the stale v1 shell from cache (brief §12). Any future shell-changing
+    redesign bumps again — the version only moves forward."""
+    sw = (WEB / "sw.js").read_text(encoding="utf-8")
+    m = re.search(r'const CACHE = "pkms-shell-v(\d+)"', sw)
+    assert m, "sw.js must declare a versioned shell cache name"
+    assert int(m.group(1)) >= 2, "shell cache version must be bumped past v1"
+
+
+def test_shell_theme_color_is_consistent():
+    """One ground color across the PWA chrome: the <meta theme-color>, the
+    manifest theme/background, and the CSS --night token must agree, or the
+    Android status bar / splash flashes a different color than the page."""
+    html = (WEB / "index.html").read_text(encoding="utf-8")
+    manifest = (WEB / "manifest.webmanifest").read_text(encoding="utf-8")
+    css = (WEB / "styles.css").read_text(encoding="utf-8")
+    m = re.search(r'<meta name="theme-color" content="(#[0-9a-fA-F]{6})"', html)
+    assert m, "index.html must declare a theme-color"
+    ground = m.group(1)
+    assert f'"theme_color": "{ground}"' in manifest
+    assert f'"background_color": "{ground}"' in manifest
+    assert ground in css, "the CSS ground token must match the declared theme-color"
+
+
+def test_styles_keep_accessibility_floor():
+    """Redesigns may change every visual token, but the floor stays: honor
+    prefers-reduced-motion and keep a visible keyboard focus style."""
+    css = (WEB / "styles.css").read_text(encoding="utf-8")
+    assert "prefers-reduced-motion" in css
+    assert ":focus-visible" in css
+
+
 def test_context_rail_includes_read_next():
     """The calm context rail includes reading as one glanceable item, not a separate pile."""
     html = (WEB / "index.html").read_text(encoding="utf-8")
