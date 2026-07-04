@@ -10,6 +10,7 @@ runner = CliRunner()
 
 # --- _project_root (regression: was hardcoded parents[3], broke when cwd moved) ---
 
+
 def test_project_root_honors_pkms_home(tmp_path, monkeypatch):
     monkeypatch.setenv("PKMS_HOME", str(tmp_path))
     assert cli._project_root() == tmp_path
@@ -32,6 +33,7 @@ def test_project_root_exits_when_no_vault(tmp_path, monkeypatch):
 
 
 # --- command smoke tests against a temp vault/index ---
+
 
 @pytest.fixture
 def cli_project(vault, index_dir, monkeypatch):
@@ -67,7 +69,8 @@ def test_tasks_open_and_done(cli_project):
 
 
 def test_tasks_default_is_one_per_note_with_flag_hints(cli_project):
-    from conftest import write_note
+    from tests.conftest import write_note
+
     write_note(
         cli_project / "projects" / "two.md",
         """\
@@ -80,13 +83,14 @@ def test_tasks_default_is_one_per_note_with_flag_hints(cli_project):
     runner.invoke(cli.app, ["index"])
     out = runner.invoke(cli.app, ["tasks"]).output
     assert "first of two" in out and "second of two" not in out  # one per note
-    assert "pkms tasks --all" in out          # backlog one flag away, named not counted
-    assert "pkms tasks --stash" in out        # stash visibly recoverable
-    assert "could use a first step" in out    # alpha's task has no ▶ — surfaced state
+    assert "pkms tasks --all" in out  # backlog one flag away, named not counted
+    assert "pkms tasks --stash" in out  # stash visibly recoverable
+    assert "could use a first step" in out  # alpha's task has no ▶ — surfaced state
 
 
 def test_tasks_all_shows_backlog_grouped_with_states(cli_project):
-    from conftest import write_note
+    from tests.conftest import write_note
+
     write_note(
         cli_project / "projects" / "mix.md",
         """\
@@ -103,7 +107,8 @@ def test_tasks_all_shows_backlog_grouped_with_states(cli_project):
 
 
 def test_tasks_stash_recovery_path_is_visible(cli_project):
-    from conftest import write_note
+    from tests.conftest import write_note
+
     write_note(
         cli_project / "projects" / "ice.md",
         "- [p] paused thing (wake: after slice 6)\n- [i] iced thing\n",
@@ -118,6 +123,7 @@ def test_tasks_stash_recovery_path_is_visible(cli_project):
 
 def test_tasks_stale_lists_reshape_candidates(cli_project):
     from pkms.db import connect as db_connect
+
     runner.invoke(cli.app, ["index"])
     conn = db_connect(cli_project.parent / ".index")
     conn.execute("UPDATE task_seen SET first_seen='2026-05-01'")  # age everything
@@ -134,6 +140,7 @@ def test_did_logs_to_daily_note_and_pebbles_render(cli_project):
     assert result.exit_code == 0
     assert "counted" in result.output
     from datetime import date
+
     note = (cli_project / "daily" / f"{date.today().isoformat()}.md").read_text(encoding="utf-8")
     assert "## did" in note and "- [x] shipped the thing" in note
 

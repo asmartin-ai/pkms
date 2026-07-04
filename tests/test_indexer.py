@@ -41,7 +41,12 @@ def test_reindex_is_idempotent(vault, index_dir):
     assert conn.execute("SELECT count(*) c FROM links").fetchone()["c"] == 2
     assert conn.execute("SELECT count(*) c FROM tasks").fetchone()["c"] == 3
     # FTS index must hold exactly one row per note after a double index
-    assert conn.execute("SELECT count(*) c FROM notes_fts WHERE notes_fts MATCH 'alpha'").fetchone()["c"] == 1
+    assert (
+        conn.execute("SELECT count(*) c FROM notes_fts WHERE notes_fts MATCH 'alpha'").fetchone()[
+            "c"
+        ]
+        == 1
+    )
     conn.close()
 
 
@@ -54,9 +59,21 @@ def test_reindex_removes_deleted_notes(vault, index_dir):
 
     conn = connect(index_dir)
     assert conn.execute("SELECT count(*) c FROM notes").fetchone()["c"] == 2
-    assert conn.execute("SELECT count(*) c FROM links").fetchone()["c"] == 0  # both links lived in alpha
-    assert conn.execute("SELECT count(*) c FROM tasks WHERE note_path LIKE '%alpha.md'").fetchone()["c"] == 0
-    assert conn.execute("SELECT count(*) c FROM notes_fts WHERE notes_fts MATCH 'alpha'").fetchone()["c"] == 0
+    assert (
+        conn.execute("SELECT count(*) c FROM links").fetchone()["c"] == 0
+    )  # both links lived in alpha
+    assert (
+        conn.execute("SELECT count(*) c FROM tasks WHERE note_path LIKE '%alpha.md'").fetchone()[
+            "c"
+        ]
+        == 0
+    )
+    assert (
+        conn.execute("SELECT count(*) c FROM notes_fts WHERE notes_fts MATCH 'alpha'").fetchone()[
+            "c"
+        ]
+        == 0
+    )
     conn.close()
 
 
@@ -73,9 +90,12 @@ def test_reshape_clock_survives_reindex_and_resets_on_edit(vault, index_dir):
     conn.close()
     index_vault(vault, index_dir)
     conn = connect(index_dir)
-    assert conn.execute(
-        "SELECT first_seen FROM task_seen WHERE hash=?", (row["h"],)
-    ).fetchone()["first_seen"] == "2026-05-01"
+    assert (
+        conn.execute("SELECT first_seen FROM task_seen WHERE hash=?", (row["h"],)).fetchone()[
+            "first_seen"
+        ]
+        == "2026-05-01"
+    )
     conn.close()
 
     # edit the line: old clock pruned, fresh clock starts (human touch, §4)
@@ -86,9 +106,10 @@ def test_reshape_clock_survives_reindex_and_resets_on_edit(vault, index_dir):
     )
     index_vault(vault, index_dir)
     conn = connect(index_dir)
-    assert conn.execute(
-        "SELECT count(*) c FROM task_seen WHERE hash=?", (row["h"],)
-    ).fetchone()["c"] == 0  # stale clock pruned with its line
+    assert (
+        conn.execute("SELECT count(*) c FROM task_seen WHERE hash=?", (row["h"],)).fetchone()["c"]
+        == 0
+    )  # stale clock pruned with its line
     fresh = conn.execute(
         "SELECT ts.first_seen FROM task_seen ts JOIN tasks t "
         "ON t.note_path=ts.note_path AND t.hash=ts.hash "
@@ -99,7 +120,8 @@ def test_reshape_clock_survives_reindex_and_resets_on_edit(vault, index_dir):
 
 
 def test_task_metadata_lands_in_index(vault, index_dir):
-    from conftest import write_note
+    from tests.conftest import write_note
+
     write_note(
         vault / "projects" / "meta.md",
         """\
@@ -111,8 +133,11 @@ def test_task_metadata_lands_in_index(vault, index_dir):
     index_vault(vault, index_dir)
     conn = connect(index_dir)
     shaped = conn.execute("SELECT * FROM tasks WHERE text='shaped task'").fetchone()
-    assert (shaped["size"], shaped["first_action"], shaped["done_when"]) == \
-        ("25m", "open the file", "tests green")
+    assert (shaped["size"], shaped["first_action"], shaped["done_when"]) == (
+        "25m",
+        "open the file",
+        "tests green",
+    )
     assert shaped["state"] == "open"
     iced = conn.execute("SELECT state FROM tasks WHERE text='iced task'").fetchone()
     assert iced["state"] == "iceboxed"
@@ -133,8 +158,7 @@ def test_reindex_picks_up_edits(vault, index_dir):
     row = conn.execute("SELECT content FROM notes WHERE path LIKE '%beta.md'").fetchone()
     assert "Rewritten" in row["content"]
     targets = [
-        r["target"]
-        for r in conn.execute("SELECT target FROM links WHERE source LIKE '%beta.md'")
+        r["target"] for r in conn.execute("SELECT target FROM links WHERE source LIKE '%beta.md'")
     ]
     assert targets == ["alpha"]
     conn.close()

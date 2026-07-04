@@ -10,8 +10,8 @@ and `pkms today` shows it as "1 new to fold in".
 ## 1. Desktop side (PowerShell)
 
 ```powershell
-tailscale up        # tailscale is installed but was stopped on 2026-06-12
-Get-Content K:\Projects\PKMS\.secrets\capture-token   # you'll paste this on the phone
+tailscale up
+Get-Content .secrets\capture-token   # you'll paste this on the phone
 ```
 
 The capture service itself is already running (startup shortcut "PKMS capture service";
