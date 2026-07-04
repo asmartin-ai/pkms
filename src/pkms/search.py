@@ -2,6 +2,7 @@
 
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 from .db import connect
 
@@ -19,7 +20,7 @@ def _sanitize(query: str) -> str:
     return " ".join(f'"{t}"' for t in tokens)
 
 
-def search(query: str, index_dir: Path, limit: int = 20, raw: bool = False) -> list[dict]:
+def search(query: str, index_dir: Path, limit: int = 20, raw: bool = False) -> list[dict[str, Any]]:
     if not query.strip():
         return []
     conn = connect(index_dir)
@@ -40,8 +41,7 @@ def resolve_note(ref: str, index_dir: Path) -> str | None:
     stem = Path(ref.strip().replace("\\", "/")).stem
     conn = connect(index_dir)
     row = conn.execute(
-        "SELECT path FROM notes WHERE path = ? OR path LIKE ? "
-        "ORDER BY LENGTH(path) LIMIT 1",
+        "SELECT path FROM notes WHERE path = ? OR path LIKE ? ORDER BY LENGTH(path) LIMIT 1",
         (ref, f"%{stem}.md"),
     ).fetchone()
     conn.close()

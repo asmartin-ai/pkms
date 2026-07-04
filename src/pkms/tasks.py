@@ -18,9 +18,13 @@ changes the hash and resets the clock, which is exactly the human-touch-strips-
 machine-marks rule (§4) with no extra bookkeeping.
 """
 
+from __future__ import annotations
+
 import hashlib
 import re
+import sqlite3
 from datetime import date, timedelta
+from typing import Any
 
 MARKERS = {
     " ": "open",
@@ -44,9 +48,9 @@ def task_hash(raw_line: str) -> str:
     return hashlib.sha1(raw_line.strip().encode("utf-8")).hexdigest()[:16]
 
 
-def _split_meta(raw: str) -> tuple[str, dict]:
+def _split_meta(raw: str) -> tuple[str, dict[str, str | None]]:
     parts = _META_SPLIT.split(raw)
-    meta = {"size": None, "first_action": None, "done_when": None}
+    meta: dict[str, str | None] = {"size": None, "first_action": None, "done_when": None}
     for token, value in zip(parts[1::2], parts[2::2]):
         value = value.strip()
         if value:
@@ -54,7 +58,7 @@ def _split_meta(raw: str) -> tuple[str, dict]:
     return parts[0].strip(), meta
 
 
-def extract_tasks(content: str) -> list[dict]:
+def extract_tasks(content: str) -> list[dict[str, Any]]:
     out = []
     for m in TASK_RE.finditer(content):
         state = MARKERS[m.group(1)]
@@ -65,19 +69,23 @@ def extract_tasks(content: str) -> list[dict]:
             if wm:
                 wake = wm.group(1).strip()
         text, meta = _split_meta(raw)
-        out.append({
-            "state": state,
-            "done": state == "done",
-            "text": text,
-            "line": content[: m.start()].count("\n") + 1,
-            "hash": task_hash(f"[{m.group(1)}] {raw}"),
-            **meta,
-            "wake": wake,
-        })
+        out.append(
+            {
+                "state": state,
+                "done": state == "done",
+                "text": text,
+                "line": content[: m.start()].count("\n") + 1,
+                "hash": task_hash(f"[{m.group(1)}] {raw}"),
+                **meta,
+                "wake": wake,
+            }
+        )
     return out
 
 
-def stale_tasks(conn, *, days: int = RESHAPE_DAYS, today: date | None = None) -> list[dict]:
+def stale_tasks(
+    conn: sqlite3.Connection, *, days: int = RESHAPE_DAYS, today: date | None = None
+) -> list[dict[str, Any]]:
     """Reshape candidates: open tasks whose exact line has sat untouched for
     `days`. The briefing offers AT MOST ONE of these per session (G8 budget)."""
     cutoff = ((today or date.today()) - timedelta(days=days)).isoformat()
@@ -93,7 +101,7 @@ def stale_tasks(conn, *, days: int = RESHAPE_DAYS, today: date | None = None) ->
     return [dict(r) for r in rows]
 
 
-def next_action_per_note(conn) -> list[dict]:
+def next_action_per_note(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     """One OPEN task per note, projects first — stuck/not-now/paused/iceboxed
     are not next actions (§6). Inbox captures are excluded — their tasks
     surface after folding, not before."""
