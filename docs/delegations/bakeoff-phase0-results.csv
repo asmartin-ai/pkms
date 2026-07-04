@@ -10,7 +10,11 @@ phase0-F2,F2,T12_pro,deepseek-v4-pro,deepseek-direct,1,
 ,,,
 6.3k_sent,6.5k_received,0.0084,
 ,pass,pass,true,0,"smoke; oracle hash unchanged; 1 edit; F2 4/4 + existing tasks 11/11 green"
-phase0-F3,F3,T12_pro,deepseek-v4-pro,deepseek-direct,1,
+phase0-F3,deepseek-direct,F3,T12_pro,deepseek-v4-pro,deepseek-direct,1,
 ,,,
 5.2k_sent,967_received,0.0031,
 ,pass,pass,true,0,"smoke; oracle hash unchanged; 1 edit; F3 5/5 + existing search tests green"
+phase0-F3-zenmux,F3,T12_pro,deepseek-v4-pro,zenmux-raw,1,
+,,,
+5.2k_sent,2.6k_received,null,
+,pass,pass,true,0,"ZenMux-dashboard cross-check run; raw --api-base https://zenmux.ai/api/anthropic --api-format anthropic --model deepseek/deepseek-v4-pro; diff byte-identical to phase0-F3 (DeepSeek-direct); aider cost_reported=null (no model-metadata entry for the doubled-prefix id anthropic/deepseek/deepseek-v4-pro); TIMESTAMP 2026-07-04T17:47:21Z — find on ZenMux dashboard by this ts; token counts from aider stdout: 5.2k sent 2.6k received; cross-check the dashboard $ for this call vs the ZenMux Pro price line ($0.435/$0.87 per M) to validate aider-delegate's token counter for the real bakeoff"
