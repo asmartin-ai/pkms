@@ -113,3 +113,22 @@ def next_action_per_note(conn: sqlite3.Connection) -> list[dict[str, Any]]:
            ORDER BY CASE WHEN t.note_path LIKE 'projects%' THEN 0 ELSE 1 END, t.note_path""",
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def snoozed_notes(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    """Notes whose only open-but-unfinished tasks are [~] not-now (§6 snooze
+    surface). A note qualifies when it has at least one not-now task and NO
+    open task; notes with a [ ] open task stay in next_actions, not here.
+    Inbox captures are excluded — same rule as next_action_per_note."""
+    rows = conn.execute(
+        """SELECT t.note_path, n.title
+           FROM tasks t LEFT JOIN notes n ON n.path = t.note_path
+           WHERE t.state = 'not-now' AND t.note_path NOT LIKE 'inbox%'
+             AND t.note_path NOT IN (
+                 SELECT note_path FROM tasks
+                 WHERE state = 'open' AND note_path NOT LIKE 'inbox%'
+             )
+           GROUP BY t.note_path
+           ORDER BY t.note_path""",
+    ).fetchall()
+    return [dict(r) for r in rows]

@@ -86,24 +86,13 @@ def _snoozed_notes(index_dir: Path) -> list[JsonDict]:
     if not (index_dir / "pkms.db").exists():
         return []
     from .db import connect
+    from .tasks import snoozed_notes
 
     conn = connect(index_dir)
-    rows = conn.execute(
-        """SELECT t.note_path, n.title
-           FROM tasks t
-           LEFT JOIN notes n ON n.path = t.note_path
-           WHERE t.state = 'not-now' AND t.note_path NOT LIKE 'inbox%'
-             AND t.note_path NOT IN (
-                 SELECT note_path FROM tasks
-                 WHERE state = 'open' AND note_path NOT LIKE 'inbox%'
-             )
-           GROUP BY t.note_path
-           ORDER BY t.note_path""",
-    ).fetchall()
+    rows = snoozed_notes(conn)
     conn.close()
     return [
-        {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem}
-        for r in rows
+        {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem} for r in rows
     ]
 
 
