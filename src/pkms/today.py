@@ -77,6 +77,36 @@ def _next_actions(index_dir: Path) -> list[JsonDict]:
     ]
 
 
+def _snoozed_notes(index_dir: Path) -> list[JsonDict]:
+    """Notes whose only open-but-unfinished tasks are [~] not-now.
+
+    The recognisable-snooze surface (§6): at least one not-now task and NO
+    open task. Notes with a [ ] open task stay in next_actions, not here.
+    Excludes inbox captures — same rule as _next_actions."""
+    if not (index_dir / "pkms.db").exists():
+        return []
+    from .db import connect
+
+    conn = connect(index_dir)
+    rows = conn.execute(
+        """SELECT t.note_path, n.title
+           FROM tasks t
+           LEFT JOIN notes n ON n.path = t.note_path
+           WHERE t.state = 'not-now' AND t.note_path NOT LIKE 'inbox%'
+             AND t.note_path NOT IN (
+                 SELECT note_path FROM tasks
+                 WHERE state = 'open' AND note_path NOT LIKE 'inbox%'
+             )
+           GROUP BY t.note_path
+           ORDER BY t.note_path""",
+    ).fetchall()
+    conn.close()
+    return [
+        {"note": r["note_path"], "title": r["title"] or Path(r["note_path"]).stem}
+        for r in rows
+    ]
+
+
 def _done_today(vault: Path, today_stem: str) -> int:
     """Win pebbles: done tasks in today's note (disk, not index — state lives
     in files). Wins reset without debt; 0 renders as nothing, never a gap."""
@@ -212,7 +242,13 @@ def recognition_cards(vault: Path, index_dir: Path, *, k: int = 3) -> list[JsonD
     return result
 
 
-def today_view(vault: Path, index_dir: Path, *, record_offer: bool = False) -> JsonDict:
+def today_view(
+    vault: Path,
+    index_dir: Path,
+    *,
+    record_offer: bool = False,
+    hide_snoozed: bool = False,
+) -> JsonDict:
     today_stem = date.today().isoformat()
     actions = _next_actions(index_dir)
     return {
@@ -224,6 +260,7 @@ def today_view(vault: Path, index_dir: Path, *, record_offer: bool = False) -> J
         "resurface": _resurface_card(vault, index_dir, record_offer=record_offer),
         "next_actions": actions[:MAX_NOTES_SHOWN],
         "more_notes": max(0, len(actions) - MAX_NOTES_SHOWN),
+        "snoozed": [] if hide_snoozed else _snoozed_notes(index_dir),
     }
 
 
