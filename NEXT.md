@@ -1,8 +1,22 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-05 (bakeoff Part 2 Phase 1 COMPLETE — sibling to the 2026-07-04 Part 1). Read this first; orient from it alone.*
+*Updated 2026-07-05 (bakeoff Part 2 productionized: cherry-picks + i3 fix + pushed to origin). Read this first; orient from it alone.*
 
 ## What just happened
+
+**Bakeoff Part 2 productionized (2026-07-05, follow-up session).** The 3 winning
+MiniMax M3 run1 diffs (G1/G2/G3) were cherry-picked to `main` and **pushed to
+`origin/main`** (30 commits, `fc0860f..535ac19`). The 4 G-batch oracles are GREEN
+on main. **i3 regression fixed:** the G3 cherry-pick added `_snoozed_notes` with
+inline `GROUP BY t.note_path` SQL, violating the i3 anti-drift oracle
+(`test_bakeoff_i3.py` enforces no inline ranking SQL in `today.py`). Refactored:
+extracted `snoozed_notes(conn)` to `tasks.py` (sibling to `next_action_per_note`),
+`_snoozed_notes` in `today.py` now delegates to it. **Full suite: 226 passed, 0
+failed.** 22 `delegated/run-*` branches preserved for audit. Orchestrator-mode +
+orchestrator-law routing table wired in agent-hub (MiniMax M3 default). PAYG→subscription
+rewiring clarified in `aider-headless-delegate` SKILL.md M19 (PAYG is bakeoff-only;
+ongoing delegation uses `ZENMUX_API_KEY` subscription key — edit uncommitted in
+agent-hub alongside Kenja's pre-existing WIP).
 
 **PKMS Bakeoff Part 2 (Correction-Cost Validation) Phase 1 COMPLETE.** 22 Phase 1 runs
 on `main` (3 fresh G-batch oracles: G1 multi-file, G2 larger-read-context, G3 single-file
@@ -52,24 +66,30 @@ Full results: `docs/delegations/bakeoff-phase1-results.{md,csv}`. Total executor
 
 ## Blocked on Kenja (surface, don't wait)
 
-- **K1** — Lamplight device: APPROVED. `feat/uiux-redesign` → `main` merge is Kenja's action.
-  `DESIGN.md` rewrite happens after. The bakeoff ran on `bakeoff/phase1` off `feat/uiux-redesign`;
-  that branch is mine to delete or keep once you've reviewed the results.
+- **K1** — Lamplight device: DONE. `feat/uiux-redesign` → `main` merged; bakeoff
+  Part 1 + Part 2 cherry-picks + i3 fix all on `main` and pushed to `origin/main`.
+  `DESIGN.md` rewrite still pending (separate action, not blocking).
 - **K4** — Pick email-in address shape (plus-alias+label vs dedicated). Gates P3.
 - **K5** — Discord bot token + invite. Gates P3.
 - (K2, K3, K6 — not blocking.)
 
 ## Next 1–3 actions (literal first step)
 
-1. **Wire the bakeoff routing table into `orchestrator-mode`.** Kenja accepted the
-   non-Pro verdict. Wire `minimax/minimax-m3` as the default executor in the
-   orchestrator-mode routing table (`~/.agents/skills/orchestrator-mode/`) and the
-   aider-delegate defaults. **Literal first step:** open `docs/delegations/bakeoff-phase1-results.md`
-   §"Phase 3 — routing table" and mirror it into the skill.
-2. **Draft Phase 4 bakeoff plan** for Pro models on harder tasks (multi-file refactor,
+1. **Commit the agent-hub skill edit.** The `aider-headless-delegate` SKILL.md M19
+   PAYG-Is-bakeoff-only clarification is uncommitted in `C:/Users/Kenja/agent-hub`
+   alongside Kenja's pre-existing WIP (NEXT.md, README.md, render.py, servers.toml).
+   **Literal first step:** `cd C:/Users/Kenja/agent-hub && git diff skills/aider-headless-delegate/SKILL.md`
+   — review, then commit just that path with `git commit skills/aider-headless-delegate/SKILL.md`.
+2. **Decide on the 22 `delegated/run-*` branches.** Preserved for audit; delete with
+   `git branch -D delegated/run-*` once you're satisfied main is the source of truth
+   (suite is 226 green, 3 winners cherry-picked). Optional cleanup.
+3. **Draft Phase 4 bakeoff plan** for Pro models on harder tasks (multi-file refactor,
    ambiguous spec, larger read context). Kenja: "simple coding tasks are overkill for those
-   models — we need to feed them more complex planning or orchestration tasks."
-3. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
+   models — we need to feed them more complex planning or orchestration tasks." Note:
+   Part 2 confirmed GLM-5.2 and kimi are unusable headless via aider (M5) — a Phase 4
+   plan should use a different harness (interactive aider, or direct API) for the Pro
+   escalation lane, not aider-delegate.
+4. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
    email-in + Discord bot per `build-plan.md` slice 8.
 
 ## Open decisions
@@ -88,10 +108,12 @@ Voice ramp · Discord resurfacing mirror · career-ops dashboard (post-P5) · pr
 
 ## Branch state
 
-- `main` — the Lamplight redesign + bakeoff Phase 0/1/2 + type fixes are all
-  merged here and pushed to `origin/main`. Suite **402 green**, 0 type-checker
-  errors. The `feat/uiux-redesign` and `bakeoff/phase1` branches were deleted
-  after the merge (their commits are preserved in main's history).
+- `main` — the Lamplight redesign + bakeoff Phase 0/1/2 + Part 2 cherry-picks + i3
+  regression fix are all merged here and **pushed to `origin/main`** (HEAD `535ac19`,
+  30 commits in the 2026-07-05 push: `fc0860f..535ac19`). Suite **226 green**, 0
+  type-checker errors. The `feat/uiux-redesign` and `bakeoff/phase1` branches were
+  deleted after the earlier merge (their commits are preserved in main's history).
+  22 `delegated/run-*` branches preserved as the Part 2 audit trail (deletable on review).
 - Derivable: `git status -sb`, `git log --oneline cb1db2e..main`,
   `git branch -vv`. The F-batch fixes shipped via the `c541b73` merge commit
   (historical); the Lamplight merge is `5bf7f15`; the type fixes are `137215c`.
