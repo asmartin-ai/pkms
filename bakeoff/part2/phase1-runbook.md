@@ -12,7 +12,12 @@ done via ntfy topic `kenja-bench-r7k2q9`.*
 
 ## State at activation (verified 2026-07-05 before arming listener)
 
-| Item | State | Verified by |
+*Snapshot as of 2026-07-05 06:06 CDT (pre-signal). The `main` branch has since
+been pushed to `origin/main` and is no longer ahead; the listener is no longer
+running. This table records the state at the moment the listener was armed —
+verify with `git status -sb`, `git log --oneline -5`, `lms ps` if reusing.*
+
+| Item | State at activation | Verify (current) |
 |---|---|---|
 | PKMS branch | `main`, 3 ahead of origin (G-batch oracles + Part 2 results committed) | `git status -sb`, `git log --oneline -5` |
 | Test baseline | **222 passed, 4 RED** (G1, G2, G3×2 oracles) | `.venv/Scripts/python.exe -m pytest tests/ -q` |

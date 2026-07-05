@@ -6,8 +6,8 @@
 
 **Bakeoff Part 2 productionized (2026-07-05, follow-up session).** The 3 winning
 MiniMax M3 run1 diffs (G1/G2/G3) were cherry-picked to `main` and **pushed to
-`origin/main`** (30 commits, `fc0860f..535ac19`). The 4 G-batch oracles are GREEN
-on main. **i3 regression fixed:** the G3 cherry-pick added `_snoozed_notes` with
+`origin/main`**. The 4 G-batch oracles are GREEN on main. **i3 regression fixed:**
+the G3 cherry-pick added `_snoozed_notes` with
 inline `GROUP BY t.note_path` SQL, violating the i3 anti-drift oracle
 (`test_bakeoff_i3.py` enforces no inline ranking SQL in `today.py`). Refactored:
 extracted `snoozed_notes(conn)` to `tasks.py` (sibling to `next_action_per_note`),
@@ -109,11 +109,11 @@ Voice ramp · Discord resurfacing mirror · career-ops dashboard (post-P5) · pr
 ## Branch state
 
 - `main` — the Lamplight redesign + bakeoff Phase 0/1/2 + Part 2 cherry-picks + i3
-  regression fix are all merged here and **pushed to `origin/main`** (HEAD `535ac19`,
-  30 commits in the 2026-07-05 push: `fc0860f..535ac19`). Suite **226 green**, 0
-  type-checker errors. The `feat/uiux-redesign` and `bakeoff/phase1` branches were
-  deleted after the earlier merge (their commits are preserved in main's history).
-  22 `delegated/run-*` branches preserved as the Part 2 audit trail (deletable on review).
-- Derivable: `git status -sb`, `git log --oneline cb1db2e..main`,
-  `git branch -vv`. The F-batch fixes shipped via the `c541b73` merge commit
-  (historical); the Lamplight merge is `5bf7f15`; the type fixes are `137215c`.
+  regression fix are all merged here and **pushed to `origin/main`**. Suite
+  **226 green**, 0 type-checker errors. The `feat/uiux-redesign` and
+  `bakeoff/phase1` branches were deleted after the earlier merge (their commits
+  are preserved in main's history). 22 `delegated/run-*` branches preserved as
+  the Part 2 audit trail (deletable on review).
+- Derivable: `git status -sb`, `git branch -vv`, `git log --oneline origin/main..main`.
+  Historical merges (F-batch `c541b73`, Lamplight `5bf7f15`, type fixes `137215c`)
+  are preserved in main's history.
