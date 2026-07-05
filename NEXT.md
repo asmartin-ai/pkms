@@ -1,11 +1,34 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-04 (bakeoff Phases 1–3 COMPLETE). Read this first; orient from it alone.*
+*Updated 2026-07-05 (bakeoff Part 2 Phase 1 COMPLETE — sibling to the 2026-07-04 Part 1). Read this first; orient from it alone.*
 
 ## What just happened
 
-**PKMS Price-Performance Bakeoff COMPLETE.** 59 runs across Phases 1–3 on `bakeoff/phase1`
-(off `feat/uiux-redesign`, 3 F-batch fixes reverted to reuse the oracles):
+**PKMS Bakeoff Part 2 (Correction-Cost Validation) Phase 1 COMPLETE.** 22 Phase 1 runs
+on `main` (3 fresh G-batch oracles: G1 multi-file, G2 larger-read-context, G3 single-file
+control), activated by the content-hoarder completion signal on ntfy `kenja-bench-r7k2q9`.
+- **Verdict: Part 1 routing table holds.** MiniMax M3 stays first-shot clean across all 3
+  task shapes (G3, G1, G2) × 2 runs = **6/6 (100%) first-shot green, $0.0013/run median**.
+  Zero correction cost (`orch_corr_usd=0` across all 22 runs) — the correction-cost metric
+  is confirmed as a logging discipline with near-zero observed cost on the winning executor.
+- **Pro lane does NOT earn its keep via aider-delegate.** Both Pro models are unusable
+  headless via aider (M5 thinking-tokens bug — model burns output on reasoning prose,
+  emits 0 edits): GLM-5.2 0/2, kimi-k2.7-code 1/4 (only G3 run2 passed; G3 run1 + G1×2
+  failed M5). Killed via kill-fast on G1/G2 for both.
+- **Local control (Qwen3-Coder-30B-A3B):** clears G3 (easy single-file) 2/2 first-shot,
+  flails on G1 (multi-file) 0/2 with edit-parse failures (model describes edits in prose
+  instead of SEARCH/REPLACE blocks). Local lane stays as 'free but slower' fallback for
+  easy single-file scoped tasks only.
+- **Cross-substrate check vs content-hoarder's sibling bakeoff (same day):** agrees on both
+  counts — MiniMax M3 is the T3 winner, GLM-5.2 is unusable headless. High-confidence
+  routing table.
+- KAT-Coder-Pro-V2: 5/6 (83%) — near-tie backup; 1 G1 run2 edit-parse fail (variance).
+Full results + verdict: `docs/delegations/bakeoff-part2-phase1-results.md`. Raw data:
+`bakeoff/part2/results.csv`. Total Phase 1 executor spend ~$0.025. Oracle hashes locked
+throughout; no regressions from any arm.
+
+**PKMS Price-Performance Bakeoff Part 1 COMPLETE (2026-07-04).** 59 runs across Phases 1–3
+on `bakeoff/phase1` (off `feat/uiux-redesign`, 3 F-batch fixes reverted to reuse the oracles):
 - **Phase 1 (T3 Flash):** 6 models × 3 tasks × 2 runs = 35 runs. **MiniMax M3 wins** —
   $0.001576/run median, 8s wallclock, 1M ctx, 6/6 first-shot green, lowest cost+variance.
   KAT-Coder-Pro-V2 is the near-tie backup (256K ctx, most minimal diffs). step-3.7-flash
