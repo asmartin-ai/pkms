@@ -72,9 +72,19 @@ CREATE TABLE IF NOT EXISTS task_seen (
     first_seen  TEXT NOT NULL,              -- ISO date this exact line appeared
     PRIMARY KEY (note_path, hash)
 );
+
+-- Durable, queryable record of keep IDs that have been fully captured
+-- (slice 4 + G1 oracle). The flat ledger at .index/keep-ledger.txt is
+-- append-only and cheap, but if a crash interrupts a batch the file alone
+-- cannot answer "which notes *completed* before the failure?" — the SQLite
+-- store can. The ingest code records here right after write_capture succeeds.
+CREATE TABLE IF NOT EXISTS keep_completed (
+    id          TEXT PRIMARY KEY,
+    completed_at TEXT NOT NULL
+);
 """
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def connect(index_dir: Path) -> sqlite3.Connection:
@@ -88,6 +98,7 @@ def connect(index_dir: Path) -> sqlite3.Connection:
         if cols and "state" not in cols:
             conn.execute("DROP TABLE tasks")
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+    conn.executescript(SCHEMA)
     conn.executescript(SCHEMA)
     conn.commit()
     return conn
