@@ -5,7 +5,22 @@
 **Status:** Phases 1–3 complete. 59 runs total: 35 T3 Flash (Phase 1) + 24 T1/T2 Pro (Phase 2).
 **Executor price lines:** T3 Flash $0.14 in / $0.28 out per M · T1/T2 Pro $0.435 in / $0.87 out per M (ZenMux promo).
 **Orchestrator:** GLM-5.2 via aider-delegate (orchestrator cost computed separately at end, not per-run).
-**Verdict:** MiniMax M3 (T3 Flash) wins the cheap-delegate lane. Pro tier does NOT justify ~3× on this workload.
+**DATA TAINT NOTICE (2026-07-04, post-completion):** All 59 runs in this bakeoff are
+marked **methodology-tainted, not model-specific**. The three F-batch oracles spell out the
+fix in their test docstrings (e.g. test_f1_search_raw_cli.py: "Goes green once cli.search
+grows a --raw flag... Scope: src/pkms/cli.py only"). Every executor was given the oracle as
+--read context (aider-headless-delegate M10), so every model saw the solution spelled out.
+This inflates every model's first-shot rate uniformly -- the bakeoff measured "can the model
+implement a docstring's hint" not "can the model diagnose a RED test." The verdict and
+routing table below stand as the result on the methodology's terms, but they should not be
+read as a clean capability ranking. Part 2 (bakeoffs/PKMS-Part2-Correction-Cost-Validation-2026-07-04.md)
+authors fresh oracles with the fix stripped from the docstring (test name + assertions only,
+no "Goes green once..." prose). The MiniMax M3 cheating suspicion (investigations/MiniMax-M3-Bakeoff-Cheating-Hypothesis-2026-07-04.md)
+is recorded as SUSPECTED, UNVERIFIED; the cache-leakage arm of that investigation is the
+remaining open question. The per-row first_shot=true and quality_verdict=pass values in the
+CSV are accurate on the leaky-oracle methodology; they are not evidence of clean-test capability.
+
+**Verdict:** MiniMax M3 (T3 Flash) wins the cheap-delegate lane. **(Tainted -- see notice above.)** Pro tier does NOT justify ~3× on this workload.
 
 ## What ran
 
