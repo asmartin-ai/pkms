@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from .capture import write_capture
+from .db import connect as _db_connect
 from .ocr import extract_text
 
 LEDGER = "keep-ledger.txt"
@@ -51,6 +52,40 @@ def append_ledger(index_dir: Path, note_ids: list[str]) -> None:
     with (index_dir / LEDGER).open("a", encoding="utf-8") as f:
         for nid in note_ids:
             f.write(nid + "\n")
+
+
+def record_completed(index_dir: Path, note_id: str) -> None:
+    """Mark a keep note as fully captured in the durable SQLite store.
+
+    Called immediately after write_capture succeeds, before append_ledger, so
+    a crash between the SQLite write and the flat-ledger append still leaves
+    a queryable record of what completed (G1 oracle).
+    """
+    conn = _db_connect(index_dir)
+    try:
+        conn.execute(
+            "INSERT OR IGNORE INTO keep_completed(id, completed_at) VALUES (?, ?)",
+            (note_id, _now_iso()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def completed_keep_ids(index_dir: Path) -> set[str]:
+    """Return the set of keep IDs that have been fully captured, per the
+    durable SQLite index. The flat ledger is a hint; this is the contract."""
+    conn = _db_connect(index_dir)
+    try:
+        rows = conn.execute("SELECT id FROM keep_completed").fetchall()
+    finally:
+        conn.close()
+    return {r[0] for r in rows}
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
 
 
 # --- keep client (seam: tests inject a fake) ---
@@ -132,6 +167,9 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep: Any = None) -
         if not body.strip():
             body = "(empty keep note)"
         write_capture(body, vault, source="keep", extra={"keep_id": note.id})
+        # Record into the durable store BEFORE the flat ledger so a crash
+        # between the two leaves the completion recoverable from SQLite.
+        record_completed(index_dir, note.id)
         append_ledger(index_dir, [note.id])
         report["new"] += 1
     return report
