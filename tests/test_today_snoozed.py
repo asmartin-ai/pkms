@@ -6,25 +6,29 @@ from tests.conftest import write_note
 
 
 def test_today_view_reports_snoozed_section_by_default(vault, index_dir):
+    # A snoozed note: only [~] not-now tasks, no active [ ] task.
     write_note(
         vault / "projects" / "snoozer.md",
         """\
-        - [ ] open and active
         - [~] parked for later, not now
         """,
         title="Snoozer Project",
     )
+    # The fixture's projects/alpha.md has only a [ ] open task (no [~]) — it is
+    # active, not snoozed, and must NOT appear in the snoozed section.
     index_vault(vault, index_dir)
 
     view = today_view(vault, index_dir)
 
     assert "snoozed" in view, (
         "the today-view must surface a snoozed section listing notes whose only "
-        "tasks are not-now ([~])"
+        "open-but-unfinished tasks are not-now ([~])"
     )
     snoozed_notes = {s["note"] for s in view["snoozed"]}
-    assert "projects/snoozer.md" in snoozed_notes, (
-        "a note whose sole open-but-unfinished task is [~] must appear in the snoozed section"
+    assert snoozed_notes == {"projects/snoozer.md"}, (
+        "the snoozed section must contain exactly the notes whose only "
+        "open-but-unfinished tasks are [~]; an active note (projects/alpha.md, "
+        "which has a [ ] open task and no [~]) must NOT appear"
     )
 
 
@@ -32,7 +36,6 @@ def test_today_view_hides_snoozed_section_when_flagged(vault, index_dir):
     write_note(
         vault / "projects" / "snoozer.md",
         """\
-        - [ ] open and active
         - [~] parked for later, not now
         """,
         title="Snoozer Project",
