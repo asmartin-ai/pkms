@@ -427,6 +427,63 @@ def ingest_keep_cmd():
     console.print(f"[dim]{render_report(report)}[/dim]")
 
 
+@ingest_app.command("email")
+def ingest_email_cmd(
+    label: str = typer.Option("pkms", "--label", "-l", help="Gmail label to poll"),
+):
+    """Pull new email from a Gmail label into vault/inbox/."""
+    from .email_ingest import ingest_email, make_imap_fetch
+    from .keep_ingest import read_secret
+
+    address = read_secret(_ROOT, "email-address")
+    password = read_secret(_ROOT, "email-app-password")
+    if not address or not password:
+        console.print(
+            "[yellow]email isn't connected yet[/yellow] — create "
+            ".secrets/email-address (your Gmail address) and "
+            ".secrets/email-app-password (a Gmail app password); "
+            "https://myaccount.google.com/apppasswords"
+        )
+        raise typer.Exit(1)
+    fetch = make_imap_fetch(address, password, label)
+    report = ingest_email(VAULT, INDEX, fetch=fetch)
+    console.print(
+        f"[dim]email: captured {report['captured']}, "
+        f"skipped {report['skipped']}[/dim]"
+    )
+
+
+@app.command()
+def discord_bot(
+    base_url: str = typer.Option(
+        "http://127.0.0.1:8765", "--base-url", help="PKMS capture service URL"
+    ),
+    channel_id: str = typer.Option(
+        None, "--channel-id", help="One channel id to listen in (DMs always allowed)"
+    ),
+):
+    """Run the Discord capture bot (DMs always, plus one optional channel)."""
+    from .capture_service import resolve_token
+    from .discord_capture import run_bot
+    from .keep_ingest import read_secret
+
+    bot_token = read_secret(_ROOT, "discord-bot-token")
+    if not bot_token:
+        console.print(
+            "[yellow]discord bot token not found[/yellow] — create "
+            ".secrets/discord-bot-token (Discord dev portal → Bot → Reset Token)"
+        )
+        raise typer.Exit(1)
+    capture_token = resolve_token(_ROOT)
+    run_bot(
+        bot_token,
+        INDEX,
+        base_url=base_url,
+        capture_token=capture_token,
+        allowed_channel_id=channel_id,
+    )
+
+
 @app.command()
 def daily(
     open_editor: bool = typer.Option(
