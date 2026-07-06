@@ -297,6 +297,17 @@ rendering live data; area notes exist as first-class vault notes; tests for
 the tile data source; Kenja recognizes it as "mine" (his reaction is the
 acceptance bar, per the G5 precedent).
 
+**Status (2026-07-06, agent, autonomous run):** the AGENT half is shipped —
+`today.area_tiles()` + token-gated `GET /api/area-tiles` (oracle
+`tests/test_area_tiles.py`, 14 tests, backend delegated to MiniMax M3 via the
+CLI lane, one-shot) and the density-gated `#area-tiles` row in web + web_ext
+(first-party, SW cache v5→v6). Tiles render title + ONE next action (reuses
+`tasks.next_action_per_note`) + quiet last-touched; no counts; empty
+`vault/areas/` → row hidden. The CONTENT half (authoring area notes WITH
+Kenja — one options-question for which areas) remains open; nothing was
+invented. Suite 430 green. Discovery: the indexer crashes on non-UTF8 vault
+files (`frontmatter.load` → UnicodeDecodeError) — parked in §7 as M5.
+
 ### P5 — Phase 5 dogfood gate (after slices ship)
 ⏱ light setup + a 2-week clock + one review sitting · depends: P1, ideally P3
 ▶ Setup sitting: confirm all capture ramps + surfaces work end-to-end; write
@@ -353,6 +364,15 @@ coordination notes with the content-hoarder session, slice-shaped spec.
 - **M3 — docs freshness**: after any packet ships, reconcile README /
   AGENTS.md / DESIGN.md statements it invalidated. Docs that describe dead
   reality are how future sessions get poisoned.
+- **M5 — indexer non-UTF8 hardening**: `index_vault` dies with a raw
+  UnicodeDecodeError if any vault `*.md` file isn't valid UTF-8
+  (`frontmatter.load(md_path)` at indexer.py:27). Found 2026-07-06 while
+  writing the P4 oracle. Fix shape: try/except per file — skip + warn, never
+  crash the whole index run. Small; pairs well with an oracle test. NOT
+  urgent (real vault is UTF-8 today).
+  **Status (2026-07-06, agent):** fixed same day, inline (decision-rule
+  small). Skip + "skipped (unreadable)" note + stale index copy pruned like
+  a deleted file. Regression test in `test_indexer.py` (`34fe308`).
 - **M4 — publication-safety respect**: Kenja has an in-flight scrub
   (options.html help text, test path hygiene, `spike/` removal,
   `docs/publication-safety.md`). Never commit those files in a packet; if
