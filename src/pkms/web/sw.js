@@ -6,6 +6,8 @@
 // app.js/styles.css changed and sw.js didn't — a footgun for an iterated tool.)
 // /api/today is network-only (always-fresh data; if offline, the page shows
 // its error banner — sync is never load-bearing for correctness, §9).
+// v6: area tiles wired (/api/area-tiles + density-gated tile row) (2026-07-06)
+// — bump so installed PWAs pick up the new app.js/styles.css/index.html.
 // v5: inbox surface wired (/api/inbox-items + density-gated card row) (2026-07-04)
 // — bump so installed PWAs pick up the new app.js/styles.css instead of the v4 shell.
 // v4: search surface wired (recent-notes + /api/search?q=) (2026-07-04) — bump
@@ -14,7 +16,7 @@
 // PWAs pick up the new app.js instead of the stale v2 shell from cache.
 // v2: the "Lamplight" redesign (2026-07-02) — bump so installed PWAs pick up
 // the new shell instead of serving the stale Log Book II look from cache.
-const CACHE = "pkms-shell-v5";
+const CACHE = "pkms-shell-v6";
 const SHELL = [
   "/web/",
   "/web/index.html",
