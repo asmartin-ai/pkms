@@ -1,6 +1,7 @@
 """Parse [[wikilinks]] and build backlink index."""
 
 import re
+from collections import defaultdict
 from pathlib import Path
 
 from pkms.db import connect
@@ -16,35 +17,29 @@ def extract_links(content: str) -> list[str]:
 def find_orphans(index_dir: Path) -> list[dict]:
     """Return wikilink targets that resolve to no indexed note.
 
-    Walks the links table and groups by raw target. A target resolves when a
-    note's path stem (path with its `.md` suffix stripped, lower-cased) matches
-    the target (also lower-cased). Targets that resolve to nothing are
-    orphans; each orphan entry lists every source note that references it.
+    Each entry is {"target": <raw wikilink text>, "sources": [sorted note
+    paths that reference it]}. A target 'resolves' when a note's path-or-
+    stem matches the target text case-insensitively (e.g. 'gamma' matches
+    a note path ending in 'gamma.md').
     """
     conn = connect(index_dir)
     try:
-        stems: set[str] = set()
-        for row in conn.execute("SELECT path FROM notes").fetchall():
-            p = row["path"]
-            lower = p.lower()
-            if lower.endswith(".md"):
-                stem = lower[:-3]
-            else:
-                stem = lower
-            stems.add(stem)
-            # Also index the basename stem so bare wikilinks like [[beta]]
-            # resolve to notes at any depth (e.g. resources/beta.md).
-            basename = stem.rsplit("/", 1)[-1]
-            stems.add(basename)
+        # Build the set of indexed stems: lowercase basename without '.md'.
+        stems = set()
+        for (path,) in conn.execute("SELECT path FROM notes").fetchall():
+            stem = Path(path).stem.lower()
+            if stem:
+                stems.add(stem)
 
-        groups: dict[str, set[str]] = {}
-        for row in conn.execute("SELECT source, target FROM links").fetchall():
-            groups.setdefault(row["target"], set()).add(row["source"])
+        # Group link sources by target.
+        target_to_sources: dict[str, set[str]] = defaultdict(set)
+        for source, target in conn.execute("SELECT source, target FROM links").fetchall():
+            target_to_sources[target.strip()].add(source)
+
+        orphans = []
+        for target, sources in target_to_sources.items():
+            if target.lower() not in stems:
+                orphans.append({"target": target, "sources": sorted(sources)})
+        return orphans
     finally:
         conn.close()
-
-    orphans: list[dict] = []
-    for target, sources in groups.items():
-        if target.lower() not in stems:
-            orphans.append({"target": target, "sources": sorted(sources)})
-    return orphans
