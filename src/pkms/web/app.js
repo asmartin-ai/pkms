@@ -22,6 +22,7 @@
   const PEBBLES = { count: 0, goal: null, entries: [] };
   let RECENT_NOTES = []; // populated by loadRecentNotes() -> /api/recent-notes
   let INBOX_ITEMS = []; // populated by loadAuxiliarySurfaces -> /api/inbox-items
+  let AREA_TILES = []; // populated by loadAuxiliarySurfaces -> /api/area-tiles
 
   let PKMS_BASE_URL = "";
   let PKMS_TOKEN = "";
@@ -141,16 +142,18 @@
 
   async function loadAuxiliarySurfaces() {
     try {
-      const [reading, recognition, recent, inbox] = await Promise.all([
+      const [reading, recognition, recent, inbox, areas] = await Promise.all([
         fetchJson("/api/reading-queue"),
         fetchJson("/api/recognition-cards"),
         fetchJson("/api/recent-notes"),
         fetchJson("/api/inbox-items"),
+        fetchJson("/api/area-tiles"),
       ]);
       READING_QUEUE = reading;
       RECOGNITION_CARDS = recognition;
       RECENT_NOTES = recent;
       INBOX_ITEMS = inbox;
+      AREA_TILES = areas;
       if (state.route === "today") renderToday();
       if (state.route === "reading") renderReading();
       if (state.route === "search") renderSearch();
@@ -294,6 +297,7 @@
     // ── Context rail: fold in, read next, still curious, done today ──
     renderFold();
     renderInbox();
+    renderAreaTiles();
     renderNextRead();
     renderResurface();
     renderPebbles();
@@ -347,6 +351,38 @@
         <span class="inbox-surface__preview">${esc(it.preview || "(empty capture)")}</span>
         <small class="inbox-surface__meta">${esc(it.source || "")}${it.captured ? ` · ${esc(_fmtTouched(it.captured))}` : ""}</small>
       </li>`,
+    ).join("");
+    surface.hidden = false;
+  }
+
+  /// Area tiles — life-domain desk objects (Lamplight rule: they stay DIM;
+  /// the lamp is on the lead action above). One tile per populated area note,
+  /// each carrying exactly ONE next action plus a quiet "last touched" line.
+  /// No counts, no urgency cues, no progress bars — recognition of a life
+  /// domain, not a dashboard. AREA_TILES comes from /api/area-tiles
+  /// (loadAuxiliarySurfaces); Kenja authors vault/areas/ notes himself, so an
+  /// empty list hides the row entirely — the surface never invents structure.
+  function renderAreaTiles() {
+    const surface = $("#area-tiles");
+    if (!surface) return;
+    const grid = $("#area-tiles-grid");
+    if (!grid) return;
+    if (!AREA_TILES || AREA_TILES.length === 0) {
+      surface.hidden = true;
+      grid.innerHTML = "";
+      return;
+    }
+    grid.innerHTML = AREA_TILES.map(
+      (t) => `
+      <button class="area-tile" type="button" data-path="${esc(t.path)}">
+        <span class="area-tile__title">${esc(t.title)}</span>
+        <span class="area-tile__action">${
+          t.next_action ? `▶ ${esc(t.next_action)}` : "resting — nothing asked of you"
+        }</span>
+        <small class="area-tile__meta">${
+          t.last_touched ? esc(_fmtTouched(t.last_touched)) : ""
+        }</small>
+      </button>`,
     ).join("");
     surface.hidden = false;
   }
