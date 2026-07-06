@@ -1,6 +1,6 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-05 (bakeoff Part 2 productionized: cherry-picks + i3 fix + pushed to origin). Read this first; orient from it alone.*
+*Updated 2026-07-05 (Phase 2+3 GLM-5.2 headless investigation filed; NEXT.md reconciled — GLM-5.2 status softened from "unusable" to "conditionally viable with anti-deliberation spec rewrite"). Read this first; orient from it alone.*
 
 ## What just happened
 
@@ -25,16 +25,24 @@ control), activated by the content-hoarder completion signal on ntfy `kenja-benc
   task shapes (G3, G1, G2) × 2 runs = **6/6 (100%) first-shot green, $0.0013/run median**.
   Zero correction cost (`orch_corr_usd=0` across all 22 runs) — the correction-cost metric
   is confirmed as a logging discipline with near-zero observed cost on the winning executor.
-- **Pro lane does NOT earn its keep via aider-delegate.** Both Pro models are unusable
-  headless via aider (M5 thinking-tokens bug — model burns output on reasoning prose,
-  emits 0 edits): GLM-5.2 0/2, kimi-k2.7-code 1/4 (only G3 run2 passed; G3 run1 + G1×2
-  failed M5). Killed via kill-fast on G1/G2 for both.
+- **Pro lane does NOT earn its keep via aider-delegate (default spec).** Both Pro models are unusable
+  headless via aider with the standard delegation spec (M5 — model burns output on reasoning
+  prose, emits 0 edits): GLM-5.2 0/2, kimi-k2.7-code 1/4 (only G3 run2 passed; G3 run1 + G1×2
+  failed M5). Killed via kill-fast on G1/G2 for both. **Phase 2+3 update (2026-07-05):**
+  GLM-5.2's M5 failure is partially fixable — an anti-deliberation spec rewrite ("emit edits
+  immediately, no reasoning prose, first token must be the edit block") lifts pass rate to
+  2/4 (~50%) on G3. Mechanism 1 (thinking-mode) and 5 (edit-format) ruled out by Phase 2;
+  mechanism 3 (framing) confirmed by Phase 3. GLM-5.2 is **conditionally viable** as a
+  fallback (spec-rewrite + retries + pytest oracle), NOT a default executor. MiniMax M3 stays
+  default. kimi NOT re-tested — its M5 status is unchanged. Full record:
+  `delegated/run-2026-07-05-glm52-headless-investigation` + `docs/delegations/bakeoff-part2-phase2-3-results.md`.
 - **Local control (Qwen3-Coder-30B-A3B):** clears G3 (easy single-file) 2/2 first-shot,
   flails on G1 (multi-file) 0/2 with edit-parse failures (model describes edits in prose
   instead of SEARCH/REPLACE blocks). Local lane stays as 'free but slower' fallback for
   easy single-file scoped tasks only.
 - **Cross-substrate check vs content-hoarder's sibling bakeoff (same day):** agrees on both
-  counts — MiniMax M3 is the T3 winner, GLM-5.2 is unusable headless. High-confidence
+  counts — MiniMax M3 is the T3 winner, GLM-5.2 is unusable headless with the standard spec
+  (Phase 3: conditionally viable with anti-deliberation spec rewrite, ~50%). High-confidence
   routing table.
 - KAT-Coder-Pro-V2: 5/6 (83%) — near-tie backup; 1 G1 run2 edit-parse fail (variance).
 Full results + verdict: `docs/delegations/bakeoff-part2-phase1-results.md`. Raw data:
@@ -86,9 +94,11 @@ Full results: `docs/delegations/bakeoff-phase1-results.{md,csv}`. Total executor
 3. **Draft Phase 4 bakeoff plan** for Pro models on harder tasks (multi-file refactor,
    ambiguous spec, larger read context). Kenja: "simple coding tasks are overkill for those
    models — we need to feed them more complex planning or orchestration tasks." Note:
-   Part 2 confirmed GLM-5.2 and kimi are unusable headless via aider (M5) — a Phase 4
-   plan should use a different harness (interactive aider, or direct API) for the Pro
-   escalation lane, not aider-delegate.
+   Part 2 confirmed GLM-5.2 and kimi are unusable headless via aider with the **standard
+   spec** (M5). Phase 3 (2026-07-05) showed GLM-5.2 is **conditionally viable** with an
+   anti-deliberation spec rewrite (~50% on G3, single-file) — a Phase 4 plan could test the
+   spec-rewrite lever on multi-file / harder tasks, or use a different harness (interactive
+   aider, direct API) for the Pro escalation lane. kimi was NOT re-tested in Phase 3.
 4. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
    email-in + Discord bot per `build-plan.md` slice 8.
 
