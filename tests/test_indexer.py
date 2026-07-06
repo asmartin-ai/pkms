@@ -162,3 +162,23 @@ def test_reindex_picks_up_edits(vault, index_dir):
     ]
     assert targets == ["alpha"]
     conn.close()
+
+
+def test_unreadable_note_is_skipped_not_fatal(vault, index_dir, capsys):
+    """M5: one non-UTF8 (or YAML-broken) file must not kill the index run —
+    it is skipped with a note, and a previously-indexed copy is pruned like
+    a deleted file rather than lingering stale."""
+    bad = vault / "resources" / "corrupt.md"
+    bad.write_text("---\ntitle: Was Fine\n---\n\nReadable at first.", encoding="utf-8")
+    stats = index_vault(vault, index_dir)
+    assert stats["notes"] == 4  # the 3 fixture notes + corrupt.md
+
+    bad.write_bytes(b"---\ntitle: [unclosed\n---\n\xff\xfe garbage")
+    stats = index_vault(vault, index_dir)
+    assert stats["notes"] == 3
+    assert "skipped (unreadable)" in capsys.readouterr().out
+
+    conn = connect(index_dir)
+    rows = conn.execute("SELECT path FROM notes WHERE path LIKE '%corrupt.md'").fetchall()
+    assert rows == []  # stale copy pruned, not lingering
+    conn.close()
