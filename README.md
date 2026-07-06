@@ -55,8 +55,12 @@ pkms tasks --stash    # Paused/iceboxed tasks
 pkms search <query>   # Full-text search
 pkms promote <url>    # Turn a hoarded Reddit thread into a readable vault note
 pkms resurface        # Up to 3 curious questions from the vault, each with a why
+pkms did "thing"      # Log a done thing — counts today; retroactive welcome
 pkms index            # Rebuild the full index from the vault
 pkms serve            # Web service: capture endpoint + desktop today-view
+pkms ingest keep      # Pull Google Keep exports into the inbox
+pkms ingest email     # Pull labeled Gmail messages into the inbox (IMAP)
+pkms discord-bot      # Discord DMs → inbox (see docs/email-discord-setup.md)
 ```
 
 ## Start the desktop service
