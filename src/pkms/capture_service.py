@@ -196,6 +196,11 @@ def make_server(
 
                 body = json.dumps(inbox_items(vault))
                 self._send(200, body, "application/json; charset=utf-8")
+            elif path == "/api/area-tiles":
+                from .today import area_tiles
+
+                body = json.dumps(area_tiles(vault, index_dir))
+                self._send(200, body, "application/json; charset=utf-8")
             else:
                 self._send(404, "not found")
 
