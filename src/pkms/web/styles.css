@@ -785,6 +785,69 @@ button {
     color: var(--bone-faint);
     margin-top: 0.15rem;
 }
+
+/* Area tiles — life-domain desk objects (Lamplight: dim by design; the lamp
+   stays on the lead action). One next action + quiet last-touched per tile;
+   no counts, no progress bars. Density-gated via .block--optional. */
+.area-tiles {
+    margin-top: var(--block-gap);
+}
+.area-tiles__kicker {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--bone-faint);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+.area-tiles__kicker::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--hairline);
+}
+.area-tiles__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0.75rem;
+}
+.area-tile {
+    display: block;
+    text-align: left;
+    padding: 0.75rem 0.85rem;
+    background: none;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease);
+}
+.area-tile:hover {
+    background: var(--night-raised);
+}
+.area-tile__title {
+    display: block;
+    font-family: var(--display);
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--bone);
+}
+.area-tile__action {
+    display: block;
+    font-family: var(--body);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--bone-dim);
+    margin-top: 0.35rem;
+}
+.area-tile__meta {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--bone-faint);
+    margin-top: 0.35rem;
+}
 .card__title {
     font-family: var(--display);
     font-size: var(--step-1);

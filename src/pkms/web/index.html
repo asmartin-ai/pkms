@@ -233,6 +233,24 @@
                     </ul>
                 </div>
 
+                <!-- Area tiles (hidden in calm mode) — life-domain desk objects.
+                     Lamplight rule: tiles stay dim, the lamp is on the lead action.
+                     One next action + a quiet "last touched" per tile; no counts,
+                     ever. Empty until Kenja authors vault/areas/ notes — the
+                     surface never invents his life structure. -->
+                <div
+                    class="area-tiles block--optional"
+                    id="area-tiles"
+                    hidden
+                >
+                    <div class="area-tiles__kicker">
+                        the rest of the desk
+                    </div>
+                    <div class="area-tiles__grid" id="area-tiles-grid">
+                        <!-- tiles from /api/area-tiles -->
+                    </div>
+                </div>
+
                 <!-- Next actions (hidden in calm mode) — one per note, ⏱ ▶ ✓ anatomy. -->
                 <div class="actions-block block--optional">
                     <div class="actions-block__kicker">
