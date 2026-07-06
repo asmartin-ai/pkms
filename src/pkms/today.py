@@ -330,3 +330,53 @@ def inbox_items(vault: Path, *, limit: int = 10) -> list[JsonDict]:
     # fallback when captured is missing (the filename is timestamp-prefixed).
     out.sort(key=lambda e: str(e["captured"]), reverse=True)
     return out[:limit]
+
+
+def area_tiles(vault: Path, index_dir: Path) -> list[JsonDict]:
+    """Life-domain tiles for the today-view row — Lamplight rule.
+
+    One next action per tile, never a pile: each tile carries exactly the
+    note's single OPEN next action (or None when the note has none, or when
+    the index db is missing — tiles still render from disk). No counts, no
+    urgency cues, ever — the tiles are a quiet recognition surface, not a
+    dashboard. Empty/missing `areas/` → [] (the agent never invents the
+    user's life structure). A malformed area note is skipped entirely, not a
+    500. Read-only: never writes the vault or the index. Capped at 8, sorted
+    by vault-relative POSIX path for calm and stable ordering.
+    """
+    areas = vault / "areas"
+    if not areas.is_dir():
+        return []
+
+    # Reuse the index for the next-action set; same guarded open as _next_actions.
+    next_action_for: dict[str, str] = {}
+    if (index_dir / "pkms.db").exists():
+        from .db import connect
+        from .tasks import next_action_per_note
+
+        conn = connect(index_dir)
+        rows = next_action_per_note(conn)
+        conn.close()
+        next_action_for = {r["note_path"]: _display_text(r["text"]) for r in rows}
+
+    import frontmatter
+
+    out: list[JsonDict] = []
+    for p in sorted(areas.glob("*.md")):
+        try:
+            meta = frontmatter.load(p).metadata
+        except Exception:
+            # Malformed area note: skip, never 500 the surface.
+            continue
+        rel = "/".join(p.relative_to(vault).parts)
+        mtime = p.stat().st_mtime
+        out.append(
+            {
+                "title": str(meta.get("title") or p.stem),
+                "path": Path(rel).as_posix(),
+                "next_action": next_action_for.get(rel),
+                "last_touched": datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+            }
+        )
+    out.sort(key=lambda t: t["path"])
+    return out[:8]

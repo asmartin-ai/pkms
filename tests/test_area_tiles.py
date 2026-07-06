@@ -162,10 +162,14 @@ def test_last_touched_is_iso_utc(vault, index_dir):
 
 
 def test_malformed_area_note_is_skipped(vault, index_dir):
+    # Index first, THEN drop the broken file: area_tiles lists areas/ from
+    # disk, so the bad note exercises its skip path directly. (The indexer
+    # itself crashes on non-UTF8 vault files — pre-existing, tracked
+    # separately; this oracle is about the tile surface, not the indexer.)
     _make_areas(vault)
+    _index(vault, index_dir)
     bad = vault / "areas" / "broken.md"
     _ = bad.write_bytes(b"---\ntitle: [unclosed\n---\n\xff\xfe garbage")
-    _index(vault, index_dir)
     tiles = area_tiles(vault, index_dir)
     assert [t["path"] for t in tiles] == ["areas/career.md", "areas/health.md"]
 
