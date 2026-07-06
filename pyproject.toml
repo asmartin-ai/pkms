@@ -21,6 +21,9 @@ dev = [
     "ruff>=0.6",
     "Pillow",
 ]
+discord = [
+    "discord.py>=2",
+]
 
 [project.scripts]
 pkms = "pkms.cli:app"
