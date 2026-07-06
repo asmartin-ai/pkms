@@ -23,8 +23,16 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
 
     for md_path in sorted(vault_root.rglob("*.md")):
         rel = md_path.relative_to(vault_root).as_posix()
+        try:
+            post = frontmatter.load(md_path)
+        except Exception:
+            # One unreadable note (non-UTF8 bytes, broken YAML) must not kill
+            # the whole index run. Skip it — and leave it out of `seen`, so a
+            # previously-indexed copy is pruned like a deleted file rather
+            # than lingering stale.
+            print(f"  skipped (unreadable): {rel}")
+            continue
         seen.add(rel)
-        post = frontmatter.load(md_path)
         content = post.content
         meta = post.metadata
 
