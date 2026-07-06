@@ -1,129 +1,50 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-05 (Phase 2+3 GLM-5.2 headless investigation filed; NEXT.md reconciled — GLM-5.2 status softened from "unusable" to "conditionally viable with anti-deliberation spec rewrite"). Read this first; orient from it alone.*
+*Updated 2026-07-05. Bakeoff series ICEBOXED 2026-07-05 (Phases 1-3 complete);
+back to product work on Slice 7. Read this first; orient from it alone.*
 
-## What just happened
+## Current focus — Slice 7 (Phone PWA)
 
-**Bakeoff Part 2 productionized (2026-07-05, follow-up session).** The 3 winning
-MiniMax M3 run1 diffs (G1/G2/G3) were cherry-picked to `main` and **pushed to
-`origin/main`**. The 4 G-batch oracles are GREEN on main. **i3 regression fixed:**
-the G3 cherry-pick added `_snoozed_notes` with
-inline `GROUP BY t.note_path` SQL, violating the i3 anti-drift oracle
-(`test_bakeoff_i3.py` enforces no inline ranking SQL in `today.py`). Refactored:
-extracted `snoozed_notes(conn)` to `tasks.py` (sibling to `next_action_per_note`),
-`_snoozed_notes` in `today.py` now delegates to it. **Full suite: 226 passed, 0
-failed.** 22 `delegated/run-*` branches preserved for audit. Orchestrator-mode +
-orchestrator-law routing table wired in agent-hub (MiniMax M3 default). PAYG→subscription
-rewiring clarified in `aider-headless-delegate` SKILL.md M19 (PAYG is bakeoff-only;
-ongoing delegation uses `ZENMUX_API_KEY` subscription key — edit uncommitted in
-agent-hub alongside Kenja's pre-existing WIP).
+Code done (Lamplight frontend, `/api/inbox-items`, PWA service worker,
+capture surface). Remaining gate is the **device-level proof on the Pixel 6
+over tailnet** — Kenja demonstrates: today-view, read a promoted thread,
+capture a thought from inside it. Steps: `docs/pixel-pwa-setup.md`.
+**First action:** `tailscale serve --bg 8765`, then Add-to-Home-Screen on Pixel.
 
-**PKMS Bakeoff Part 2 (Correction-Cost Validation) Phase 1 COMPLETE.** 22 Phase 1 runs
-on `main` (3 fresh G-batch oracles: G1 multi-file, G2 larger-read-context, G3 single-file
-control), activated by the content-hoarder completion signal on ntfy `kenja-bench-r7k2q9`.
-- **Verdict: Part 1 routing table holds.** MiniMax M3 stays first-shot clean across all 3
-  task shapes (G3, G1, G2) × 2 runs = **6/6 (100%) first-shot green, $0.0013/run median**.
-  Zero correction cost (`orch_corr_usd=0` across all 22 runs) — the correction-cost metric
-  is confirmed as a logging discipline with near-zero observed cost on the winning executor.
-- **Pro lane does NOT earn its keep via aider-delegate (default spec).** Both Pro models are unusable
-  headless via aider with the standard delegation spec (M5 — model burns output on reasoning
-  prose, emits 0 edits): GLM-5.2 0/2, kimi-k2.7-code 1/4 (only G3 run2 passed; G3 run1 + G1×2
-  failed M5). Killed via kill-fast on G1/G2 for both. **Phase 2+3 update (2026-07-05):**
-  GLM-5.2's M5 failure is partially fixable — an anti-deliberation spec rewrite ("emit edits
-  immediately, no reasoning prose, first token must be the edit block") lifts pass rate to
-  2/4 (~50%) on G3. Mechanism 1 (thinking-mode) and 5 (edit-format) ruled out by Phase 2;
-  mechanism 3 (framing) confirmed by Phase 3. GLM-5.2 is **conditionally viable** as a
-  fallback (spec-rewrite + retries + pytest oracle), NOT a default executor. MiniMax M3 stays
-  default. kimi NOT re-tested — its M5 status is unchanged. Full record:
-  `delegated/run-2026-07-05-glm52-headless-investigation` + `docs/delegations/bakeoff-part2-phase2-3-results.md`.
-- **Local control (Qwen3-Coder-30B-A3B):** clears G3 (easy single-file) 2/2 first-shot,
-  flails on G1 (multi-file) 0/2 with edit-parse failures (model describes edits in prose
-  instead of SEARCH/REPLACE blocks). Local lane stays as 'free but slower' fallback for
-  easy single-file scoped tasks only.
-- **Cross-substrate check vs content-hoarder's sibling bakeoff (same day):** agrees on both
-  counts — MiniMax M3 is the T3 winner, GLM-5.2 is unusable headless with the standard spec
-  (Phase 3: conditionally viable with anti-deliberation spec rewrite, ~50%). High-confidence
-  routing table.
-- KAT-Coder-Pro-V2: 5/6 (83%) — near-tie backup; 1 G1 run2 edit-parse fail (variance).
-Full results + verdict: `docs/delegations/bakeoff-part2-phase1-results.md`. Raw data:
-`bakeoff/part2/results.csv`. Total Phase 1 executor spend ~$0.025. Oracle hashes locked
-throughout; no regressions from any arm.
+## Next 1-3 actions
 
-**PKMS Price-Performance Bakeoff Part 1 COMPLETE (2026-07-04).** 59 runs across Phases 1–3
-on `bakeoff/phase1` (off `feat/uiux-redesign`, 3 F-batch fixes reverted to reuse the oracles):
-- **Phase 1 (T3 Flash):** 6 models × 3 tasks × 2 runs = 35 runs. **MiniMax M3 wins** —
-  $0.001576/run median, 8s wallclock, 1M ctx, 6/6 first-shot green, lowest cost+variance.
-  KAT-Coder-Pro-V2 is the near-tie backup (256K ctx, most minimal diffs). step-3.7-flash
-  overflowed 256K ctx on F2 (kill-fast: OK for single-file only). qwen3.6-flash had 1 no-edit
-  flake (F1 r1, r2 clean; 14% flake rate).
-- **Phase 2 (T1/T2 Pro):** 4 models × 3 tasks × 2 runs = 24 runs. **All 24 first-shot green.**
-  kimi-k2.7-code is the Pro winner ($0.005401/run, 10.5s, lowest variance). dsv4pro is most
-  expensive+verbose ($0.007395, adds unsolicited UX scope). qwen3.7-max has severe wallclock
-  variance (156s spike on F2).
-- **Phase 3 verdict:** **Pro does NOT justify ~3× on this workload.** Identical pass/first-shot
-  rates (100%/100%), 2.9–4.1× cost, no speed/quality advantage. The §6 kill-fast gate fires soft:
-  Flash wins the cheap-delegate lane; Pro becomes the escalation lane for tasks that strain T3
-  (multi-file refactor, ambiguous spec, larger read context).
-- **Routing table:** default `minimax/minimax-m3` (T3); backup `kuaishou/kat-coder-pro-v2` (T3);
-  Pro escalation `moonshotai/kimi-k2.7-code`; alt Pro `z-ai/glm-5.2`; avoid `stepfun/step-3.7-flash`
-  (256K overflow) and `deepseek/deepseek-v4-pro` in the cheap lane.
+1. **Slice 7 device proof** — Kenja, ~10 min on the Pixel over tailnet.
+2. **Slice 8 unblocks** — K4: email-in address shape (plus-alias+label vs
+   dedicated). K5: Discord bot token + invite. Both gate Slice 8.
+3. **Slice 8 build** once K4+K5 land — email-in + Discord bot, per
+   `vault/projects/pkms-design/build-plan.md` slice 8.
 
-Full results: `docs/delegations/bakeoff-phase1-results.{md,csv}`. Total executor spend $0.2125
-($0.0649 T3 + $0.1476 Pro). Oracle hashes locked throughout; suite stays at 393 pass / 9 RED
-(the reverted F-batch) on `bakeoff/phase1`; no regressions from any of the 59 arms.
+## Blocked on Kenja
 
-## Blocked on Kenja (surface, don't wait)
-
-- **K1** — Lamplight device: DONE. `feat/uiux-redesign` → `main` merged; bakeoff
-  Part 1 + Part 2 cherry-picks + i3 fix all on `main` and pushed to `origin/main`.
-  `DESIGN.md` rewrite still pending (separate action, not blocking).
-- **K4** — Pick email-in address shape (plus-alias+label vs dedicated). Gates P3.
-- **K5** — Discord bot token + invite. Gates P3.
-- (K2, K3, K6 — not blocking.)
-
-## Next 1–3 actions (literal first step)
-
-1. **Commit the agent-hub skill edit.** The `aider-headless-delegate` SKILL.md M19
-   PAYG-Is-bakeoff-only clarification is uncommitted in `C:/Users/Kenja/agent-hub`
-   alongside Kenja's pre-existing WIP (NEXT.md, README.md, render.py, servers.toml).
-   **Literal first step:** `cd C:/Users/Kenja/agent-hub && git diff skills/aider-headless-delegate/SKILL.md`
-   — review, then commit just that path with `git commit skills/aider-headless-delegate/SKILL.md`.
-2. **Decide on the 22 `delegated/run-*` branches.** Preserved for audit; delete with
-   `git branch -D delegated/run-*` once you're satisfied main is the source of truth
-   (suite is 226 green, 3 winners cherry-picked). Optional cleanup.
-3. **Draft Phase 4 bakeoff plan** for Pro models on harder tasks (multi-file refactor,
-   ambiguous spec, larger read context). Kenja: "simple coding tasks are overkill for those
-   models — we need to feed them more complex planning or orchestration tasks." Note:
-   Part 2 confirmed GLM-5.2 and kimi are unusable headless via aider with the **standard
-   spec** (M5). Phase 3 (2026-07-05) showed GLM-5.2 is **conditionally viable** with an
-   anti-deliberation spec rewrite (~50% on G3, single-file) — a Phase 4 plan could test the
-   spec-rewrite lever on multi-file / harder tasks, or use a different harness (interactive
-   aider, direct API) for the Pro escalation lane. kimi was NOT re-tested in Phase 3.
-4. **P3 once K4+K5 land:** present K4's two options to Kenja (one question), then build the
-   email-in + Discord bot per `build-plan.md` slice 8.
+- **K4** — email-in address shape. **K5** — Discord bot token + invite.
 
 ## Open decisions
 
-- **Bakeoff follow-up (deferred, not blocking):** the 3rd-run variance backfill on minimax F2 +
-  kimi F2 — only worth running if the routing-table decision changes, which it doesn't. Skip.
-- **Lever-T thinking-compression plan** — its §1 forbids running before the model question is
-  settled. It's now settled (minimax is the default). Lever-T can run if Phase 0's trace study
-  shows ≥40% compressible thinking content; otherwise skip.
-- **Inbox surface "open" action:** routes to `/api/open-note` (default markdown editor). The
-  "/fold externally" alternative is not wired; defer until Kenja lives with the surface.
+- **kimi generalization:** does the anti-deliberation spec rewrite transfer to
+  kimi-k2.7-code? Paused, not closed — reactivate on user follow-up.
 
-## Icebox (do not start; reactivation conditions in `docs/delegation-roadmap.md` §8 + `build-plan.md`)
+## Icebox (reactivation conditions marked)
 
-Voice ramp · Discord resurfacing mirror · career-ops dashboard (post-P5) · predictive partial sync (post-P5) · Keep-via-official-API · Textual TUI · Rust/Go hot paths · self-hosted fonts · card thumbnails · blind second visual take · cleaner token path for the PWA (reactivate when the token leaves the tailnet or the URL gets shared).
+- **PKMS bakeoff series** (iceboxed 2026-07-05) — reactivate if routing table
+  needs to change. Conclusions: MiniMax M3 default; GLM-5.2 conditional with
+  anti-deliberation spec (~50%); kimi not re-tested. Evidence on
+  `delegated/run-2026-07-05-glm52-headless-investigation` (local-only); full
+  write-up `LLM-dev/bakeoffs/GLM-5.2-Phase3-SpecRewrite-Report-2026-07-05.md`.
+- **Phase 1.5 free-models bakeoff — PKMS arm withdrawn** — CH-only now.
+  Reactivate if a PKMS-side free-model question resurfaces.
+- **kimi Phase 4 run** — reactivate if kimi re-enters the routing decision.
+- **Phase 3b (isolate anti-deliberation directive from SQL confounder)** —
+  reactivate if the conditional-viability claim needs hardening.
 
 ## Branch state
 
-- `main` — the Lamplight redesign + bakeoff Phase 0/1/2 + Part 2 cherry-picks + i3
-  regression fix are all merged here and **pushed to `origin/main`**. Suite
-  **226 green**, 0 type-checker errors. The `feat/uiux-redesign` and
-  `bakeoff/phase1` branches were deleted after the earlier merge (their commits
-  are preserved in main's history). 22 `delegated/run-*` branches preserved as
-  the Part 2 audit trail (deletable on review).
+- `main` — Slice 1-6 + Lamplight + bakeoff conclusions merged; **226 green**;
+  pushed to `origin/main`.
+- `delegated/run-2026-07-05-glm52-headless-investigation` (local-only) —
+  Phase 2+3 artifacts; push when ready.
 - Derivable: `git status -sb`, `git branch -vv`, `git log --oneline origin/main..main`.
-  Historical merges (F-batch `c541b73`, Lamplight `5bf7f15`, type fixes `137215c`)
-  are preserved in main's history.
