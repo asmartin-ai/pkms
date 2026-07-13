@@ -20,7 +20,6 @@ from types import SimpleNamespace
 
 from pkms import ocr
 
-
 # A path we hand in via the exe= injection point so find_tesseract() is bypassed
 # and we land directly on subprocess.run for the run-behavior cases.
 FAKE_EXE = Path(r"C:\fake\tesseract.exe")

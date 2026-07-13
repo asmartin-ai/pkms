@@ -13,7 +13,7 @@ import json
 import os
 import re
 import sqlite3
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -131,7 +131,7 @@ def search_threads(conn: sqlite3.Connection, terms: str, limit: int = 8) -> list
 
 
 def _day(utc: int | None) -> str:
-    return datetime.fromtimestamp(utc, tz=timezone.utc).date().isoformat() if utc else ""
+    return datetime.fromtimestamp(utc, tz=UTC).date().isoformat() if utc else ""
 
 
 def _comment_lines(node: JsonDict, depth: int, lines: list[str], stats: Stats) -> None:

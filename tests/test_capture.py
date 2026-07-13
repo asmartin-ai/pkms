@@ -10,7 +10,6 @@ import pytest
 from pkms.capture import inbox_count, write_capture
 from pkms.capture_service import make_server, resolve_token
 
-
 # --- write_capture ---
 
 def test_capture_writes_frontmatter_and_body(tmp_path):

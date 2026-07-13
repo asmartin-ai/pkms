@@ -9,9 +9,9 @@ from __future__ import annotations
 import email
 import hashlib
 import imaplib
+from collections.abc import Callable
 from email.message import Message
 from pathlib import Path
-from typing import Callable
 
 from .capture import write_capture
 

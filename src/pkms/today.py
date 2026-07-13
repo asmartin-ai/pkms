@@ -7,7 +7,7 @@ Copy rules: no backlog counts, no overdue framing, empty state reads as a win
 """
 
 import re
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -279,7 +279,7 @@ def recent_notes(vault: Path, index_dir: Path, *, limit: int = 8) -> list[JsonDi
             {
                 "title": r["title"],
                 "path": Path(r["path"]).as_posix(),
-                "last_touched": datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+                "last_touched": datetime.fromtimestamp(mtime, tz=UTC).isoformat(),
             }
         )
     out.sort(key=lambda e: str(e["last_touched"]), reverse=True)
@@ -305,7 +305,7 @@ def inbox_items(vault: Path, *, limit: int = 10) -> list[JsonDict]:
     for p in sorted(inbox.glob("*.md"), reverse=True):
         try:
             post = frontmatter.load(p)
-        except Exception:
+        except Exception:  # noqa: S112
             # A malformed capture shouldn't 500 the surface — skip it.
             continue
         body = post.content.strip()
@@ -365,7 +365,7 @@ def area_tiles(vault: Path, index_dir: Path) -> list[JsonDict]:
     for p in sorted(areas.glob("*.md")):
         try:
             meta = frontmatter.load(p).metadata
-        except Exception:
+        except Exception:  # noqa: S112
             # Malformed area note: skip, never 500 the surface.
             continue
         rel = "/".join(p.relative_to(vault).parts)
@@ -375,7 +375,7 @@ def area_tiles(vault: Path, index_dir: Path) -> list[JsonDict]:
                 "title": str(meta.get("title") or p.stem),
                 "path": Path(rel).as_posix(),
                 "next_action": next_action_for.get(rel),
-                "last_touched": datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+                "last_touched": datetime.fromtimestamp(mtime, tz=UTC).isoformat(),
             }
         )
     out.sort(key=lambda t: t["path"])

@@ -8,8 +8,8 @@ suite runs without discord.py installed and must stay that way.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -56,7 +56,7 @@ def should_capture(
 def make_poster(base_url: str, token: str) -> Callable[[str], None]:
     def post(text: str) -> None:
         url = f"{base_url.rstrip('/')}/capture?source=discord"
-        req = Request(
+        req = Request(  # noqa: S310
             url,
             data=text.encode("utf-8"),
             headers={
@@ -67,7 +67,7 @@ def make_poster(base_url: str, token: str) -> Callable[[str], None]:
         )
         # HTTPError propagates on non-2xx — caller sees the failure and the id
         # is intentionally NOT ledgered so a retry can succeed.
-        with urlopen(req):
+        with urlopen(req):  # noqa: S310
             pass
 
     return post

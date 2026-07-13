@@ -38,7 +38,6 @@ import pytest
 
 from pkms.capture_service import make_server
 from pkms.today import area_tiles
-
 from tests.conftest import write_note
 
 TOKEN = "test-token-123"
