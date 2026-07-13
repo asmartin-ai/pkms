@@ -11,9 +11,9 @@ import fnmatch
 import re
 import subprocess
 import sys
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -159,13 +159,12 @@ def history_risk_paths(paths: Iterable[str]) -> list[str]:
 
 
 def run_git(args: Sequence[str], *, check: bool = True) -> str:
-    result = subprocess.run(
-        ["git", *args],
+    result = subprocess.run(  # noqa: S603 — fixed argv, no shell
+        ["git", *args],  # noqa: S607 — git is expected on PATH
         cwd=ROOT,
         check=False,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
     if check and result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed:\n{result.stderr.strip()}")
