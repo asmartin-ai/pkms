@@ -40,9 +40,12 @@ CAPTURE_PAGE = """<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>pkms capture</title>
-<style>body{font-family:sans-serif;max-width:30em;margin:2em auto;padding:0 1em}
-textarea{width:100%;height:6em;font-size:1.1em}button{font-size:1.2em;padding:.5em 2em;margin-top:.5em}
-#ok{color:green;font-weight:bold}</style></head>
+<style>
+body{font-family:sans-serif;max-width:30em;margin:2em auto;padding:0 1em}
+textarea{width:100%;height:6em;font-size:1.1em}
+button{font-size:1.2em;padding:.5em 2em;margin-top:.5em}
+#ok{color:green;font-weight:bold}
+</style></head>
 <body><form onsubmit="event.preventDefault();
 fetch('/capture'+location.search,{method:'POST',body:document.getElementById('t').value})
 .then(r=>r.text()).then(x=>{document.getElementById('ok').textContent=x;document.getElementById('t').value='';document.getElementById('t').focus();})">
@@ -315,7 +318,7 @@ def make_server(
 
 
 def run(
-    vault: Path, root: Path, *, host: str = "0.0.0.0", port: int = 8765, token: str | None = None
+    vault: Path, root: Path, *, host: str = "0.0.0.0", port: int = 8765, token: str | None = None  # noqa: S104
 ) -> None:
     token = resolve_token(root, token)
     server = make_server(vault, root / ".index", host, port, token)

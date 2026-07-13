@@ -45,13 +45,13 @@ RESHAPE_DAYS = 14  # G4: untouched this long → re-offered reshaped, never nagg
 
 def task_hash(raw_line: str) -> str:
     """Identity of one task line (marker included — a state flip is a touch)."""
-    return hashlib.sha1(raw_line.strip().encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha1(raw_line.strip().encode("utf-8")).hexdigest()[:16]  # noqa: S324
 
 
 def _split_meta(raw: str) -> tuple[str, dict[str, str | None]]:
     parts = _META_SPLIT.split(raw)
     meta: dict[str, str | None] = {"size": None, "first_action": None, "done_when": None}
-    for token, value in zip(parts[1::2], parts[2::2]):
+    for token, value in zip(parts[1::2], parts[2::2], strict=False):
         value = value.strip()
         if value:
             meta[_META_KEY[token]] = value

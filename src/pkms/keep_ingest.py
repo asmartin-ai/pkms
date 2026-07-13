@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import urllib.request
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
@@ -84,8 +85,8 @@ def completed_keep_ids(index_dir: Path) -> set[str]:
 
 
 def _now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
+    from datetime import datetime
+    return datetime.now(UTC).isoformat()
 
 
 # --- keep client (seam: tests inject a fake) ---
@@ -112,7 +113,7 @@ def make_keep(email: str, token: str, index_dir: Path):
 
 
 def _download(url: str, dest: Path) -> None:
-    with urllib.request.urlopen(url) as resp:
+    with urllib.request.urlopen(url) as resp:  # noqa: S310
         dest.write_bytes(resp.read())
 
 
@@ -128,7 +129,7 @@ def ingest_keep(vault: Path, index_dir: Path, root: Path, *, keep: Any = None) -
         return {"setup_needed": True}
 
     if keep is None:
-        assert email is not None and token is not None  # narrowed by the setup_needed guard above
+        assert email is not None and token is not None  # noqa: S101
         keep = make_keep(email, token, index_dir)
 
     ledger = load_ledger(index_dir)

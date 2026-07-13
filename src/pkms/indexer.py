@@ -1,7 +1,7 @@
 """Scan vault and populate the SQLite index."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import frontmatter
@@ -12,7 +12,7 @@ from .tasks import extract_tasks
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> dict[str, int]:
@@ -48,7 +48,8 @@ def index_vault(vault_root: Path, index_dir: Path, *, verbose: bool = False) -> 
                  title=excluded.title, created=excluded.created,
                  modified=excluded.modified, tags=excluded.tags,
                  content=excluded.content, indexed_at=excluded.indexed_at""",
-            (rel, title, str(meta.get("created", "")), str(meta.get("modified", "")), tags, content, _now()),
+            (rel, title, str(meta.get("created", "")), str(meta.get("modified", "")),
+             tags, content, _now()),
         )
         # FTS stays in sync via triggers on the notes table (see db.SCHEMA)
 

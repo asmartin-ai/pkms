@@ -35,7 +35,7 @@ def extract_text(image: Path, *, exe: Path | None = None) -> str | None:
     if exe is None:
         return None
     try:
-        out = subprocess.run(
+        out = subprocess.run(  # noqa: S603
             [str(exe), str(image), "stdout"],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
