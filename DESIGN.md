@@ -215,6 +215,25 @@ undo, and local open feedback.
   Byte-identical to `src/pkms/web/` per the packaging rule (parity test-pinned).
 - Backend data/actions: `src/pkms/capture_service.py`, `src/pkms/today.py`.
 
+## Hearth Convergence (pending)
+
+The Hearth visual language (`K:\Projects\adhd-design-language\VISUAL-LANGUAGE.md`,
+ratified 2026-07-03, gate G-B) calls for two type swaps to converge PKMS with the
+shared system:
+
+| Token | Current (Lamplight) | Hearth target | 
+|---|---|---|
+| Body face | Atkinson Hyperlegible | Lexend |
+| Mono face | IBM Plex Mono | JetBrains Mono |
+
+Plus token renames to the Hearth schema. These ride the next scheduled front-end
+packet (token-level, no dedicated repaint). The display face (Bricolage Grotesque)
+and all color tokens stay. Until that packet lands, this document describes the
+current Lamplight reality on `feat/uiux-redesign`.
+
+**Gate status (2026-07-12):** K1 (device verdict) still blocks the Lamplight merge.
+DESIGN.md rewrite (P0 scope) happens after merge approval.
+
 ## Detector Scope
 
 The Impeccable detector ignores are intentionally minimal and project-local. Each
