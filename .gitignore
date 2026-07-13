@@ -33,6 +33,9 @@ desktop.ini
 # Claude Code machine-local permissions (skills/ stays tracked)
 .claude/settings.local.json
 
+# Autonomous/overnight run trail (local audit log; not part of the shipped project)
+.autonomous/
+
 # Impeccable live-mode runtime recovery state
 .impeccable/live/sessions/
 
