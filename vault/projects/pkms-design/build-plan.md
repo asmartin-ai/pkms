@@ -2,15 +2,17 @@
 title: PKMS build plan — Phase 4 vertical slices
 tags: [pkms-design, build-plan, adhd]
 created: 2026-06-12
-modified: 2026-06-29
+modified: 2026-07-12
 status: in-progress
 ---
 
 # PKMS Build Plan (Phase 4)
 
-> **Status: IN PROGRESS (2026-06-29) — slices 1–6 shipped; slice 7 (Phone PWA) underway
-> (increment 2 landed: desktop new-tab/PWA shell now has real web capture,
-> reading/recognition APIs, and persistent resurface actions); repo published to GitHub with CI.**
+> **Status (2026-07-12):** slices 1–8 agent-complete on `main` (431 green). Slice 7
+> remaining is Kenja device proof on the Pixel (`docs/pixel-pwa-setup.md`). Slice 8
+> remaining is Kenja activation (`docs/email-discord-setup.md`). Phase 5 dogfood
+> criteria live at [[phase5-dogfood]]; clock starts after activation. Repo published
+> to GitHub with CI.
 > Derived from [[decisions]] (all 10 gates closed
 > 2026-06-12) and bound by the shared design language at
 > `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` (v post-CH-pass, commit `ce809e2`).
@@ -60,7 +62,7 @@ Status: ✓ shipped · ▸ in progress · ◦ not started.
 | 5 | ✓ | Task model — ⏱▶✓, states, reshape | One next action per project; stale tasks reshaped not rotted | heavy |
 | 6 | ✓ | Resurfacing card | 1–3 curious questions a day, relevance-weighted, dismissable forever | medium-heavy |
 | 7 | ▸ | Phone PWA | Today-view + reading queue + capture on the Pixel over tailnet | heavy |
-| 8 | ◦ | Side-door batch — email-in + Discord bot | Capture from work and from Discord | medium |
+| 8 | ▸ | Side-door batch — email-in + Discord bot | Capture from work and from Discord | medium |
 
 After slice 8 → **Phase 5 dogfood gate**. Predictive partial sync (G10) stays gated on
 real usage to predict from; embeddings decision lives inside slice 6.
@@ -245,8 +247,9 @@ Ships:
   deferral between.
 
 Increment landed 2026-06-29: desktop/new-tab frontend posts real captures, fetches live
-reading/recognition data, and persists resurface not-now/let-go actions. Remaining slice-7
-proof is device-level.
+reading/recognition data, and persists resurface not-now/let-go actions. Agent close-out
+2026-07-04: `docs/pixel-pwa-setup.md` written; Lamplight merged. Remaining slice-7 proof
+is Kenja device-level only (Pixel over tailnet).
 
 ✓ Done-when: on the Pixel, over tailnet, Kenja opens the PWA → sees today-view, reads a
 promoted thread, captures a thought from inside it — all three demonstrated.
@@ -264,6 +267,11 @@ Ships:
 - **Discord bot**: minimal bot; DM or dedicated channel → POST `/capture`
   (`source: discord`). Kenja action: ⏱ ~10 min — create the bot token + invite it.
 - Both ramps idempotent and append-only; ingestion ledgers in `.index` (§1 dedupe, §9).
+
+**Status (2026-07-06, agent):** code + tests shipped on `main` — `pkms ingest email`,
+`pkms discord-bot`, oracles in `tests/test_email_ingest.py` + `tests/test_discord_capture.py`,
+activation doc at `docs/email-discord-setup.md`. Remaining is Kenja wiring only
+(Gmail app password + Discord bot token).
 
 ✓ Done-when: an email sent from a work-ish context and a Discord DM both appear in
 `vault/inbox/` and in the next /fold run.
@@ -298,11 +306,9 @@ when picked up.
   PKMS vault. Coordination point with content-hoarder (the triage inbox / system of record
   for raw saves — [[40-handoff-content-hoarder]]); must preserve the sacred zero-decision
   capture path (classification happens after the dump, never as a prompt at capture time).
-- **Inbox surface in the new-tab/PWA** *(Kenja, 2026-06-29)* — show recent
-  `vault/inbox/` captures as a calm surface/card row, not just the "N new to fold in"
-  count. Must preserve inbox-as-progress copy: no backlog pile, no unread badge, and each
-  item should offer one gentle action (open, fold later, or start `/fold`). Reactivation:
-  when returning to frontend polish after the reading/open-note path is stable.
+- **Inbox surface in the new-tab/PWA** *(Kenja, 2026-06-29)* — ✅ shipped 2026-07-04
+  as packet P2(b): density-gated `#inbox-surface` + `GET /api/inbox-items`. Left here
+  only as history; do not re-open.
 
 ## Icebox (Phase 3 carries + later additions)
 

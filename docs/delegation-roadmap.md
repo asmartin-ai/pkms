@@ -136,17 +136,13 @@ git log --oneline -10 main
 .venv\Scripts\python.exe -m pytest -q   # record the real baseline number
 ```
 
-Snapshot (verify, don't trust): slices 1–6 shipped; slice 7 (phone PWA) has
-the full web front end live (real capture, reading/recognition APIs,
-persistent resurface actions) but **no device-level proof yet**. Suite was
-372 passing. Branch `feat/uiux-redesign` holds the complete **Lamplight**
-visual redesign (dark umber room, one amber-lit object per surface), verified
-in a desktop preview at Pixel-6 viewport, awaiting Kenja's device review —
-not merged. The working tree also carried Kenja's separate publication-safety
-edits (options.html, several tests, staged `spike/` deletions): if still
-present, leave them strictly alone. Known-open sweep items: B6 (CRLF strip
-one-liner), I4 (ruff rule-policy pass). `DESIGN.md` still describes the
-pre-Lamplight visual system until P0 lands.
+Snapshot (verify, don't trust — re-run the ritual): as of 2026-07-12, slices
+1–8 agent-complete on `main`, Lamplight merged, suite **431 green**. Slice 7
+device proof + Slice 8 credential wiring remain Kenja-hands
+(`docs/kenja-gates.md`). P4 agent-half shipped (area tiles); content half
+blocked on which areas Kenja wants. M1/M2/M3/M5 maintenance done. S1 is
+decision-gated (`docs/s1-notifications-decision-gates.md`). Do not invent
+life-area notes or start a Life-OS dashboard from here.
 
 ---
 
@@ -157,11 +153,11 @@ agent-side prep, then end with the single ▶ Kenja action.
 
 | # | Action | ⏱ | Gates |
 |---|---|---|---|
-| K1 | Review Lamplight on real devices (Firefox ext new tab + Pixel PWA), verdict merge/fix | ~10 min | P0 |
+| K1 | Review Lamplight on real devices (Firefox ext new tab + Pixel PWA), verdict merge/fix | ~10 min | P0 — **done 2026-07-04; Lamplight merged** |
 | K2 | Pixel HTTP-Shortcuts capture tile setup (`docs/pixel-capture-setup.md`) | ~10 min | P1 |
 | K3 | Google Keep master-token dance (`docs/keep-setup.md`) | ~5 min | scheduled Keep pull |
-| K4 | D1: pick email-in address shape (plus-alias+label vs dedicated) | ~1 min | P3 |
-| K5 | Discord bot token + invite | ~10 min | P3 |
+| K4 | D1: pick email-in address shape (plus-alias+label vs dedicated) | ~1 min | P3 — plus-alias path documented in `docs/email-discord-setup.md`; still needs live wiring |
+| K5 | Discord bot token + invite | ~10 min | P3 — code ready; token still Kenja |
 | K6 | Reddit script app at reddit.com/prefs/apps (F2 fresh-URL promote) | ~10 min | icebox |
 
 ---
@@ -195,6 +191,9 @@ re-synced). Suite green at 372. **K1 (device verdict) still blocks the rest of P
 (merge + DESIGN.md rewrite happen after Kenja's review). Branch `feat/uiux-redesign`
 carries the fix; not merged.
 
+**Status (2026-07-04, later):** K1 approved; `feat/uiux-redesign` merged to `main`
+(`5bf7f15`). DESIGN.md rewritten for Lamplight (`46551d5`). P0 closed.
+
 ### P1 — Slice-7 close-out: prove it on the Pixel
 ⏱ medium sitting · depends: P0 merged · branch `feat/pixel-proof`
 ▶ Write `docs/pixel-pwa-setup.md`: exact steps for Kenja — tailscale serve
@@ -216,6 +215,9 @@ landed; `build-plan.md` slice-7 row flipped to ✓ with a dated note.
 slice-7 device actions, failure-mode table (gesture-nav deadzones, keyboard-
 overlap, SW cache, theme-color), build-plan row flip procedure. **K1 + the live
 run still block close-out.** Agent side is done; everything remaining needs Kenja.
+
+**Status (2026-07-12):** Lamplight merge removed the K1 block. Remaining P1
+close-out is still the live Pixel proof only (`docs/kenja-gates.md`).
 
 ### P2 — Web surface completion (recognition-first search + inbox surface)
 ⏱ one heavy sitting · depends: P0 · branch `feat/web-surfaces`
@@ -281,6 +283,11 @@ the parsing/ledger units; the Gmail/Discord auth wiring stays first-party.
 ✓ Done-when: an email and a Discord DM each land in `vault/inbox/` (proven
 on a synthetic run + one real message Kenja sends), appear in the next
 /fold, suite green, `build-plan.md` row flipped.
+
+**Status (2026-07-06, agent):** code + oracles shipped on `main` —
+`pkms ingest email`, `pkms discord-bot` (`979d848`), activation doc
+(`e360540`). Synthetic path green; real email + Discord DM still need Kenja
+credentials (K4/K5).
 
 ### P4 — F2: area tiles + populate `vault/areas/`
 ⏱ one heavy sitting · depends: P0 (visual system), best after P2 · branch `feat/area-tiles`
@@ -361,9 +368,14 @@ coordination notes with the content-hoarder session, slice-shaped spec.
   `["E","F","I","S","UP","B"]` with per-file S101 ignores for tests and
   judged noqas (~345 findings — judgment work, not mechanical; do not
   delegate).
+  **Status (2026-07-12, agent):** enabled on `main` (`bc33d7e`) with
+  per-file ignores for tests. Residual lint is scripts/bakeoff-only.
 - **M3 — docs freshness**: after any packet ships, reconcile README /
   AGENTS.md / DESIGN.md statements it invalidated. Docs that describe dead
   reality are how future sessions get poisoned.
+  **Status (2026-07-12, agent):** README command list (`d020ed7`);
+  DESIGN.md Lamplight + Hearth gate status; build-plan + this roadmap
+  snapshot/status lines brought current.
 - **M5 — indexer non-UTF8 hardening**: `index_vault` dies with a raw
   UnicodeDecodeError if any vault `*.md` file isn't valid UTF-8
   (`frontmatter.load(md_path)` at indexer.py:27). Found 2026-07-06 while
