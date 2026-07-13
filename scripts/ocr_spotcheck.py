@@ -50,7 +50,7 @@ def main() -> int:
     for variant, text in SAMPLES.items():
         img = tmp / f"{variant}.png"
         render(text, variant, img)
-        out = subprocess.run(
+        out = subprocess.run(  # noqa: S603 — fixed argv, absolute tesseract path
             [str(TESSERACT), str(img), "stdout"],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
