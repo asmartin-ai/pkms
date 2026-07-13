@@ -18,7 +18,12 @@ def _insert(conn, **kw):
 
 
 def _fts_paths(conn, query):
-    return [r["path"] for r in conn.execute("SELECT path FROM notes_fts WHERE notes_fts MATCH ?", (query,))]
+    return [
+        r["path"]
+        for r in conn.execute(
+            "SELECT path FROM notes_fts WHERE notes_fts MATCH ?", (query,)
+        )
+    ]
 
 
 def test_schema_objects_created(index_dir):

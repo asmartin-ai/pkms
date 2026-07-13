@@ -25,7 +25,8 @@ def _project_root() -> Path:
         if (candidate / "vault").is_dir():
             return candidate
     raise SystemExit(
-        "No vault/ found in current directory or its parents. Set PKMS_HOME or cd into the PKMS project."
+        "No vault/ found in current directory or its parents. "
+        "Set PKMS_HOME or cd into the PKMS project."
     )
 
 
@@ -42,12 +43,24 @@ def index(verbose: bool = typer.Option(False, "--verbose", "-v")):
     console.print("[bold]Indexing vault…[/bold]")
     stats = index_vault(VAULT, INDEX, verbose=verbose)
     console.print(
-        f"[green]Done.[/green] {stats['notes']} notes, {stats['links']} links, {stats['tasks']} tasks"
+        f"[green]Done.[/green] {stats['notes']} notes, {stats['links']} links, "
+        f"{stats['tasks']} tasks"
     )
 
 
 @app.command()
-def search(query: str, limit: int = typer.Option(20, "--limit", "-n"), raw: bool = typer.Option(False, "--raw", help="Pass the query straight to FTS5 (boolean operators, prefixes). Power-user escape hatch; literal-by-default stays the contract.")):
+def search(
+    query: str,
+    limit: int = typer.Option(20, "--limit", "-n"),
+    raw: bool = typer.Option(
+        False,
+        "--raw",
+        help=(
+            "Pass the query straight to FTS5 (boolean operators, prefixes). "
+            "Power-user escape hatch; literal-by-default stays the contract."
+        ),
+    ),
+):
     """Full-text search across all notes."""
     from .search import search as _search
 
@@ -108,7 +121,8 @@ def tasks(
             console.print("[dim]nothing has sat long enough to reshape.[/dim]")
             return
         console.print(
-            "  [bold]been quiet a while[/bold] [dim]— the briefing offers at most one, reshaped smaller[/dim]"
+            "  [bold]been quiet a while[/bold] "
+            "[dim]— the briefing offers at most one, reshaped smaller[/dim]"
         )
         for r in rows:
             title = r["title"] or Path(r["note_path"]).stem
@@ -215,7 +229,8 @@ def resurface(
         target = resolve_note(not_now or let_go, INDEX)
         if not target:
             console.print(
-                f"[yellow]couldn't find[/yellow] {escape(not_now or let_go)} — try the path shown by pkms resurface"
+                f"[yellow]couldn't find[/yellow] {escape(not_now or let_go)}"
+                f" — try the path shown by pkms resurface"
             )
             raise typer.Exit(1)
         if not_now:
@@ -332,7 +347,8 @@ def today():
 def _print_promoted(result: dict[str, Any]) -> None:
     rel = result["note"].relative_to(VAULT).as_posix()
     console.print(
-        f"[green]promoted ✓[/green] vault/{rel}  [dim]· queued · ~{result['minutes']} min read[/dim]"
+        f"[green]promoted ✓[/green] vault/{rel}"
+        f"  [dim]· queued · ~{result['minutes']} min read[/dim]"
     )
     console.print(
         "[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]"
@@ -390,7 +406,7 @@ def promote(query: str):
 
 @app.command()
 def serve(
-    host: str = typer.Option("0.0.0.0", "--host"),
+    host: str = typer.Option("0.0.0.0", "--host"),  # noqa: S104
     port: int = typer.Option(8765, "--port", "-p"),
     token: str = typer.Option(
         "",
@@ -422,7 +438,7 @@ def ingest_keep_cmd():
                 "[yellow]keep login failed[/yellow] — the master token may have "
                 "expired; docs/keep-setup.md has the refresh steps"
             )
-            raise typer.Exit(1)
+            raise typer.Exit(1) from e
         raise
     console.print(f"[dim]{render_report(report)}[/dim]")
 
@@ -497,7 +513,7 @@ def daily(
     console.print(f"[green]Created[/green] {path}" if created else f"{path}")
     if open_editor:
         editor = os.environ.get("EDITOR", "notepad")
-        subprocess.Popen([editor, str(path)])
+        subprocess.Popen([editor, str(path)])  # noqa: S603
 
 
 @app.command()
@@ -519,7 +535,7 @@ def new(
     path.write_text(f"---\ntitle: {title}\ncreated: {today}\ntags: []\n---\n\n# {title}\n\n")
     console.print(f"[green]Created[/green] {path}")
     editor = os.environ.get("EDITOR", "notepad")
-    subprocess.Popen([editor, str(path)])
+    subprocess.Popen([editor, str(path)])  # noqa: S603
 
 
 if __name__ == "__main__":  # enables `pythonw -m pkms.cli serve` from the startup shortcut

@@ -9,7 +9,7 @@ or any other tests/ file.
   F6  — indexed note paths must use '/' separators (URL-safe), never '\\'.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from typer.testing import CliRunner
 
@@ -27,7 +27,7 @@ def test_b5_day_uses_utc():
     # local clock is still on the 13th, so a local-tz conversion renders the wrong day.
     epoch = 1699921800
     local_day = datetime.fromtimestamp(epoch).date().isoformat()
-    utc_day = datetime.fromtimestamp(epoch, tz=timezone.utc).date().isoformat()
+    utc_day = datetime.fromtimestamp(epoch, tz=UTC).date().isoformat()
     assert local_day != utc_day, (
         "this machine's tz has a zero UTC offset for this epoch, so the bug is "
         "invisible here — the B5 oracle needs a tz with a non-zero offset"

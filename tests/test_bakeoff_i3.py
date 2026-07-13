@@ -49,4 +49,6 @@ def test_i3_both_sites_delegate_to_shared_helper():
 
     # the duplicated ranking query must no longer live inline at either call site
     assert "GROUP BY t.note_path" not in cli_src, "inline ranking SQL still duplicated in cli.py"
-    assert "GROUP BY t.note_path" not in today_src, "inline ranking SQL still duplicated in today.py"
+    assert "GROUP BY t.note_path" not in today_src, (
+        "inline ranking SQL still duplicated in today.py"
+    )
