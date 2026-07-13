@@ -1,8 +1,8 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-12 (life-os architecture alignment). Slices 1–8 + P4
-agent-half complete; Lamplight merged; M2 done; 431 green. All remaining
-near-term gates are Kenja-hands — consolidated in `docs/kenja-gates.md`.*
+*Updated 2026-07-12 (agent overnight: M3 docs freshness + residual ruff).
+Slices 1–8 + P4 agent-half complete; Lamplight merged; M1–M3/M5 done; 431
+green. All remaining near-term gates are Kenja-hands — `docs/kenja-gates.md`.*
 
 ## Current focus — activate Slices 7+8, then Phase 5 dogfood
 
@@ -43,6 +43,9 @@ from here.
 - **Keep link overflow.** Route standalone YouTube/link saves toward
   content-hoarder; Keep stays a notes ramp (`docs/keep-setup.md` +
   life-os `docs/onramps.md`).
+- **Hearth type/token convergence.** Atkinson→Lexend, Plex Mono→JetBrains
+  Mono, token renames. Rides the next scheduled front-end packet
+  (DESIGN.md §Hearth Convergence). Not blocking activation.
 
 ## Blocked on Kenja (decision gates)
 
@@ -77,7 +80,7 @@ from here.
 
 ## Branch state
 
-- `main` — slices 1–8 + Lamplight merge + P4 agent-half + M2 ruff pass complete;
+- `main` — slices 1–8 + Lamplight merge + P4 agent-half + M1–M3/M5 complete;
   **431 green**; local commits pending push.
 - `delegated/run-2026-07-05-glm52-headless-investigation` (local-only) — bakeoff
   artifacts.

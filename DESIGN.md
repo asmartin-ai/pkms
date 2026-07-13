@@ -19,8 +19,8 @@ else. It should feel like a trusted desk note: readable, finite, and forgiving.
   `VISUAL-LANGUAGE.md` "Hearth" canon, accepted 2026-07-03). It lands unchanged
   as PKMS's visual layer. Build report: `docs/redesign/fable-report.md`;
   direction pick rationale: `docs/redesign/fable-directions.md`.
-- **Scope.** This document describes the shipped Lamplight system on
-  `feat/uiux-redesign` (post-2026-07-02 redesign). When tokens or components
+- **Scope.** This document describes the shipped Lamplight system on `main`
+  (merged 2026-07-04 from `feat/uiux-redesign`). When tokens or components
   change, update this file in the same commit.
 
 ## Design Principles
@@ -229,10 +229,11 @@ shared system:
 Plus token renames to the Hearth schema. These ride the next scheduled front-end
 packet (token-level, no dedicated repaint). The display face (Bricolage Grotesque)
 and all color tokens stay. Until that packet lands, this document describes the
-current Lamplight reality on `feat/uiux-redesign`.
+current Lamplight reality on `main`.
 
-**Gate status (2026-07-12):** K1 (device verdict) still blocks the Lamplight merge.
-DESIGN.md rewrite (P0 scope) happens after merge approval.
+**Gate status (2026-07-12):** Lamplight is merged. Remaining visual work is the
+Hearth type/token convergence above — not a dedicated repaint, and not blocking
+activation or Phase 5.
 
 ## Detector Scope
 
