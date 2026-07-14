@@ -170,6 +170,9 @@ def test_search_terms_are_not_ids():
 
 
 def test_readonly_uri_handles_windows_extended_paths():
+    import platform
+    if platform.system() != "Windows":
+        pytest.skip("Windows extended-path test requires Windows")
     uri = _sqlite_readonly_uri(Path(r"\\?\O:\Temp\pkms space\app.db"))
     assert uri == "file:/O:/Temp/pkms%20space/app.db?mode=ro"
 
