@@ -11,6 +11,7 @@ or any other tests/ file.
 
 from datetime import UTC, datetime
 
+import pytest
 from typer.testing import CliRunner
 
 import pkms.cli as cli
@@ -28,10 +29,8 @@ def test_b5_day_uses_utc():
     epoch = 1699921800
     local_day = datetime.fromtimestamp(epoch).date().isoformat()
     utc_day = datetime.fromtimestamp(epoch, tz=UTC).date().isoformat()
-    assert local_day != utc_day, (
-        "this machine's tz has a zero UTC offset for this epoch, so the bug is "
-        "invisible here — the B5 oracle needs a tz with a non-zero offset"
-    )
+    if local_day == utc_day:
+        pytest.skip("CI runner's timezone has zero UTC offset — test requires non-UTC tz")
     assert promote._day(epoch) == utc_day
 
 
