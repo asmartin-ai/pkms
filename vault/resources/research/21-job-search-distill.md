@@ -104,7 +104,7 @@ how-to, and a "suggested first action." It was updated the same day as TODO.md.
 
 **Evidence:** HANDOFF.md, LastWriteTime 2026-06-09 17:26:27. The document is dense, structured, and
 cross-references TODO.md explicitly. The "Suggested first action" section ends with a concrete instruction:
-"Ask Aaron which of #7/#8/#10 to draft first … then proceed." The 2026-06-09 timestamp shows it was
+"Ask Kenja which of #7/#8/#10 to draft first … then proceed." The 2026-06-09 timestamp shows it was
 maintained alongside the rest of the session's work — not just written once and abandoned.
 
 **Source:** `K:\Projects\job-search-2026\HANDOFF.md`
@@ -205,7 +205,7 @@ re-run.
 The section is marked with a prominent pause note and an explicit rationale.
 
 **Evidence:** TODO.md lines 55–81. The section header is "## 🔁 The weekly engine (recurring — small,
-fixed, non-negotiable)." Immediately below it: "**⏸ APPLY ENGINE PAUSED (2026-06-09, Aaron's call):**
+fixed, non-negotiable)." Immediately below it: "**⏸ APPLY ENGINE PAUSED (2026-06-09, Kenja's call):**
 not yet decided on leaving the current job." The apply task is prefixed "(PAUSED)" and has a specific
 reactivation condition ("the day that decision flips to 'go'"). Study sessions and commit cadence remain
 active. The pause note includes the reason and the trigger to un-pause — a clean suspension, not an

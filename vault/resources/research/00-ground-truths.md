@@ -177,10 +177,10 @@ user to improve.
 
 ### C4. Open tasks seeded by this doc
 
-- [x] Aaron: answer Part B (any subset counts)
+- [x] Kenja: answer Part B (any subset counts)
 - [x] Claude: Sweep A — community anecdotes (HN/Reddit/YouTube/GitHub) → [[11-hn]], [[12-reddit]], [[13-youtube]], [[14-github]]
 - [x] Claude: Reddit MCP recommendation note → [[reddit-mcp-options]]
 - [x] Claude: Sweep B — Barkley + academic → [[15-barkley]], [[16-academic]] *(done 2026-06-10)*
 - [x] Claude: Sweep C — hoarder mining, landscape, seed links + mobile/sync + leftovers + job-search distill → [[17-hoarder-mining]], [[18-landscape]], [[19-seed-links]], [[20-mobile-sync]], [[21-job-search-distill]] *(done 2026-06-10)*
 - [x] Claude: synthesis → [[10-synthesis]] + theme notes [[30-theme-capture]]…[[37-theme-self-knowledge]] *(done 2026-06-10)*
-- [x] Aaron: Phase 2 reactions → [[05-reading-queue]] (▶ first action: react to [[30-theme-capture]], ≤10 min)
+- [x] Kenja: Phase 2 reactions → [[05-reading-queue]] (▶ first action: react to [[30-theme-capture]], ≤10 min)

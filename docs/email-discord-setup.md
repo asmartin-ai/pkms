@@ -5,15 +5,15 @@ idempotent — safe to run repeatedly, nothing is captured twice.
 
 ## Email-in (~2 min + one test send)
 
-Address shape (K4, decided 2026-07-05): plus-alias `aaronmartin638+pkms@gmail.com`
+Address shape (K4, decided 2026-07-05): plus-alias `you+pkms@gmail.com`
 with a Gmail label. The poller reads the **label**, not the address, so the future
 migration to a dedicated account is just new secrets + a new filter — no code change.
 
-1. Gmail → Settings → Filters → Create filter: **To** `aaronmartin638+pkms@gmail.com`
+1. Gmail → Settings → Filters → Create filter: **To** `you+pkms@gmail.com`
    → Apply label **`pkms`** (create it), optionally Skip Inbox.
 2. Create an app password at https://myaccount.google.com/apppasswords (requires 2FA).
 3. In the repo root, create two files (gitignored under `.secrets/`):
-   - `.secrets/email-address` — `aaronmartin638@gmail.com`
+   - `.secrets/email-address` — `you@gmail.com`
    - `.secrets/email-app-password` — the 16-char app password
 4. Run `pkms ingest email`. It prints `email: captured N, skipped M`.
    Different label: `pkms ingest email --label other-label`.
