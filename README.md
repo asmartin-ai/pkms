@@ -160,15 +160,19 @@ Project-local Claude skills still live under `.claude/skills/`:
 
 ## Publication safety
 
-PKMS is private-canonical by default: captures, daily notes, local vault state,
-indexes, exports, secrets, and machine paths must not be pushed raw. Before
-publishing or mirroring, read `docs/publication-safety.md` and build the
-allowlisted mirror:
+PKMS is split into two repos:
+
+- **`asmartin-ai/pkms-canonical`** (private) — canonical workspace with full vault state.
+  Work happens here; never push it raw to a public remote.
+- **`asmartin-ai/pkms`** (public) — sanitized mirror built from the allowlist. Push here
+  only after running the mirror build and safety checker.
 
 ```powershell
 python scripts/build_public_mirror.py
 python scripts/check_publication_safety.py --history
 ```
+
+Full policy: `docs/publication-safety.md`.
 
 ## License
 
