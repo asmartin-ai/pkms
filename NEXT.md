@@ -23,7 +23,7 @@ from here.
 
 ## Next actions (all Kenja — see `docs/kenja-gates.md`)
 
-1. **Push main** — local commits pending (asmartin-ai account). 1 min.
+1. **Push main** — ~~local commits pending (asmartin-ai account). 1 min.~~ ✅ done 2026-07-13.
 2. **Slice 8 activation** — `docs/email-discord-setup.md`. ~12 min.
 3. **Slice 7 device proof** — `docs/pixel-pwa-setup.md`. ~10 min.
 4. **Start Phase 5 dogfood clock** once 1–3 land — criteria in
@@ -81,7 +81,9 @@ from here.
 ## Branch state
 
 - `main` — slices 1–8 + Lamplight merge + P4 agent-half + M1–M3/M5 complete;
-  **431 green**; local commits pending push.
-- `delegated/run-2026-07-05-glm52-headless-investigation` (local-only) — bakeoff
-  artifacts.
-- Derivable: `git status -sb`, `git branch -vv`, `git log --oneline origin/main..main`.
+  **431 green**; pushed to both remotes.
+- `canonical` remote = `asmartin-ai/pkms-canonical` (private, full history).
+- `origin` remote = `asmartin-ai/pkms` (public mirror). Public pushes use
+  `scripts/build_public_mirror.py`; never push canonical main raw.
+- `delegated/run-2026-07-05-glm52-headless-investigation` (canonical-only) — bakeoff artifacts.
+- Derivable: `git remote -v`, `git status -sb`, `git log --oneline origin/main..main`.

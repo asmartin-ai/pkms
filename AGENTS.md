@@ -6,6 +6,21 @@ This file is the repo-local source of truth for agents that understand the AGENT
 
 ---
 
+## Remote setup
+
+This local clone works against two GitHub remotes:
+
+| Remote | URL | Visibility | Role |
+|--------|-----|------------|------|
+| `canonical` | `asmartin-ai/pkms-canonical` | **private** | Full vault state — push work here |
+| `origin` | `asmartin-ai/pkms` | public | Sanitized mirror — push via `scripts/build_public_mirror.py` |
+
+**Rule:** push canonical `main` to `canonical` (private). Never push canonical raw to
+`origin` (public). Public updates use the mirror build pipeline. Full policy:
+`docs/publication-safety.md`.
+
+---
+
 # PKMS — Personal Knowledge Management System
 
 ## Project overview

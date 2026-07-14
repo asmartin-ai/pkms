@@ -1,14 +1,13 @@
 # PKMS publication safety
 
-> Snapshot as of 2026-07-01 for current repo visibility/recommendation. The
-> publication boundary and generated-mirror workflow are normative policy.
+> Snapshot as of 2026-07-13. The publication boundary and generated-mirror
+> workflow are normative policy. **The split is now live:** `asmartin-ai/pkms-canonical`
+> (private, full vault state) and `asmartin-ai/pkms` (public, sanitized mirror).
 
-PKMS has two kinds of state:
+PKMS has two repos:
 
-- **Canonical private workspace:** the full local repo/vault, including captures, daily notes, personal notes, generated indexes, tokens, local paths, and any research that has not been explicitly scrubbed.
-- **Public mirror:** a generated export made from an allowlist. It is safe to publish only after running the publication safety checker and reviewing any findings.
-
-Do **not** push a private canonical checkout directly to a public remote. Treat `asmartin-ai/pkms` as the current public surface and, after a future private canonical repo exists, as the public mirror target.
+- **`pkms-canonical`** (private): the full local repo/vault, including captures, daily notes, personal notes, generated indexes, tokens, local paths, and unscrubbed research. **This is where work happens.** Never push it to a public remote.
+- **`pkms`** (public): the public mirror. Push here only after running the mirror build and safety checker.
 
 ## Public/private boundary
 
