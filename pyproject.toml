@@ -13,6 +13,7 @@ dependencies = [
     "python-frontmatter>=1.1",
     "watchdog>=4",
     "gkeepapi>=0.17",
+    "typing-extensions>=4",
 ]
 
 [project.optional-dependencies]

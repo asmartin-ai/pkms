@@ -28,8 +28,10 @@ import secrets
 import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import cast, override
+from typing import cast
 from urllib.parse import parse_qs, urlparse
+
+from typing_extensions import override
 
 from .capture import write_capture
 from .db import connect
