@@ -353,6 +353,25 @@ classification happens AFTER the dump — the capture path gains zero
 decisions. Deliverable: routing-table spec (what goes where, what stays),
 coordination notes with the content-hoarder session, slice-shaped spec.
 
+### S3 — Promotion ingest from content-hoarder (added 2026-07-20)
+Direction is now recorded: life-os ADR 0027 (Proposed) — Option C hybrid.
+content-hoarder's promotion-card fixture is click-test proven (CH#72 closed;
+life-os ADRs 0016/0017/0025/0026 Accepted). PKMS side is the destination spec:
+- **Destination:** `vault/inbox/` — promotion is a capture, it enters the one
+  inbox like every other ramp (Decision 0003); classification happens after.
+- **Envelope:** life-os `docs/contracts.md` `capture` contract — `id`,
+  `captured_at`, `source` (= `content-hoarder`), `source_account_id`,
+  `raw_text`, `raw_ref`, `context.{device,app}`.
+- **Provenance:** two-hop `source_span` — PKMS note → content-hoarder item id →
+  original URL. Never flatten to the original URL only; the CH hop carries
+  tags/decay/receipt state.
+- **Out of scope:** unsave-on-source (deferred behind CH `action_receipt`
+  infra per ADR 0027 §Decision.3); any auto-promote-on-save (Option B rejected).
+Deliverable: slice-shaped spec appended to `build-plan.md` (transport — file
+drop vs `POST /capture` — is the main open question; capture path gains zero
+decisions either way). Build is a separate packet. Coordinate with S2's
+routing table; read `vault/resources/research/40-handoff-content-hoarder.md`.
+
 ---
 
 ## 7. Maintenance lane (fill spare capacity; never displaces a P-packet)

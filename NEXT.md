@@ -25,10 +25,16 @@ testbed. That role belongs to content-hoarder (life-os ADR 0013).
 
 ## After dogfood (not now)
 
-- **Promotion ingest path.** When content-hoarder's promotion-card fixture
-  exists, define the PKMS-side destination.
+- **Promotion ingest path — UNBLOCKED 2026-07-20.** content-hoarder's
+  promotion-card fixture is click-test proven (CH#72 closed) and life-os
+  ADR 0027 (Proposed) records the direction: Option C hybrid — promote via
+  triage sprint into PKMS `vault/inbox/`, capture envelope per life-os
+  `docs/contracts.md`, two-hop `source_span` (PKMS → CH item → original URL),
+  unsave-on-source deferred behind `action_receipt`. Next: PKMS-side
+  promotion-ingest spec (destination, envelope mapping) — see
+  `docs/delegation-roadmap.md`.
 - **Today-card / resurface consumption.** Fixture-first; no live ranking
-  until content-hoarder proves the card.
+  content-hoarder proves card.
 - **Hearth type/token convergence.** Atkinson→Lexend, Plex Mono→JetBrains
   Mono, token renames. Rides the next scheduled front-end packet.
 - **Keep link overflow.** Route standalone YouTube/link saves toward
