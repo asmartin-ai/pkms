@@ -1,8 +1,30 @@
 # NEXT.md — PKMS current focus
 
-*Updated 2026-07-14 (session wrap-up). CI green. Email capture live.
-Private/public repo split complete. Slices 1–8 agent-complete; P4
-agent-half complete; Lamplight merged; 431 green.*
+*Updated 2026-07-26 (session wrap-up). Keep onramp shipped (ADR 0028).
+CI green. 273 tests passed after UV migration; uv.lock committed.
+Free-pool swarm confirmed gkeepapi v0.17.1 is actively maintained.*
+
+## Session wrapup — 2026-07-26 (Google Keep onramp + UV migration)
+
+**Shipped:** Three-path Keep onramp per life-os ADR 0028:
+- `pkms ingest keep-takeout <zip>` — bulk Takeout import (no auth, idempotent)
+- `pkms ingest keep` — live incremental sync via gkeepapi
+- `pkms ingest keep-sweep [--apply]` — destructive sweep; DRY RUN DEFAULT
+
+**Load-bearing safety:** a Keep note never imported is NEVER deleted
+(`test_apply_never_deletes_uncaptured_note`). 32 keep tests, 273 full suite.
+Attachments mirrored to K:\MediaMirror\keep\ (sha256, file:// links).
+
+**UV migration:** `uv.lock` committed (38 packages). `uv sync --all-extras`
+reuses `.venv`. `typer>=0.16` floor bumped.
+
+**Next for the user:**
+1. Generate Takeout ZIP at takeout.google.com (Keep only)
+2. `pkms ingest keep-takeout <zip>` → ~200 notes into vault/inbox/
+3. `pkms ingest keep-sweep --age-days 30` (dry-run); review; `--apply` if good
+
+**Discord bot + Pixel PWA still pending** (Slice 7+8 activation, unblocked).
+**Promotion ingest path** still per ADR 0027 (unblocked, deferred behind dogfood).
 
 ## Current focus — finish Slice 7+8 activation, then Phase 5 dogfood
 
