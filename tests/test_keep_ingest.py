@@ -1,6 +1,7 @@
 """Keep ingest: baseline-prime, ledger dedupe, OCR-at-ingest, honest reports."""
 
 from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
 
@@ -71,24 +72,27 @@ def test_title_lands_above_text_and_trashed_skipped(project):
 def test_image_downloaded_and_ocr_text_inlined(project, monkeypatch):
     vault, index_dir, root = project
     append_ledger(index_dir, ["seed"])
-    monkeypatch.setattr(ki, "_download", lambda url, dest: dest.write_bytes(b"jpg"))
+    # New seam: _download_bytes returns bytes; code hashes + writes to sha-named file.
+    monkeypatch.setattr(ki, "_download_bytes", lambda url: b"\xff\xd8fake-jpg-bytes")
     monkeypatch.setattr(ki, "extract_text", lambda p: "words inside the image")
+    media = root / "media"
     keep = FakeKeep([note("i1", text="see pic", images=[SimpleNamespace(id="blob1")])])
-    report = ingest_keep(vault, index_dir, root, keep=keep)
+    report = ingest_keep(vault, index_dir, root, keep=keep, media_dir=media)
     assert report["images"] == 1 and report["ocr_missing"] == 0
-    assert (vault / "media" / "keep" / "i1_0.jpg").read_bytes() == b"jpg"
+    # file::// link to off-vault mirror
     body = next((vault / "inbox").glob("*.md")).read_text(encoding="utf-8")
-    assert "![keep image](../media/keep/i1_0.jpg)" in body
     assert "words inside the image" in body
+    assert "![keep attachment](file:///" in body
 
 
 def test_missing_ocr_engine_is_disclosed_not_fatal(project, monkeypatch):
     vault, index_dir, root = project
     append_ledger(index_dir, ["seed"])
-    monkeypatch.setattr(ki, "_download", lambda url, dest: dest.write_bytes(b"jpg"))
+    monkeypatch.setattr(ki, "_download_bytes", lambda url: b"\xff\xd8fake-jpg-bytes")
     monkeypatch.setattr(ki, "extract_text", lambda p: None)  # no engine
+    media = root / "media"
     keep = FakeKeep([note("i2", images=[SimpleNamespace(id="b")])])
-    report = ingest_keep(vault, index_dir, root, keep=keep)
+    report = ingest_keep(vault, index_dir, root, keep=keep, media_dir=media)
     assert report["new"] == 1 and report["ocr_missing"] == 1
     assert "saved unread" in render_report(report)
 
@@ -96,24 +100,29 @@ def test_missing_ocr_engine_is_disclosed_not_fatal(project, monkeypatch):
 def test_failed_download_keeps_image_in_keep_and_says_so(project, monkeypatch):
     vault, index_dir, root = project
     append_ledger(index_dir, ["seed"])
-    def boom(url, dest):
+
+    def boom(url):
         raise OSError("network")
-    monkeypatch.setattr(ki, "_download", boom)
+
+    monkeypatch.setattr(ki, "_download_bytes", boom)
+    media = root / "media"
     keep = FakeKeep([note("i3", text="txt", images=[SimpleNamespace(id="b")])])
-    report = ingest_keep(vault, index_dir, root, keep=keep)
+    report = ingest_keep(vault, index_dir, root, keep=keep, media_dir=media)
     assert report["media_failed"] == 1
     assert "they stay in Keep" in render_report(report)
 
 
 def test_no_token_reports_setup_needed(project):
     vault, index_dir, root = project
-    report = ingest_keep(vault, index_dir, root)  # no .secrets at all
-    assert report == {"setup_needed": True}
+    # no .secrets files; keep=None triggers the early return
+    report = ingest_keep(vault, index_dir, root, keep=None)
+    assert report["setup_needed"] is True
     assert "keep-setup.md" in render_report(report)
 
 
 def test_nothing_new_copy_is_quiet(project):
     vault, index_dir, root = project
-    append_ledger(index_dir, ["a1"])
+    append_ledger(index_dir, ["a1"])  # past baseline
     report = ingest_keep(vault, index_dir, root, keep=FakeKeep([note("a1")]))
+    assert report["new"] == 0
     assert render_report(report) == "keep: nothing new"

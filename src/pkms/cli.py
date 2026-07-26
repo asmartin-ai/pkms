@@ -443,6 +443,75 @@ def ingest_keep_cmd():
     console.print(f"[dim]{render_report(report)}[/dim]")
 
 
+@ingest_app.command("keep-takeout")
+def ingest_keep_takeout_cmd(
+    zip_path: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    media_dir: Path | None = typer.Option(
+        None, "--media-dir", help="Override PKMS_KEEP_MEDIA_DIR for this run"
+    ),
+):
+    """One-shot bulk import of a Google Takeout ZIP into vault/inbox/.
+
+    Read-only against the ZIP and against Google Keep. Attachments are
+    mirrored to PKMS_KEEP_MEDIA_DIR (default K:\\MediaMirror\\keep\\) and
+    referenced from the capture via file:// links. Re-runs are idempotent.
+    """
+    from .keep_takeout import import_takeout, render_takeout_report
+
+    report = import_takeout(zip_path, VAULT, INDEX, media_dir=media_dir)
+    console.print(f"[dim]{render_takeout_report(report)}[/dim]")
+    if report["errors"]:
+        for err in report["errors"][:5]:
+            console.print(f"  [dim]! {err}[/dim]")
+        if len(report["errors"]) > 5:
+            console.print(f"  [dim]... and {len(report['errors']) - 5} more[/dim]")
+
+
+@ingest_app.command("keep-sweep")
+def ingest_keep_sweep_cmd(
+    age_days: int = typer.Option(30, "--age-days", min=1, help="Minimum age in days"),
+    apply: bool = typer.Option(False, "--apply", help="Actually delete from Keep."),
+):
+    """Delete (or report on) captured Keep notes that are old + unpinned.
+
+    A note is eligible when ALL of the following are true:
+      - it has been captured into the vault (per the keep_completed index),
+      - the original Keep createdAt is older than --age-days,
+      - it is not pinned (live snapshot),
+      - it is not trashed or archived (live check).
+
+    The default is DRY RUN. Pass --apply to actually call gkeepapi's delete.
+    The destructive path is gated on this flag; there is no implicit
+    deletion. Notes grandfathered by the v3->v4 schema migration (NULL
+    keep_created_at) are always skipped — they have no age data, so
+    never eligible.
+    """
+    from .keep_ingest import (
+        make_keep,
+        read_secret,
+        render_sweep_report,
+        sweep_old_unpinned,
+    )
+
+    email = read_secret(_ROOT, "keep-email")
+    token = read_secret(_ROOT, "keep-master-token")
+    if not email or not token:
+        console.print(
+            "[yellow]keep isn't connected yet[/yellow] — docs/keep-setup.md has "
+            "the one-time setup (~5 min)"
+        )
+        raise typer.Exit(1)
+
+    keep = make_keep(email, token, INDEX)
+    report = sweep_old_unpinned(keep, INDEX, age_days=age_days, dry_run=not apply)
+    console.print(f"[dim]{render_sweep_report(report)}[/dim]")
+    if report.get("eligible_ids") and not apply:
+        console.print(
+            f"  [dim]re-run with --apply to delete {len(report['eligible_ids'])} "
+            f"note{'s' if len(report['eligible_ids']) != 1 else ''} from Keep[/dim]"
+        )
+
+
 @ingest_app.command("email")
 def ingest_email_cmd(
     label: str = typer.Option("pkms", "--label", "-l", help="Gmail label to poll"),

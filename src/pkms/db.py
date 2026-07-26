@@ -78,13 +78,22 @@ CREATE TABLE IF NOT EXISTS task_seen (
 -- append-only and cheap, but if a crash interrupts a batch the file alone
 -- cannot answer "which notes *completed* before the failure?" — the SQLite
 -- store can. The ingest code records here right after write_capture succeeds.
+--
+-- v4: source ('takeout' or 'live') + keep_created_at + pinned snapshot.
+-- The sweep needs the original Keep creation time to compute age; older
+-- rows pre-dating v4 will have NULL keep_created_at and are skipped by the
+-- sweep (they're grandfathered, which is the safe default for a destructive
+-- operation on the user's own data).
 CREATE TABLE IF NOT EXISTS keep_completed (
-    id          TEXT PRIMARY KEY,
-    completed_at TEXT NOT NULL
+    id              TEXT PRIMARY KEY,
+    completed_at    TEXT NOT NULL,
+    source          TEXT NOT NULL DEFAULT 'live',
+    keep_created_at TEXT,
+    pinned          INTEGER NOT NULL DEFAULT 0
 );
 """
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 def connect(index_dir: Path) -> sqlite3.Connection:
@@ -93,12 +102,22 @@ def connect(index_dir: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     # The index is a derived view: a pre-slice-5 tasks table is rebuilt, not
     # migrated in place — `pkms index` repopulates it from the vault.
-    if conn.execute("PRAGMA user_version").fetchone()[0] < SCHEMA_VERSION:
+    cur_version = conn.execute("PRAGMA user_version").fetchone()[0]
+    if cur_version < SCHEMA_VERSION:
         cols = {r[1] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()}
         if cols and "state" not in cols:
             conn.execute("DROP TABLE tasks")
+        # v3 -> v4: add source/keep_created_at/pinned to keep_completed.
+        # ALTER TABLE ADD COLUMN is non-destructive; existing rows get the
+        # column defaults (source='live', keep_created_at=NULL, pinned=0).
+        # NULL keep_created_at means "no age data" - the sweep skips these
+        # rows (grandfather clause for an already-imported set).
+        kc_cols = {r[1] for r in conn.execute("PRAGMA table_info(keep_completed)").fetchall()}
+        if kc_cols and "source" not in kc_cols:
+            conn.execute("ALTER TABLE keep_completed ADD COLUMN source TEXT NOT NULL DEFAULT 'live'")
+            conn.execute("ALTER TABLE keep_completed ADD COLUMN keep_created_at TEXT")
+            conn.execute("ALTER TABLE keep_completed ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0")
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-    conn.executescript(SCHEMA)
     conn.executescript(SCHEMA)
     conn.commit()
     return conn

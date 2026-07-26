@@ -174,6 +174,43 @@ Keep ingestion moves to the icebox with reactivation = "gkeepapi or official API
 on words that only exist inside the image.
 
 ---
+SWAP 155.=175:
+## Slice 4 — Keep ingest + OCR at ingest *(medium, extended 2026-07-26)*
+
+⏱ medium sitting · ▶ run F1: a live `gkeepapi` auth + list against the personal account
+
+Ships (F1-pass path):
+- `pkms ingest keep`: new Keep notes → inbox files (`source: keep`), media downloaded;
+  ingested-ID ledger in `.index` so dedupe is invisible (§1).
+- `pkms ingest keep-takeout <zip>` *(2026-07-26, ADR 0028)*: one-shot bulk import
+  of a Google Takeout ZIP — **recommended starting point** for any user with
+  pre-existing Keep history. No auth, idempotent on re-run. Brings all
+  history into the vault without the master-token blast radius.
+- `pkms ingest keep-sweep [--apply]` *(2026-07-26, ADR 0028)*: destructive
+  cleanup that trashes from Keep the captured notes that are old + unpinned.
+  **DRY RUN by default**; the load-bearing safety property is that a note
+  is never deleted unless `keep_completed` (the durable SQLite index)
+  records it as imported. Configurable `--age-days` (default 30).
+- **Attachments are mirrored to `K:\MediaMirror\keep\`** (Spec 10, sha256
+  filenames) and referenced from the capture via `file://` markdown image
+  links. Override with `PKMS_KEEP_MEDIA_DIR` env var.
+- **OCR at ingest** (research: "Hard Agree", promote early): image captures get extracted
+  text appended into the capture file at ingest — never a deferred backlog of
+  unsearchable images (§1, §9 bound-what-automation-produces). Engine picked at build
+  time (tesseract via winget vs. delegating to a local vision model — decided in-sitting,
+  whichever passes a 5-image accuracy spot-check).
+- Scheduled pull (Task Scheduler), with the quiet-disclosure rule: if a pull caps or
+  skips anything, it says so ambiently (§4 silent-toward-debt/honest-about-actions).
+
+F1-fail path: slice shrinks to OCR on inbox images + a documented manual Keep side door;
+Keep ingestion moves to the icebox with reactivation = "gkeepapi or official API becomes viable".
+
+✓ Done-when: a Keep note with an image, created on the phone, is findable by `pkms search`
+on words that only exist inside the image. (Extended 2026-07-26: a Takeout
+import brings ALL existing Keep notes into the vault, with attachments
+mirrored, before any live sync is enabled.)
+
+---
 
 ## Slice 5 — Task model: ⏱▶✓, states, reshape-before-fade
 
