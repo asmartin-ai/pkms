@@ -10,7 +10,8 @@ look-at-later pile (see keep_ingest.py).
 Output: each note -> one capture in `vault/inbox/`, with frontmatter that
 records the synthetic takeout id, the original Keep created/updated time, the
 pin/archive state, and any labels. Attachments are mirrored to the configured
-media directory (default `keep-media` per Spec 10, overridable via
+media directory (default `<repo-root>/keep-media` per Spec 10 — anchored at
+the project root, never the process cwd — overridable via
 `PKMS_KEEP_MEDIA_DIR`) and referenced from the capture via `file://`
 markdown image links.
 
@@ -60,13 +61,17 @@ def _load_takeout_ledger(index_dir: Path) -> set[str]:
         if ln.strip()
     }
 
-DEFAULT_MEDIA_DIR = Path(os.environ.get("PKMS_KEEP_MEDIA_DIR", "keep-media"))
+def _media_dir_from_env(root: Path) -> Path:
+    """Resolve the Keep attachments directory.
 
-
-def _media_dir_from_env() -> Path:
-    """Honor PKMS_KEEP_MEDIA_DIR if set; else the Spec 10 default."""
+    Precedence: `PKMS_KEEP_MEDIA_DIR` (set and non-empty) wins; otherwise
+    fall back to `<root>/keep-media` — anchored at the project root, never
+    the process cwd, so `pkms ingest keep-takeout` works from any directory.
+    """
     env = os.environ.get("PKMS_KEEP_MEDIA_DIR")
-    return Path(env) if env else DEFAULT_MEDIA_DIR
+    if env and env.strip():
+        return Path(env)
+    return root / "keep-media"
 
 
 def _parse_keep_timestamp(raw: Any) -> str | None:
@@ -212,6 +217,7 @@ def import_takeout(
     vault: Path,
     index_dir: Path,
     *,
+    root: Path | None = None,
     media_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Import all Keep notes from a Google Takeout ZIP.
@@ -228,7 +234,14 @@ def import_takeout(
     if not zip_path.is_file():
         raise FileNotFoundError(f"takeout zip not found: {zip_path}")
 
-    media_dir = Path(media_dir) if media_dir is not None else _media_dir_from_env()
+    if media_dir is None:
+        if root is None:
+            # Repo root for this package layout (src/pkms/keep_takeout.py) —
+            # keeps the default anchored at the project root, never the cwd.
+            root = Path(__file__).resolve().parents[2]
+        media_dir = _media_dir_from_env(root)
+    else:
+        media_dir = Path(media_dir)
     ledger = _load_takeout_ledger(index_dir)
 
     report: dict[str, Any] = {

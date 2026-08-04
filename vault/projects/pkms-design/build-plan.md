@@ -191,7 +191,7 @@ Ships (F1-pass path):
   **DRY RUN by default**; the load-bearing safety property is that a note
   is never deleted unless `keep_completed` (the durable SQLite index)
   records it as imported. Configurable `--age-days` (default 30).
-- **Attachments are mirrored to `/path/to/local-resource`** (Spec 10, sha256
+- **Attachments are mirrored to `<repo-root>/keep-media/`** (Spec 10, sha256
   filenames) and referenced from the capture via `file://` markdown image
   links. Override with `PKMS_KEEP_MEDIA_DIR` env var.
 - **OCR at ingest** (research: "Hard Agree", promote early): image captures get extracted

@@ -20,7 +20,8 @@ Behavior rules (apply to both paths):
 - **Attachments** are mirrored to the configured media directory (Spec 10
   convention) with sha256 filenames; the capture references them via
   `file://` markdown image links. The destination is overridable via the
-  `PKMS_KEEP_MEDIA_DIR` env var (default `keep-media`).
+  `PKMS_KEEP_MEDIA_DIR` env var (default `<repo-root>/keep-media`,
+  anchored at the project root — never the process cwd).
 - **Destructive sweep** — `sweep_old_unpinned()` deletes old+unpinned
   captured notes from Keep itself. Dry-run by default; the CLI requires
   `--apply` for the destructive path.
@@ -45,13 +46,17 @@ LEDGER = "keep-ledger.txt"
 STATE = "keep-state.json"
 SWEEP_STATE = "keep-sweep.json"
 
-DEFAULT_MEDIA_DIR = Path(os.environ.get("PKMS_KEEP_MEDIA_DIR", "keep-media"))
+def _media_dir(root: Path) -> Path:
+    """Resolve the Keep attachments directory.
 
-
-def _media_dir() -> Path:
-    """Honour PKMS_KEEP_MEDIA_DIR if set; else Spec 10 default."""
+    Precedence: `PKMS_KEEP_MEDIA_DIR` (set and non-empty) wins; otherwise
+    fall back to `<root>/keep-media` — anchored at the project root, never
+    the process cwd, so `pkms ingest keep` works from any directory.
+    """
     env = os.environ.get("PKMS_KEEP_MEDIA_DIR")
-    return Path(env) if env else DEFAULT_MEDIA_DIR
+    if env and env.strip():
+        return Path(env)
+    return root / "keep-media"
 
 
 def _attachment_link(dest: Path) -> str:
@@ -264,9 +269,9 @@ def ingest_keep(
     """Pull new Keep notes into vault/inbox/. Returns a report dict the CLI
     renders as one quiet line. Inject `keep` in tests.
 
-    `media_dir` defaults to PKMS_KEEP_MEDIA_DIR if set, else `keep-media`
-    (Spec 10). Attachments are mirrored with sha256 filenames and referenced
-    from the capture via file:// links.
+    `media_dir` defaults to PKMS_KEEP_MEDIA_DIR if set, else
+    `<root>/keep-media` (Spec 10). Attachments are mirrored with sha256
+    filenames and referenced from the capture via file:// links.
 
     Safety contracts:
     - First contact (ledger file absent) primes a baseline without ingesting.
@@ -289,7 +294,7 @@ def ingest_keep(
         assert email is not None and token is not None  # noqa: S101
         keep = make_keep(email, token, index_dir)
 
-    media_dir = Path(media_dir) if media_dir is not None else _media_dir()
+    media_dir = Path(media_dir) if media_dir is not None else _media_dir(root)
     ledger = load_ledger(index_dir)
     completed = completed_keep_ids(index_dir)
     seen = ledger | completed  # flat ledger union durable completed IDs

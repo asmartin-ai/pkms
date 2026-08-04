@@ -1,6 +1,6 @@
 # PKMS publication safety
 
-> Snapshot as of 2026-07-13. The publication boundary and generated-mirror
+> Snapshot as of 2026-08-04. The publication boundary and generated-mirror
 > workflow are normative policy. **The split is now live:** `asmartin-ai/pkms-canonical`
 > (private, full vault state) and `asmartin-ai/pkms` (public, sanitized mirror).
 
@@ -24,6 +24,8 @@ PRODUCT.md
 README.md
 pyproject.toml
 bin/pkms.cmd
+scripts/check_publication_safety.py
+scripts/build_public_mirror.py
 src/**
 tests/**
 .github/workflows/**
@@ -44,6 +46,7 @@ These paths must never be copied to the public mirror:
 ```text
 .secrets/**
 .index/**
+keep-media/
 .venv/**
 **/.venv/**
 .pytest_cache/**
@@ -73,6 +76,11 @@ exports/**
 spike/**
 .impeccable/live/sessions/**
 ```
+
+- `keep-media/` — the default Keep attachments dir, repo-root anchored
+  (`<repo-root>/keep-media/`). Covered by both `.gitignore` and the
+  checker's denylist, so attachments cannot leak into the mirror even if
+  the `PKMS_KEEP_MEDIA_DIR` env-var override fails.
 
 ### Needs scrub / private by default
 
@@ -131,13 +139,25 @@ python scripts/check_publication_safety.py --history         # also scan histori
 python scripts/check_publication_safety.py --mirror-manifest # print allowlisted mirror files
 ```
 
-The checker fails on:
+### Severities
 
-- tracked files matching the private denylist;
-- untracked, unignored private/generated files that `git add -A` could capture;
-- allowlisted mirror files that still match the denylist;
-- raw local path or credential-shaped content patterns; and
-- with `--history`, historical additions of private/generated path shapes.
+- **FAIL** (blocks publish, exit 1): tracked private path matches the
+  denylist; local path in a NON-scrub-suffix file; non-example raw email;
+  credential-shaped assignment; allowlist↔denylist overlap in the mirror
+  manifest; untracked-but-not-ignored denylist path.
+- **WARN** (exit 0): history findings only — paths matching
+  `HISTORY_RISK_PATTERNS` added in past commits but removed from the
+  current tree. Pre-existing (already public on origin) and unfixable
+  without a history rewrite (the user has authorized rewriting next).
+- **Exempt from content scan** (`SELF_REFERENTIAL` set in the checker):
+  `scripts/check_publication_safety.py`, `scripts/build_public_mirror.py`,
+  `tests/test_publication_safety.py` — these contain path/regex/fixture
+  literals by design; exempting them is load-bearing.
+- **Mirror-aware path exemption:** files with a suffix in `SCRUB_SUFFIXES`
+  = {.cmd, .css, .html, .json, .md, .toml, .txt, .yaml, .yml} skip
+  local-path checks because the mirror's `should_scrub` rewrites those
+  paths. Email and credential checks apply to every file regardless of
+  suffix.
 
 A failure does not automatically mean content must be deleted. Decide whether each finding should be scrubbed, moved to the future private canonical repo, explicitly accepted as public, or handled with a separate history rewrite.
 

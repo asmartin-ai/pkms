@@ -42,6 +42,7 @@ PUBLIC_ALLOWLIST = (
 PRIVATE_DENYLIST = (
     ".secrets/**",
     ".index/**",
+    "keep-media/",
     ".venv/**",
     "**/.venv/**",
     ".pytest_cache/**",
