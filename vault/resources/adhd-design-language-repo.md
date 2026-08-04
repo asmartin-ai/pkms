@@ -11,7 +11,7 @@ status: active
 The distilled, normative ADHD design principles shared between this PKMS and
 content-hoarder live in a standalone repo:
 
-**`K:\Projects\adhd-design-language`** — read `DESIGN-LANGUAGE.md` before designing
+**`/path/to/adhd-design-language`** — read `DESIGN-LANGUAGE.md` before designing
 any surface, flow, copy, or automation here.
 
 Rules of the bridge (full version in that repo's README):

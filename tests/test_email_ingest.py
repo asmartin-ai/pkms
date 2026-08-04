@@ -21,7 +21,7 @@ def _raw(subject: str, body: str, msg_id: str | None) -> bytes:
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "kenja@example.com"
-    msg["To"] = "you+pkms@gmail.com"
+    msg["To"] = "you+pkms@example.com"
     if msg_id is not None:
         msg["Message-ID"] = msg_id
     msg.set_content(body)

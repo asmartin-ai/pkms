@@ -13,7 +13,7 @@ PKMS now has three ways to get Keep notes into the vault:
 | `pkms ingest keep` | master token in `.secrets/` | Live incremental sync via gkeepapi. First run primes a baseline; new notes flow in from there. | After Takeout, to capture new notes as you make them. |
 | `pkms ingest keep-sweep [--apply]` | master token (destructive) | Trashes from Keep the captured notes that are old + unpinned. **Dry-run by default.** | Periodic cleanup once you trust the import. |
 
-**Attachments** are mirrored to `K:\MediaMirror\keep\` (Spec 10 pattern,
+**Attachments** are mirrored to `/path/to/local-resource` (Spec 10 pattern,
 sha256-named) and referenced from the capture via `file://` markdown
 image links. Override with `PKMS_KEEP_MEDIA_DIR` env var.
 
@@ -27,10 +27,10 @@ brings all your Keep history in one shot, and re-runs are idempotent.
 3. Click "Create export" → wait for the email → download the ZIP.
 4. Run:
    ```
-   pkms ingest keep-takeout K:\path\to\takeout-20260726.zip
+   pkms ingest keep-takeout /path/to/local-resource
    ```
 5. Verify in your vault: `vault/inbox/2026-*.md` captures, and
-   `K:\MediaMirror\keep\` has the attachments (sha256-named).
+   `/path/to/local-resource` has the attachments (sha256-named).
 
 You can re-run the importer any time with a fresh Takeout ZIP — the
 takeout ledger (`.index/keep-takeout-ledger.txt`) makes re-runs
@@ -162,6 +162,6 @@ records what it did in `.index/keep-sweep.json` for audit.
 
 ## See also
 
-- ADR 0028 (`K:\Projects\life-os\decisions\0028-google-keep-onramp.md`) —
+- ADR 0028 (`/path/to/local-resource`) —
   the design rationale and the safety-gate pattern
 - `keep_ingest.py` and `keep_takeout.py` in `src/pkms/`

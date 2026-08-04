@@ -56,17 +56,28 @@ def test_mirror_manifest_includes_allowlisted_paths_only():
 
 
 def test_content_risks_flag_realistic_publication_hazards():
+    # Path checks apply to non-scrubbed suffixes (.py); emails/credentials
+    # are checked for every suffix.
     text = """
     cd K:\\Projects\\PKMS
     database: K:/Projects/content-hoarder/data/app.db
     contact me at real.person@example.invalid
     REDDIT_CLIENT_SECRET=abc123abc123abc123
     """
-    risks = safety.content_risks("docs/example.md", text)
+    risks = safety.content_risks("src/pkms/example.py", text)
     assert any("local path: K:\\Projects\\PKMS" in risk for risk in risks)
     assert any("local path: K:/Projects/content-hoarder/data/app.db" in risk for risk in risks)
     assert any("raw email address: real.person@example.invalid" in risk for risk in risks)
     assert any("credential-shaped assignment" in risk for risk in risks)
+
+
+def test_content_risks_skip_path_check_for_scrubbed_suffixes():
+    # .md files are path-scrubbed by the mirror build, so local paths in them
+    # are not flagged here (they cannot leak). Emails/credentials still are.
+    text = "See K:\\Projects\\PKMS — email real.person@example.invalid"
+    risks = safety.content_risks("docs/example.md", text)
+    assert not any("local path" in r for r in risks)
+    assert any("raw email address: real.person@example.invalid" in r for r in risks)
 
 
 def test_content_risks_allow_documentation_placeholders():

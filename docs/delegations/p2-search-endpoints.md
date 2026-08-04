@@ -1,8 +1,8 @@
 # P2 delegation: recent-notes + search endpoints
 
-You are an executor working in the PKMS repo at K:\Projects\PKMS on a Windows
+You are an executor working in the PKMS repo at /path/to/PKMS on a Windows
 machine. CWD conventions are Windows backslash for executables, forward-slash
-for pytest *arguments*. The repo venv is at K:\Projects\PKMS\.venv.
+for pytest *arguments*. The repo venv is at /path/to/PKMS\.venv.
 
 ## Goal
 
@@ -137,13 +137,13 @@ inside the branch; just use them directly.
 ## Acceptance command
 
 ```
-K:\Projects\PKMS\.venv\Scripts\python.exe -m pytest tests/test_web_search_surfaces.py -q
+/path/to/PKMS\.venv\Scripts\python.exe -m pytest tests/test_web_search_surfaces.py -q
 ```
 
 After your changes, all 9 tests in that file should pass. Then run the full
 suite to confirm no regressions:
 ```
-K:\Projects\PKMS\.venv\Scripts\python.exe -m pytest -q
+/path/to/PKMS\.venv\Scripts\python.exe -m pytest -q
 ```
 The baseline before your changes was 372 passing + this oracle's 7 RED = 379
 collected, 372 passing. After: 379 collected, 379 passing (the 7 RED go green,

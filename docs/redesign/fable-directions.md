@@ -2,7 +2,7 @@
 
 Author: Fable 5 (executor), 2026-07-02.
 Brief: `docs/redesign/fable-uiux-brief.md`. Constraint spine:
-`K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` (referenced, not copied).
+`/path/to/adhd-design-language/DESIGN-LANGUAGE.md` (referenced, not copied).
 
 The current look ("Log Book II": warm cream paper, Cormorant serif, ochre
 accent) is being superseded. It is also, coincidentally, the single most common

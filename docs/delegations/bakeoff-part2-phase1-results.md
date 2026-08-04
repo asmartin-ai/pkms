@@ -2,7 +2,7 @@
 
 *Completed 2026-07-05. Phase 1 of the Part 2 bakeoff, activated by the content-hoarder
 completion signal on ntfy topic `kenja-bench-r7k2q9` at 07:30 CDT (message time 1783253691).
-Plan: `K:/Users/Kenja/Documents/LLM-dev/bakeoffs/PKMS-Part2-Correction-Cost-Validation-2026-07-04.md`.
+Plan: `/path/to/local-resource`.
 Raw data: `bakeoff/part2/results.csv` (22 Phase 1 runs + 3 Phase 0 smoke rows).*
 
 **Phase 1 only — Phase 2 (decision write-up + routing-table update) is the next step.**

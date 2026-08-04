@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -445,15 +445,16 @@ def ingest_keep_cmd():
 
 @ingest_app.command("keep-takeout")
 def ingest_keep_takeout_cmd(
-    zip_path: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
-    media_dir: Path | None = typer.Option(
-        None, "--media-dir", help="Override PKMS_KEEP_MEDIA_DIR for this run"
-    ),
+    zip_path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
+    media_dir: Annotated[
+        Path | None,
+        typer.Option("--media-dir", help="Override PKMS_KEEP_MEDIA_DIR for this run"),
+    ] = None,
 ):
     """One-shot bulk import of a Google Takeout ZIP into vault/inbox/.
 
     Read-only against the ZIP and against Google Keep. Attachments are
-    mirrored to PKMS_KEEP_MEDIA_DIR (default K:\\MediaMirror\\keep\\) and
+    mirrored to PKMS_KEEP_MEDIA_DIR (default `keep-media`) and
     referenced from the capture via file:// links. Re-runs are idempotent.
     """
     from .keep_takeout import import_takeout, render_takeout_report

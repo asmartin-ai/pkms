@@ -1,7 +1,7 @@
 # Task: implement `area_tiles` data source + `/api/area-tiles` endpoint
 
 ## Environment
-- User: Kenja. Repo: K:\Projects\PKMS (you are already inside it; use relative paths).
+- User: Kenja. Repo: /path/to/PKMS (you are already inside it; use relative paths).
 - Python package lives in `src/pkms/`. Tests in `tests/`.
 - Windows machine, but write portable code (pathlib, forward-slash posix output paths).
 

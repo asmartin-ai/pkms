@@ -10,8 +10,9 @@ look-at-later pile (see keep_ingest.py).
 Output: each note -> one capture in `vault/inbox/`, with frontmatter that
 records the synthetic takeout id, the original Keep created/updated time, the
 pin/archive state, and any labels. Attachments are mirrored to the configured
-media directory (default `K:\\MediaMirror\\keep\\` per Spec 10) and
-referenced from the capture via `file://` markdown image links.
+media directory (default `keep-media` per Spec 10, overridable via
+`PKMS_KEEP_MEDIA_DIR`) and referenced from the capture via `file://`
+markdown image links.
 
 The takeout id is `takeout:<sha256-of-source-json>`, not Google's internal
 note id (which Takeout doesn't include in older exports). The gkeepapi live
@@ -39,15 +40,27 @@ from typing import Any
 
 from .capture import write_capture
 from .keep_ingest import (
-    append_ledger,
     completed_keep_ids,
-    load_ledger,
     record_completed,
 )
 
 TAKEOUT_LEDGER = "keep-takeout-ledger.txt"
 
-DEFAULT_MEDIA_DIR = Path(r"K:\MediaMirror\keep")
+
+def _load_takeout_ledger(index_dir: Path) -> set[str]:
+    """Read the takeout ledger (keep-takeout-ledger.txt) into a set.
+    This is the source of truth for re-run idempotency — distinct from
+    keep_ledger.txt which tracks the gkeepapi live path."""
+    p = index_dir / TAKEOUT_LEDGER
+    if not p.exists():
+        return set()
+    return {
+        ln.strip()
+        for ln in p.read_text(encoding="utf-8").splitlines()
+        if ln.strip()
+    }
+
+DEFAULT_MEDIA_DIR = Path(os.environ.get("PKMS_KEEP_MEDIA_DIR", "keep-media"))
 
 
 def _media_dir_from_env() -> Path:
@@ -216,7 +229,7 @@ def import_takeout(
         raise FileNotFoundError(f"takeout zip not found: {zip_path}")
 
     media_dir = Path(media_dir) if media_dir is not None else _media_dir_from_env()
-    ledger = load_ledger(index_dir) if (index_dir / TAKEOUT_LEDGER).exists() else set()
+    ledger = _load_takeout_ledger(index_dir)
 
     report: dict[str, Any] = {
         "notes": 0,
@@ -227,6 +240,8 @@ def import_takeout(
         "attachments_skipped": 0,
         "errors": [],
     }
+
+    completed = completed_keep_ids(index_dir)
 
     with zipfile.ZipFile(zip_path) as zf:
         note_members = _discover_note_members(zf)
@@ -240,7 +255,7 @@ def import_takeout(
                     continue
 
                 note_id = _synthetic_id(raw)
-                if note_id in ledger or note_id in completed_keep_ids(index_dir):
+                if note_id in ledger or note_id in completed:
                     report["skipped_already_imported"] += 1
                     continue
 
@@ -278,15 +293,21 @@ def import_takeout(
                     full_body += "\n\n" + _attachment_link(dest)
                     report["attachments_mirrored"] += 1
 
-                labels = [lab.get("name") for lab in (payload.get("labels") or []) if lab.get("name")]
+                labels = [
+                    lab.get("name")
+                    for lab in (payload.get("labels") or [])
+                    if lab.get("name")
+                ]
                 color = payload.get("color")
                 is_pinned = bool(payload.get("isPinned"))
                 is_archived = bool(payload.get("isArchived"))
-                keep_created = _parse_keep_timestamp(timestamps.get("createTime")) or _parse_keep_timestamp(
-                    payload.get("createdAt")
+                keep_created = (
+                    _parse_keep_timestamp(timestamps.get("createTime"))
+                    or _parse_keep_timestamp(payload.get("createdAt"))
                 )
-                keep_updated = _parse_keep_timestamp(timestamps.get("updateTime")) or _parse_keep_timestamp(
-                    payload.get("updatedAt")
+                keep_updated = (
+                    _parse_keep_timestamp(timestamps.get("updateTime"))
+                    or _parse_keep_timestamp(payload.get("updatedAt"))
                 )
 
                 extra: dict[str, str] = {"keep_id": note_id, "source_kind": "takeout"}
@@ -314,6 +335,8 @@ def import_takeout(
                     pinned=is_pinned,
                 )
                 _append_takeout_ledger(index_dir, [note_id])
+                ledger.add(note_id)
+                completed.add(note_id)
                 report["notes"] += 1
             except Exception as e:  # noqa: BLE001 — surface as a report line
                 report["errors"].append(f"{member}: {e}")
@@ -333,11 +356,14 @@ def render_takeout_report(report: dict[str, Any]) -> str:
     bits: list[str] = []
     if report["notes"]:
         bits.append(
-            f"{report['notes']} keep note{'s' if report['notes'] != 1 else ''} imported from takeout"
+            f"{report['notes']} keep note"
+            f"{'s' if report['notes'] != 1 else ''} imported from takeout"
         )
     if report["attachments_mirrored"]:
         bits.append(
-            f"{report['attachments_mirrored']} attachment{'s' if report['attachments_mirrored'] != 1 else ''} mirrored to {report['media_dir']}"
+            f"{report['attachments_mirrored']} attachment"
+            f"{'s' if report['attachments_mirrored'] != 1 else ''}"
+            f" mirrored to {report['media_dir']}"
         )
     if report["skipped_already_imported"]:
         bits.append(f"{report['skipped_already_imported']} already imported")
@@ -347,8 +373,13 @@ def render_takeout_report(report: dict[str, Any]) -> str:
         bits.append(f"{report['skipped_empty']} empty")
     if report["attachments_skipped"]:
         bits.append(
-            f"{report['attachments_skipped']} attachment{'s' if report['attachments_skipped'] != 1 else ''} missing from zip"
+            f"{report['attachments_skipped']} attachment"
+            f"{'s' if report['attachments_skipped'] != 1 else ''}"
+            " missing from zip"
         )
     if report["errors"]:
-        bits.append(f"{len(report['errors'])} error{'s' if len(report['errors']) != 1 else ''} (see logs)")
+        bits.append(
+            f"{len(report['errors'])} error"
+            f"{'s' if len(report['errors']) != 1 else ''} (see logs)"
+        )
     return " · ".join(bits) if bits else "takeout: nothing new"

@@ -4,7 +4,7 @@ Do exactly the task; do not re-scope, refactor beyond it, or touch unrelated fil
 
 ## Environment
 - User: Kenja. OS: Windows.
-- Repo root: K:\Projects\PKMS. Python package lives in src/pkms/.
+- Repo root: /path/to/PKMS. Python package lives in src/pkms/.
 - The oracle tests are read-only context. Do NOT modify any file under tests/.
 
 ## Task
@@ -96,5 +96,5 @@ Add "discord.py>=2" as a new optional-dependencies group named "discord"
 Match the repo: type hints, concise docstrings, ruff line-length 100, Python 3.11+.
 
 ## Done-when
-`K:\Projects\PKMS\.venv\Scripts\python.exe -m pytest tests/test_email_ingest.py tests/test_discord_capture.py -q`
+`/path/to/PKMS\.venv\Scripts\python.exe -m pytest tests/test_email_ingest.py tests/test_discord_capture.py -q`
 is fully green, with no edits to any test file.

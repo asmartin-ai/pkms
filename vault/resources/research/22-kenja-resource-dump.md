@@ -125,7 +125,7 @@ Six user-supplied sources mined against the six RQs, deduped against [[10-synthe
 
 Self-check before writing: the three most load-bearing quotes were re-confirmed character-for-character against raw fetched source text (curl → grep), not against WebFetch summaries:
 
-1. **al3rez (KD4):** "But if all these AI companies disappear tomorrow, my system still works. It's just a text file. The AI makes it faster, not required." — found verbatim in O:\Temp\al3rez_txt.html (source uses curly apostrophes; normalized here).
+1. **al3rez (KD4):** "But if all these AI companies disappear tomorrow, my system still works. It's just a text file. The AI makes it faster, not required." — found verbatim in /path/to/local-resource (source uses curly apostrophes; normalized here).
 2. **arXiv (KD1):** "participants focusing the blame on themselves for their mistakes rather than the IDE, even in situations where the IDE had been unclear or had not functioned as expected" — found verbatim in the fetched arXiv HTML (note: "lead to" is the paper's own typo, preserved).
 3. **dsebastien (KD6/KD7):** "My system is always in flux and that's the way it should remain. There's no perfect system. It's all very personal." and "don't ruin your life trying to organize everything. Life is way too short for that" — both found verbatim in the raw article HTML.
 

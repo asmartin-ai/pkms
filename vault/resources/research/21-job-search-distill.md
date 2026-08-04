@@ -8,7 +8,7 @@ status: draft
 
 # 21 — job-search-2026 Distillation (First-Party Ground Truth)
 
-Direct inspection of `K:\Projects\job-search-2026\` — the user's own active job-search workspace,
+Direct inspection of `/path/to/local-resource` — the user's own active job-search workspace,
 read-only. This is first-party evidence: what the user actually built and demonstrably used, not what
 they report using. 14 findings, organized JS1–JS14.
 Program: [[00-ground-truths]] — Synthesis target: [[10-synthesis]]
@@ -50,7 +50,7 @@ sections carries the three markers. The "How to use this list" preamble is expli
 top to bottom: Decision gate → 15-min unblocks → Weekly engine → Flagship." The format also appears in
 HANDOFF.md (tasks referenced back to TODO.md for their ⏱/▶/✓ details).
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** The three-part marker set is low enough friction to be applied universally across
 a real workspace under real time pressure. The PKMS task format should make these three fields a
@@ -69,7 +69,7 @@ everything." The preamble says "Work the sections top to bottom: Decision gate �
 decision-gate section comes first by design, not accident. One decision (stay/go) was explicitly added
 2026-06-09, indicating active maintenance.
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** Unmade decisions are a first-class entity in this user's system, not implicit
 blockers buried under tasks. The PKMS should model decisions separately from tasks and surface them first.
@@ -87,7 +87,7 @@ FPGA hardware purchase, and two study courses. Each is named but has no ⏱/▶/
 kept inert. The preamble explicitly says "One task at a time; everything else stays out of sight in the
 Icebox." The Icebox section is present and populated with real future items, not a placeholder heading.
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** The Icebox is a shame-free parking lot that makes strategy real — by naming what
 is NOT being worked on, the user avoids the guilt of ignoring items scattered across the main list. The
@@ -107,7 +107,7 @@ cross-references TODO.md explicitly. The "Suggested first action" section ends w
 "Ask Kenja which of #7/#8/#10 to draft first … then proceed." The 2026-06-09 timestamp shows it was
 maintained alongside the rest of the session's work — not just written once and abandoned.
 
-**Source:** `K:\Projects\job-search-2026\HANDOFF.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** Continuity across sessions is a solved problem here: one document, self-contained,
 with a concrete entry point. For the PKMS this maps to a per-project "resume-from-here" affordance —
@@ -128,7 +128,7 @@ record without inflation.
 of the project. Completed tasks in the body of the doc carry "[x]" markers (e.g. the three 15-minute
 unblocks resolved 2026-06-09 in one sitting).
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** Closure is the reward — moving a task to Done and seeing the list grow is
 documented behavior here. The PKMS should make task closure satisfying and visible. A done-log that
@@ -148,7 +148,7 @@ defines a repeatable schema. The "Future Entries / newest first" section shows t
 pattern. Multiple entries carry "needs follow-up" metric confidence, showing honest calibration rather
 than inflation.
 
-**Source:** `K:\Projects\job-search-2026\codex-findings\resume-achievement-ledger.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** The ledger pattern — append-only, structured, honest about metric confidence — is
 close to the "Captain's Log" found in HN research (F9 in 11-hn.md). For the PKMS, a per-project ledger
@@ -168,7 +168,7 @@ followed by two specific tasks (EDA Playground testbench, FIR filter simulation)
 is explicit. The FPGA project is also separately spec'd in `projects/fpga-dsp-filter.md` (LastWriteTime
 2026-06-06, 3,148 bytes) — showing the lane was planned out, not just noted.
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`, `K:\Projects\job-search-2026\projects\fpga-dsp-filter.md`
+**Source:** `/path/to/local-resource`, `/path/to/local-resource`
 
 **Design implication:** This user actively names and legitimizes their hyperfocus interests rather than
 fighting them. The PKMS should support multi-lane task organization where switching lanes is a sanctioned
@@ -189,7 +189,7 @@ task in TODO.md for "update kanban weekly" or similar. The kanban content refere
 that predate the 2026-06-09 TODO updates — suggesting it was generated once but not re-run after the
 session's task changes.
 
-**Source:** `K:\Projects\job-search-2026\build\task_board.py`, `K:\Projects\job-search-2026\task-board.png`
+**Source:** `/path/to/local-resource`, `/path/to/local-resource`
 
 **Design implication:** Visual kanban boards are appealing to design but hard to sustain as a parallel
 artifact alongside a text TODO. The evidence here matches the general pattern from HN research: automated
@@ -211,7 +211,7 @@ reactivation condition ("the day that decision flips to 'go'"). Study sessions a
 active. The pause note includes the reason and the trigger to un-pause — a clean suspension, not an
 abandonment.
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** This user marks paused work explicitly with a reactivation condition rather than
 deleting it or leaving it as zombie open tasks. This is the "pause over delete" principle in action
@@ -232,7 +232,7 @@ aerospace/MBD study plan. TODO.md links to adhd-self-study-playbook.md by filena
 The 2026-06-06 LastWriteTime places them 3 days before the most recent TODO updates — they were written
 and then built upon.
 
-**Source:** `K:\Projects\job-search-2026\adhd-self-study.md`, `K:\Projects\job-search-2026\adhd-self-study-playbook.md`
+**Source:** `/path/to/local-resource`, `/path/to/local-resource`
 
 **Design implication:** The user actively synthesizes external ADHD research into personal operational
 guidance, and this synthesis is referenced (not just filed). The PKMS should support a "playbook" note
@@ -254,7 +254,7 @@ codex-output/ (5 files, LastWriteTime 2026-06-09 16:54). resume-achievement-ledg
 2026-06-09 16:59 with a "Codex Evidence Pass" annotation. The README-BRIEF explicitly names the tasks
 and output specification for the remote agent. This is a complete workflow, not a fragment.
 
-**Source:** `K:\Projects\job-search-2026\export\codex-package-2026-06-09\00-README-BRIEF.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** The user naturally structures multi-agent workflows as briefing packages (context
 + guardrails + task spec + output format) rather than ad-hoc prompts. This is exactly the pattern the
@@ -276,7 +276,7 @@ ledger template includes "Notes to sanitize" as a per-entry field. The do-not-cl
 Lauterbach, JTAG, DOORS, MISRA, DO-178C experience) appears consistently across documents updated on
 different dates.
 
-**Source:** `K:\Projects\job-search-2026\HANDOFF.md`, `K:\Projects\job-search-2026\export\codex-package-2026-06-09\02-guardrails.md`
+**Source:** `/path/to/local-resource`, `/path/to/local-resource`
 
 **Design implication:** The user maintains a "ground truth" document that constrains what can be claimed
 elsewhere — a source-of-constraints pattern. For the PKMS, this maps to a project-level policy note that
@@ -296,7 +296,7 @@ answered in one sitting)" annotation.
 LinkedIn URL decision, website push decision) are genuinely small but previously blocking. The annotation
 is honest about the mechanism: "all three answered in one sitting."
 
-**Source:** `K:\Projects\job-search-2026\TODO.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** This validates the "batch tiny unblocks" ADHD planning principle — one activation
 cost, multiple closures. The PKMS should have a first-class "quick unblocks" or "2-minute decisions"
@@ -316,7 +316,7 @@ names which stories to practice first (#1 and #5). TODO.md references "Interview
 as an open task with the ▶ first action "one story per day, out loud, 10 min." The story bank was
 written 2026-06-08; there is no evidence of any oral practice having occurred in the subsequent days.
 
-**Source:** `K:\Projects\job-search-2026\interview-prep.md`
+**Source:** `/path/to/local-resource`
 
 **Design implication:** High-quality structured artifacts that require a follow-on human action (practicing
 out loud) can sit unstarted even when the artifact itself is polished. The gap between "written" and "used"
@@ -348,7 +348,7 @@ visible session," not "survived >1 year." Where duration is claimed, it is scope
 
 ## Verification
 
-**Evidence type:** Direct file and metadata inspection of `K:\Projects\job-search-2026\`. All findings
+**Evidence type:** Direct file and metadata inspection of `/path/to/local-resource`. All findings
 are grounded in file contents and filesystem modification times read in this session. No user self-report
 relied upon.
 

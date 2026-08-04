@@ -15,7 +15,7 @@ that foregrounds re-entry prose and one next action, with restraint everywhere
 else. It should feel like a trusted desk note: readable, finite, and forgiving.
 
 - **Design lineage.** Lamplight is the lamp-mode reference of the shared ADHD
-  design language (`K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md`,
+  design language (`/path/to/adhd-design-language/DESIGN-LANGUAGE.md`,
   `VISUAL-LANGUAGE.md` "Hearth" canon, accepted 2026-07-03). It lands unchanged
   as PKMS's visual layer. Build report: `docs/redesign/fable-report.md`;
   direction pick rationale: `docs/redesign/fable-directions.md`.
@@ -217,7 +217,7 @@ undo, and local open feedback.
 
 ## Hearth Convergence (pending)
 
-The Hearth visual language (`K:\Projects\adhd-design-language\VISUAL-LANGUAGE.md`,
+The Hearth visual language (`/path/to/adhd-design-language\VISUAL-LANGUAGE.md`,
 ratified 2026-07-03, gate G-B) calls for two type swaps to converge PKMS with the
 shared system:
 

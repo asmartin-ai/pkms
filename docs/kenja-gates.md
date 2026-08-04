@@ -12,7 +12,7 @@ only things between now and a fully live system.*
 
 13 commits sitting local. No code to write — just the push.
 
-▶ **First keystroke:** open a terminal anywhere, type `git -C K:\Projects\PKMS push`
+▶ **First keystroke:** open a terminal anywhere, type `git -C /path/to/PKMS push`
 
 ✓ **Done when:** `git status` says "up to date with origin/main"
 
@@ -22,7 +22,7 @@ only things between now and a fully live system.*
 ⏱ ~2 min + one test send
 
 Gmail filter + app password. After this, forwarding a work email to
-`you+pkms@gmail.com` lands it in your inbox.
+`you+pkms@example.com` lands it in your inbox.
 
 Setup doc: `docs/email-discord-setup.md` — steps 1–5.
 

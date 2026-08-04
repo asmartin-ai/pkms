@@ -6,13 +6,13 @@ exercised the same way real production data would exercise it.
 
 from __future__ import annotations
 
-import io
 import json
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from pkms.keep_takeout import (
+    TAKEOUT_LEDGER,
     import_takeout,
     render_takeout_report,
 )
@@ -71,8 +71,22 @@ def test_import_takeout_writes_one_capture_per_note(tmp_path: Path):
     _build_takeout_zip(
         zpath,
         notes=[
-            ("a", {"title": "Buy milk", "textContent": "and eggs", "timestamps": {"createTime": 1_700_000_000_000_000}}),
-            ("b", {"title": "Read PKMS docs", "textContent": "", "timestamps": {"createTime": 1_700_000_001_000_000}}),
+            (
+                "a",
+                {
+                    "title": "Buy milk",
+                    "textContent": "and eggs",
+                    "timestamps": {"createTime": 1_700_000_000_000_000},
+                },
+            ),
+            (
+                "b",
+                {
+                    "title": "Read PKMS docs",
+                    "textContent": "",
+                    "timestamps": {"createTime": 1_700_000_001_000_000},
+                },
+            ),
         ],
     )
 
@@ -255,7 +269,15 @@ def test_import_takeout_missing_attachment_is_skipped_not_fatal(tmp_path: Path):
 
 
 def test_render_takeout_report_quiet_when_nothing_imported(tmp_path: Path):
-    r = {"notes": 0, "skipped_already_imported": 0, "skipped_trashed": 0, "skipped_empty": 0, "attachments_mirrored": 0, "attachments_skipped": 0, "errors": []}
+    r = {
+        "notes": 0,
+        "skipped_already_imported": 0,
+        "skipped_trashed": 0,
+        "skipped_empty": 0,
+        "attachments_mirrored": 0,
+        "attachments_skipped": 0,
+        "errors": [],
+    }
     assert render_takeout_report(r) == "takeout: nothing new"
 
 
@@ -269,3 +291,37 @@ def test_import_takeout_empty_zip_errors_cleanly(tmp_path: Path):
     assert report["notes"] == 0
     assert report["errors"] == []
     assert list((vault / "inbox").glob("*.md")) == []
+
+
+def test_import_takeout_dedupes_from_takeout_ledger_when_db_is_fresh(tmp_path: Path):
+    """Rerun idempotence must come from the takeout ledger even when the
+    durable DB has no completion rows — the DB is out of scope for
+    Takeout path reconciliation."""
+    vault = tmp_path / "vault"
+    index = tmp_path / ".index"
+    zpath = tmp_path / "takeout.zip"
+    _build_takeout_zip(
+        zpath,
+        notes=[
+            (
+                "dup",
+                {"title": "same", "textContent": "body"},
+            ),
+        ],
+    )
+
+    # First import succeeds and writes the takeout ledger.
+    r1 = import_takeout(zpath, vault, index, media_dir=tmp_path / "media")
+    assert r1["notes"] == 1
+    assert (index / TAKEOUT_LEDGER).exists()
+
+    # Remove the durable DB so completed_keep_ids returns empty.
+    # The takeout ledger alone must still prevent re-import.
+    db = index / "pkms.db"
+    if db.exists():
+        db.unlink()
+
+    r2 = import_takeout(zpath, vault, index, media_dir=tmp_path / "media")
+    assert r2["notes"] == 0
+    assert r2["skipped_already_imported"] == 1
+    assert len(list((vault / "inbox").glob("*.md"))) == 1

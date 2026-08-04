@@ -48,7 +48,7 @@ Read, in order:
 2. `PRODUCT.md` — who/why. ADHD-shaped single user (Kenja).
 3. `README.md` — app shape, commands, Firefox setup.
 4. `AGENTS.md` — repo rules.
-5. `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` — **the cross-surface
+5. `/path/to/adhd-design-language/DESIGN-LANGUAGE.md` — **the cross-surface
    ADHD design language. Single source of truth. Reference by path, never copy.**
    This governs COPY + BEHAVIOR even when you throw out the visuals.
 6. Current front end: `src/pkms/web/index.html`, `src/pkms/web/styles.css`,

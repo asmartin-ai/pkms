@@ -40,7 +40,7 @@ Program: [[00-ground-truths]] - Synthesis target: [[10-synthesis]]
 > Reddit network-blocks the unauthenticated JSON API from many IPs... returning 403 Blocked from Server: snooserv... regardless of User-Agent or headers.
 
 - **Source:** https://github.com/karanb192/reddit-mcp-buddy/issues/58
-- **Who:** GitHub issues #58–#60 by three separate users, June 2026; blocking behavior independently verified by me from the user's machine (K:\Projects\PKMS host) on 2026-06-09.
+- **Who:** GitHub issues #58–#60 by three separate users, June 2026; blocking behavior independently verified by me from the user's machine (/path/to/PKMS host) on 2026-06-09.
 - **Tool/system:** reddit-mcp-buddy anonymous mode — https://github.com/karanb192/reddit-mcp-buddy/pull/60
 - **Design implication:** Do NOT rely on the zero-credential path for ongoing research from this machine. Create a free Reddit 'script' app (~2 min at reddit.com/prefs/apps — this is NOT the paid API tier) and run buddy in app-only mode: client ID + secret only, no username/password, 60 req/min via OAuth, which bypasses the public-endpoint block.
 

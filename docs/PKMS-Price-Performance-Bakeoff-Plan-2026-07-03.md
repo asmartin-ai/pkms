@@ -138,7 +138,7 @@ orchestration cost is separated.
 
 ## 4. Task matrix — PKMS scoped features
 
-**Source:** `K:\Projects\PKMS` — open items from
+**Source:** `/path/to/PKMS` — open items from
 `vault/projects/pkms-design/sweep-findings-2026-06-17.md` (resolution log) + newly authored
 oracles. PKMS has a clean pytest discipline (130+ tests, prior RED-oracle pairs), making it
 the right substrate.

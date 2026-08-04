@@ -1,6 +1,6 @@
 # AGENTS.md — PKMS project rules
 
-Layers on top of `C:/Users/Kenja/agent-hub/AGENTS.md` (global rules).
+Layers on top of `/path/to/agent-hub/AGENTS.md` (global rules).
 This file is the repo-local source of truth for agents that understand the AGENTS.md standard.
 `CLAUDE.md` is kept only as a Claude Code compatibility shim that imports this file.
 
@@ -28,7 +28,7 @@ This local clone works against two GitHub remotes:
 Hybrid PKMS: markdown files in `vault/` are the source of truth; SQLite database in `.index/pkms.db` is a derived, regenerable index for fast search and backlink tracking.
 
 **Design language:** before designing any surface, flow, copy, or automation, read
-`K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` — the shared ADHD design language
+`/path/to/adhd-design-language/DESIGN-LANGUAGE.md` — the shared ADHD design language
 (single source of truth with content-hoarder; reference by path, never copy; rules for
 editing it are in that repo's README).
 

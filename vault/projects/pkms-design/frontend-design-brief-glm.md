@@ -20,7 +20,7 @@ to be pasted to GLM verbatim.
   add a pointer to `capture_service.py`'s `TODAY_APP`.
 - **Self-contained.** The frontend-binding rules from the design language are distilled
   inline so the prompt works in any GLM interface. Full source (with research provenance):
-  `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` — if GLM runs in a harness with file
+  `/path/to/adhd-design-language/DESIGN-LANGUAGE.md` — if GLM runs in a harness with file
   access, add "read that file for the complete rules."
 - **If run via Aider / Claude-Code-with-GLM in this repo,** add one line telling it to write
   deliverables to `spike/visual-home-glm/` so it never touches `vault/` or the live

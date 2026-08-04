@@ -15,7 +15,7 @@ status: in-progress
 > to GitHub with CI.
 > Derived from [[decisions]] (all 10 gates closed
 > 2026-06-12) and bound by the shared design language at
-> `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` (v post-CH-pass, commit `ce809e2`).
+> `/path/to/adhd-design-language/DESIGN-LANGUAGE.md` (v post-CH-pass, commit `ce809e2`).
 > Each slice ends in something Kenja can actually use. Build sittings are agent-executed
 > at HIGH effort; Kenja's actions are the few ⏱-marked items inside slices.
 
@@ -105,7 +105,7 @@ demonstrated live, not assumed.
 ## Slice 2 — `pkms promote` (flagship: the B11 win scenario)
 
 ⏱ one heavy sitting · ▶ read-only `sqlite3` attach to
-`K:\Projects\content-hoarder\data\app.db` and dump the schema of `reddit_threads`
+`/path/to/content-hoarder/data/app.db` and dump the schema of `reddit_threads`
 
 Ships:
 - `pkms promote <reddit-url | search terms>` — URL hits the hoarder DB directly; search
@@ -191,7 +191,7 @@ Ships (F1-pass path):
   **DRY RUN by default**; the load-bearing safety property is that a note
   is never deleted unless `keep_completed` (the durable SQLite index)
   records it as imported. Configurable `--age-days` (default 30).
-- **Attachments are mirrored to `K:\MediaMirror\keep\`** (Spec 10, sha256
+- **Attachments are mirrored to `/path/to/local-resource`** (Spec 10, sha256
   filenames) and referenced from the capture via `file://` markdown image
   links. Override with `PKMS_KEEP_MEDIA_DIR` env var.
 - **OCR at ingest** (research: "Hard Agree", promote early): image captures get extracted

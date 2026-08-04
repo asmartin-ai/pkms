@@ -8,9 +8,9 @@ status: sent
 
 # HANDOFF: ADHD-PKMS research findings → content-hoarder updates
 
-**Context (you have none from the source session — this is self-contained):** Kenja just completed a multi-sweep research program (community anecdotes from HN/Reddit/YouTube/GitHub, Barkley executive-function theory, academic literature, and read-only mining of content-hoarder's own DB) to design an ADHD-friendly PKMS at `K:\Projects\PKMS`. Several findings bear directly on content-hoarder. Your job in this chat: review these takeaways with Kenja and plan which to adopt in content-hoarder itself. The PKMS is a separate sibling system — content-hoarder stays the triage inbox / system of record for raw saves.
+**Context (you have none from the source session — this is self-contained):** Kenja just completed a multi-sweep research program (community anecdotes from HN/Reddit/YouTube/GitHub, Barkley executive-function theory, academic literature, and read-only mining of content-hoarder's own DB) to design an ADHD-friendly PKMS at `/path/to/PKMS`. Several findings bear directly on content-hoarder. Your job in this chat: review these takeaways with Kenja and plan which to adopt in content-hoarder itself. The PKMS is a separate sibling system — content-hoarder stays the triage inbox / system of record for raw saves.
 
-**Evidence on disk (read as needed, all in `K:\Projects\PKMS\vault\resources\research\`):** `17-hoarder-mining.md` (findings CH1–CH14 from content-hoarder's own DB), `10-synthesis.md` (full synthesis, six research questions), `32-theme-retrieval.md`, `33-theme-inbox-pipeline.md`. Finding IDs below refer to those files.
+**Evidence on disk (read as needed, all in `/path/to/PKMS\vault\resources\research\`):** `17-hoarder-mining.md` (findings CH1–CH14 from content-hoarder's own DB), `10-synthesis.md` (full synthesis, six research questions), `32-theme-retrieval.md`, `33-theme-inbox-pipeline.md`. Finding IDs below refer to those files.
 
 ## The headline facts from content-hoarder's own DB (verified read-only this week)
 

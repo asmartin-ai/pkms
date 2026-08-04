@@ -30,8 +30,8 @@ new-tab/PWA front end in `src/pkms/web/` (packaged Firefox copy in
 
 | Doc | What it binds |
 |---|---|
-| `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md` | Every surface, flow, copy line, and mechanic. Non-negotiable. |
-| `K:\Projects\adhd-design-language\VISUAL-LANGUAGE.md` | Shared visual layer ("Hearth", **Accepted 2026-07-03**): token schema, lamp/bench modes, component grammar. Lamplight is its lamp-mode reference — lands unchanged. Ratified G-B: PKMS swaps Atkinson→Lexend and Plex Mono→JetBrains Mono, plus Hearth token renames, riding the next scheduled front-end packet (token-level; no dedicated repaint). |
+| `/path/to/adhd-design-language/DESIGN-LANGUAGE.md` | Every surface, flow, copy line, and mechanic. Non-negotiable. |
+| `/path/to/adhd-design-language\VISUAL-LANGUAGE.md` | Shared visual layer ("Hearth", **Accepted 2026-07-03**): token schema, lamp/bench modes, component grammar. Lamplight is its lamp-mode reference — lands unchanged. Ratified G-B: PKMS swaps Atkinson→Lexend and Plex Mono→JetBrains Mono, plus Hearth token renames, riding the next scheduled front-end packet (token-level; no dedicated repaint). |
 | `AGENTS.md` (repo root) | Repo rules, vault layout, commands, conventions. |
 | `vault/projects/pkms-design/decisions.md` | The 10 closed design gates (G1–G10). Do not relitigate; a packet that seems to need a gate reopened goes back to Kenja. |
 | `vault/projects/pkms-design/build-plan.md` | Slice history, backlog, icebox with reactivation conditions. |
@@ -160,7 +160,7 @@ agent-side prep, then end with the single ▶ Kenja action.
 | K5 | Discord bot token + invite | ~10 min | P3 — code ready; token still Kenja |
 | K6 | Reddit script app at reddit.com/prefs/apps (F2 fresh-URL promote) | ~10 min | icebox |
 | K7 | Generate Google Takeout ZIP (Keep only) at takeout.google.com | ~3 min | PKMS Keep onramp (ADR 0028): gates the bulk import path. **Recommended starting point** — runs without the master token. |
-| K8 | First `pkms ingest keep-takeout <zip>` after the Takeout ZIP lands | ~1 min | PKMS Keep onramp: ~200 existing notes land in vault/inbox/ with attachments mirrored to `K:\MediaMirror\keep\`. |
+| K8 | First `pkms ingest keep-takeout <zip>` after the Takeout ZIP lands | ~1 min | PKMS Keep onramp: ~200 existing notes land in vault/inbox/ with attachments mirrored to `/path/to/local-resource`. |
 | K9 | (After K8) decide on first sweep: dry-run first, then `pkms ingest keep-sweep --age-days 30 --apply` | ~1 min | Optional cleanup. Default `--age-days 30`. Adjust to taste. |
 
 ---

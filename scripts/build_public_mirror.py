@@ -100,6 +100,8 @@ def validate_generated(output: Path) -> list[safety.Finding]:
     for path in safety.denylisted_paths(paths):
         findings.append(safety.Finding("FAIL", "mirror private path", path, "matches denylist"))
     for path in paths:
+        if safety.normalize_path(path) in safety.SELF_REFERENTIAL:
+            continue
         absolute = output / path
         if not absolute.is_file() or not safety.is_probably_text(absolute):
             continue

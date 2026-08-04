@@ -50,7 +50,7 @@ executor.
 
 ## 2. The two modes (the variable)
 
-Both modes are implemented in the caveman skill (`C:/Users/Kenja/agent-hub/skills/caveman/SKILL.md`,
+Both modes are implemented in the caveman skill (`/path/to/local-resource`,
 "Thinking modes (experimental)" section). Both reuse the existing intensity levels
 (lite/full/ultra/wenyan-*).
 
@@ -78,7 +78,7 @@ targets or the connective-tissue list.
 
 ### Why a fresh capture is required
 
-The ZCode rollout logs at `C:/Users/Kenja/.zcode/cli/rollout/*.jsonl` were checked
+The ZCode rollout logs at `/path/to/local-resource` were checked
 2026-07-03: they record `usage.outputTokens` (which includes thinking tokens billed as
 output) but **do not capture `thinking` block text content** — ZCode strips it before
 logging. So the trace corpus cannot be mined from existing logs; it must be captured

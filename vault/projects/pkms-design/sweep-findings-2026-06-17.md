@@ -51,7 +51,7 @@ A self-contained backlog from a systematic repo sweep. Written so a fresh sessio
   index (rebuild with `pkms index`). Python, Windows. Library in `src/pkms/`, tests in
   `tests/`, CLI is Typer (`src/pkms/cli.py`). The `pkms` shim works in any shell.
 - **Design language (binding):** before designing any surface, flow, or copy, read
-  `K:\Projects\adhd-design-language\DESIGN-LANGUAGE.md`. Load-bearing rules referenced
+  `/path/to/adhd-design-language/DESIGN-LANGUAGE.md`. Load-bearing rules referenced
   below: recognition over recall (§5); **no raw backlog counts / no walls** (§3, §6);
   resurfacing is rationed, machine-initiated, **side-effect-free to read** (§5); one next
   action (§6); novelty is scratched at the **view layer** while the file/SQLite substrate

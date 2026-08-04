@@ -27,7 +27,7 @@ Program: [[00-ground-truths]] - Related: [[11-hn]] (the <2s capture bar and "pho
 
 > We use Tailscale (a zero-config WireGuard mesh VPN) so the app is reachable **only by your own devices** — never the public internet.
 
-- **Source:** `K:\Projects\content-hoarder\docs\MOBILE_TAILSCALE.md` (first-party, read this session)
+- **Source:** `/path/to/local-resource` (first-party, read this session)
 - **Credibility:** First-party project doc on this machine; describes a working deployed pattern for the same user/devices. Strongest possible precedent for this build.
 - **Design implication:** PKMS can reuse the proven pattern wholesale: keep the vault+index on Windows, expose a capture/triage PWA via tailscale serve (HTTPS enables Add-to-Home-Screen + offline shell), and treat file sync as optional rather than foundational.
 
@@ -35,7 +35,7 @@ Program: [[00-ground-truths]] - Related: [[11-hn]] (the <2s capture bar and "pho
 
 > When a file has been modified on two devices simultaneously and the content actually differs, one of the files will be renamed to `<filename>.sync-conflict-<date>-<time>-<modifiedBy>.<ext>`. The file with the older modification time will be marked as the conflicting file and thus be renamed.
 
-- **Source:** [Syncthing docs — Understanding Synchronization (Conflicting Changes)](https://docs.syncthing.net/users/syncing.html)
+- **Source:** [Syncthing docs — Understanding Synchronization (Conflicting Changes)](https://docs.syncthing.net/path/to/local-resource)
 - **Credibility:** Official documentation; quote extracted verbatim from fetched page (whitespace normalized from HTML).
 - **Design implication:** If Syncthing is used, no data is ever lost in a conflict — but the PKMS indexer must recognize `*.sync-conflict-*` files, exclude them from search results, and surface them as a one-tap triage item instead of indexing them as duplicate notes.
 
@@ -147,7 +147,7 @@ OPEN QUESTIONS FOR THE DESIGNER: (1) PWA-only vs PWA+Syncthing hybrid — does t
 
 Sampled ids: MS-01, MS-08, MS-14 — all 3 verified, 0 failed.
 
-- [verified] MS-01 — Quote is verbatim from `K:\Projects\content-hoarder\docs\MOBILE_TAILSCALE.md` (lines 4-5). The doc confirms the full pattern: Flask app (web.py line 1: "Flask app factory + routes"), tailscale serve for HTTPS, Pixel 6 + Firefox PWA install, tailnet-private, no file sync. All material claims supported.
+- [verified] MS-01 — Quote is verbatim from `/path/to/local-resource` (lines 4-5). The doc confirms the full pattern: Flask app (web.py line 1: "Flask app factory + routes"), tailscale serve for HTTPS, Pixel 6 + Firefox PWA install, tailnet-private, no file sync. All material claims supported.
 - [verified] MS-08 — Quoted line present verbatim in the raw README (raw.githubusercontent.com/Waboodoo/HTTP-Shortcuts/master/README.md). Version claim (v4.5.0, 2026-05-24) confirmed on the GitHub releases page. The finding's own caveat — share-sheet-target support unverified — is accurate and honestly disclosed; no overclaiming.
 - [verified] MS-14 — Google support page confirms the process and substance, with one minor transcription note: the original is a two-sub-step action ("Tap Share" then select "Transcript (.txt)"), which the finding rendered as a single merged line — light flattening, not fabrication. The 3-5 tap estimate is consistent with the documented steps, and the "capture now, ingest later" characterization is well-supported.
 
