@@ -13,9 +13,13 @@ PKMS now has three ways to get Keep notes into the vault:
 | `pkms ingest keep` | master token in `.secrets/` | Live incremental sync via gkeepapi. First run primes a baseline; new notes flow in from there. | After Takeout, to capture new notes as you make them. |
 | `pkms ingest keep-sweep [--apply]` | master token (destructive) | Trashes from Keep the captured notes that are old + unpinned. **Dry-run by default.** | Periodic cleanup once you trust the import. |
 
-**Attachments** are mirrored to `/path/to/local-resource` (Spec 10 pattern,
+**Attachments** are mirrored to a local media dir (Spec 10 pattern,
 sha256-named) and referenced from the capture via `file://` markdown
-image links. Override with `PKMS_KEEP_MEDIA_DIR` env var.
+image links. Default is `<repo-root>/keep-media/` — anchored at the
+project root, NOT the caller's working directory. Override with the
+`PKMS_KEEP_MEDIA_DIR` env var. The scheduled pull
+(`scripts/register-keep-pull.ps1`) pins `PKMS_KEEP_MEDIA_DIR` explicitly so
+the 4-hour task and interactive runs agree on the media dir.
 
 ## Path 1 — Takeout bulk import (recommended starting point)
 
@@ -29,8 +33,9 @@ brings all your Keep history in one shot, and re-runs are idempotent.
    ```
    pkms ingest keep-takeout /path/to/local-resource
    ```
-5. Verify in your vault: `vault/inbox/2026-*.md` captures, and
-   `/path/to/local-resource` has the attachments (sha256-named).
+5. Verify in your vault: `vault/inbox/2026-*.md` captures, and the media
+   dir (default `<repo-root>/keep-media/`, or whatever `PKMS_KEEP_MEDIA_DIR`
+   is set to) has the attachments (sha256-named).
 
 You can re-run the importer any time with a fresh Takeout ZIP — the
 takeout ledger (`.index/keep-takeout-ledger.txt`) makes re-runs
