@@ -90,7 +90,7 @@ scripts/*.ahk
 
 Examples of scrub targets:
 
-- local Windows or Unix paths (`K:\...`, `C:\Users\...`, `/Users/...`)
+- local Windows or Unix paths (`/path/to/local-resource`, `/path/to/local-resource`, `/path/to/local-resource`)
 - raw email addresses, account IDs, client IDs, or API credentials
 - tokens, cookies, `.env` values, OAuth secrets, app passwords, and capture tokens
 - database paths, generated indexes, exports, caches, archives, and real fixtures

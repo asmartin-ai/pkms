@@ -114,7 +114,9 @@ def connect(index_dir: Path) -> sqlite3.Connection:
         # rows (grandfather clause for an already-imported set).
         kc_cols = {r[1] for r in conn.execute("PRAGMA table_info(keep_completed)").fetchall()}
         if kc_cols and "source" not in kc_cols:
-            conn.execute("ALTER TABLE keep_completed ADD COLUMN source TEXT NOT NULL DEFAULT 'live'")
+            conn.execute(
+                "ALTER TABLE keep_completed ADD COLUMN source TEXT NOT NULL DEFAULT 'live'"
+            )
             conn.execute("ALTER TABLE keep_completed ADD COLUMN keep_created_at TEXT")
             conn.execute("ALTER TABLE keep_completed ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0")
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")

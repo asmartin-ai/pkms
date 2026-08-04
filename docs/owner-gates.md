@@ -22,7 +22,7 @@ only things between now and a fully live system.*
 ⏱ ~2 min + one test send
 
 Gmail filter + app password. After this, forwarding a work email to
-`you+pkms@gmail.com` lands it in your inbox.
+`you+pkms@example.com` lands it in your inbox.
 
 Setup doc: `docs/email-discord-setup.md` — steps 1–5.
 

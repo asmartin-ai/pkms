@@ -15,16 +15,35 @@ from typing import Any
 
 import pytest
 
-from pkms.keep_ingest import record_completed, render_sweep_report, sweep_old_unpinned
+from pkms.keep_ingest import (
+    record_completed,
+    render_sweep_report,
+    sweep_old_unpinned,
+)
 
 
 class FakeKeep:
     def __init__(self, notes: list[Any]):
         self._notes = notes
         self.trashed_ids: list[str] = []
+        self._sync_fail = False
+        self.sync_calls = 0
+        self._fail_first = 0
 
     def all(self):
         return list(self._notes)
+
+    def sync(self):
+        self.sync_calls += 1
+        if self._sync_fail or self._fail_first >= self.sync_calls:
+            raise RuntimeError("sync failed")
+
+    def set_sync_fail(self, fail: bool = True):
+        self._sync_fail = fail
+
+    def fail_first_syncs(self, n: int):
+        """Fail the first `n` sync() calls, then succeed."""
+        self._fail_first = n
 
 
 def _note(
@@ -202,3 +221,80 @@ def test_render_sweep_report_says_dry_run_explicitly(index_dir: Path):
     line = render_sweep_report(report)
     assert "DRY RUN" in line
     assert "eligible 1" in line
+
+
+# --- sync contract ---
+
+
+def test_sync_success_records_swept_and_deleted(index_dir: Path):
+    """After trash() + sync(), the swept state and deleted count are recorded."""
+    n = _trashable_note("a", pinned=False, trashed=False, archived=False)
+    keep = FakeKeep([n])
+    record_completed(index_dir, "a", keep_created_at=_iso_days_ago(60))
+
+    report = sweep_old_unpinned(keep, index_dir, age_days=30, dry_run=False)
+
+    assert report["deleted"] == 1
+    assert report["eligible"] == 1
+    assert n.trashed is True
+    # Swept state file must exist and contain the note.
+    state = json.loads((index_dir / "keep-sweep.json").read_text(encoding="utf-8"))
+    assert "a" in state["swept"]
+
+
+def test_sync_failure_records_error_and_no_swept_or_deleted(index_dir: Path):
+    """If keep.sync() fails after trash(), no swept/deleted state is recorded
+    and the error is captured — the note remains retryable."""
+    n = _trashable_note("a", pinned=False, trashed=False, archived=False)
+    keep = FakeKeep([n])
+    keep.set_sync_fail(True)
+    record_completed(index_dir, "a", keep_created_at=_iso_days_ago(60))
+
+    report = sweep_old_unpinned(keep, index_dir, age_days=30, dry_run=False)
+
+    assert report["deleted"] == 0
+    assert report["eligible"] == 1
+    assert len(report["errors"]) == 1
+    assert "sync failed" in report["errors"][0]
+    # Note was trashed locally but not recorded in swept state.
+    assert n.trashed is True
+    # Swept state file must exist but must NOT contain the note.
+    state = json.loads((index_dir / "keep-sweep.json").read_text(encoding="utf-8"))
+    assert "a" not in state["swept"]
+
+def test_batch_sync_called_once_for_multiple_notes(index_dir: Path):
+    """gkeepapi's sync() flushes EVERY dirty node, so the sweep must sync once
+    for the whole batch — not once per note."""
+    a = _trashable_note("a")
+    b = _trashable_note("b")
+    keep = FakeKeep([a, b])
+    record_completed(index_dir, "a", keep_created_at=_iso_days_ago(60))
+    record_completed(index_dir, "b", keep_created_at=_iso_days_ago(60))
+
+    report = sweep_old_unpinned(keep, index_dir, age_days=30, dry_run=False)
+
+    assert keep.sync_calls == 1  # per-note syncing would be 2
+    assert report["deleted"] == 2
+    state = json.loads((index_dir / "keep-sweep.json").read_text(encoding="utf-8"))
+    assert {"a", "b"} <= set(state["swept"])
+
+
+def test_first_sync_failure_never_reports_a_hidden_deletion(index_dir: Path):
+    """Per-note syncing let a LATER note's successful sync silently push an
+    EARLIER note's trash while that note was reported as an error — a real
+    server-side deletion hidden behind a failure. One batch sync makes the
+    outcome all-or-nothing, so the report can never understate what was deleted."""
+    a = _trashable_note("a")
+    b = _trashable_note("b")
+    keep = FakeKeep([a, b])
+    keep.fail_first_syncs(1)  # old per-note code: a errors, b's sync flushes BOTH
+    record_completed(index_dir, "a", keep_created_at=_iso_days_ago(60))
+    record_completed(index_dir, "b", keep_created_at=_iso_days_ago(60))
+
+    report = sweep_old_unpinned(keep, index_dir, age_days=30, dry_run=False)
+
+    assert keep.sync_calls == 1
+    assert report["deleted"] == 0  # nothing claimed as deleted
+    assert len(report["errors"]) == 1
+    state = json.loads((index_dir / "keep-sweep.json").read_text(encoding="utf-8"))
+    assert state["swept"] == {}  # both stay retryable
