@@ -131,7 +131,7 @@ opens and reads — the B11 moment, executed on his pick.
 
 ## Slice 3 — Agent layer: fold, resume, briefing
 
-⏱ one heavy sitting · ▶ create `.claude/skills/fold/SKILL.md` and run it on the real
+⏱ one heavy sitting · ▶ create `.agents/skills/fold/SKILL.md` and run it on the real
 inbox accumulated since slice 1
 
 Ships:
