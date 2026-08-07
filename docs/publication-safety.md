@@ -25,6 +25,7 @@ pyproject.toml
 bin/pkms.cmd
 scripts/check_publication_safety.py
 scripts/build_public_mirror.py
+scripts/discord-bot-wizard.sh
 src/**
 tests/**
 .github/workflows/**
