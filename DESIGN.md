@@ -79,8 +79,8 @@ Three families, each with offline-friendly fallback stacks. Loaded via Google
 Fonts (pre-existing pattern); self-hosting is a separate deferred decision.
 
 - **Display:** `Bricolage Grotesque` → Segoe UI / Helvetica Neue / Arial.
-- **Body:** `Atkinson Hyperlegible` → -apple-system / Segoe UI / Roboto / Arial.
-- **Mono/metadata:** `IBM Plex Mono` → Cascadia Code / SF Mono / Consolas.
+- **Body:** `Lexend` → -apple-system / Segoe UI / Roboto / Arial.
+- **Mono/metadata:** `JetBrains Mono` → Cascadia Code / SF Mono / Consolas.
 
 Fluid type scale (clamp-based, mobile-first — Pixel 6 column is the base, wide
 viewports are the enhancement):
@@ -215,25 +215,22 @@ undo, and local open feedback.
   Byte-identical to `src/pkms/web/` per the packaging rule (parity test-pinned).
 - Backend data/actions: `src/pkms/capture_service.py`, `src/pkms/today.py`.
 
-## Hearth Convergence (pending)
+## Hearth type/token convergence (shipped 2026-08-07)
 
 The Hearth visual language (`/path/to/adhd-design-language\VISUAL-LANGUAGE.md`,
-ratified 2026-07-03, gate G-B) calls for two type swaps to converge PKMS with the
-shared system:
+ratified 2026-07-03, gate G-B) type swaps are in: PKMS converged on the shared
+token schema and faces.
 
-| Token | Current (Lamplight) | Hearth target | 
-|---|---|---|
-| Body face | Atkinson Hyperlegible | Lexend |
-| Mono face | IBM Plex Mono | JetBrains Mono |
+| Token (Hearth) | Face |
+|---|---|
+| `--font-display` | Bricolage Grotesque (unchanged) |
+| `--font-body` | Lexend |
+| `--font-mono` | JetBrains Mono |
 
-Plus token renames to the Hearth schema. These ride the next scheduled front-end
-packet (token-level, no dedicated repaint). The display face (Bricolage Grotesque)
-and all color tokens stay. Until that packet lands, this document describes the
-current Lamplight reality on `main`.
-
-**Gate status (2026-07-12):** Lamplight is merged. Remaining visual work is the
-Hearth type/token convergence above — not a dedicated repaint, and not blocking
-activation or Phase 5.
+Tokens renamed to the Hearth schema (`--display`/`--body`/`--mono` →
+`--font-display`/`--font-body`/`--font-mono`) and faces swapped
+(Atkinson→Lexend, Plex Mono→JetBrains Mono). All color tokens stay. A
+token-level pass — no dedicated repaint.
 
 ## Detector Scope
 
