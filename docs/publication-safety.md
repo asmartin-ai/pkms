@@ -1,6 +1,6 @@
 # PKMS publication safety
 
-> Snapshot as of 2026-08-04. The publication boundary and generated-mirror
+> Snapshot as of 2026-08-07. The publication boundary and generated-mirror
 > workflow are normative policy. **The split is now live:** `asmartin-ai/pkms-canonical`
 > (private, full vault state) and `asmartin-ai/pkms` (public, sanitized mirror).
 
