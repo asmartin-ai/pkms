@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PUBLIC_ALLOWLIST = (
     "AGENTS.md",
-    "CLAUDE.md",
     "DESIGN.md",
     "LICENSE",
     "PRODUCT.md",
@@ -31,8 +30,7 @@ PUBLIC_ALLOWLIST = (
     "src/**",
     "tests/**",
     ".github/workflows/**",
-    ".claude/skills/**",
-    ".agents/skills/impeccable/**",
+    ".agents/skills/**",
     "docs/**",
     "vault/resources/adhd-design-language-repo.md",
     "vault/resources/research/**",
