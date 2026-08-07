@@ -2,7 +2,7 @@
 title: PKMS build plan — Phase 4 vertical slices
 tags: [pkms-design, build-plan, adhd]
 created: 2026-06-12
-modified: 2026-07-12
+modified: 2026-08-07
 status: in-progress
 ---
 
@@ -63,6 +63,7 @@ Status: ✓ shipped · ▸ in progress · ◦ not started.
 | 6 | ✓ | Resurfacing card | 1–3 curious questions a day, relevance-weighted, dismissable forever | medium-heavy |
 | 7 | ▸ | Phone PWA | Today-view + reading queue + capture on the Pixel over tailnet | heavy |
 | 8 | ▸ | Side-door batch — email-in + Discord bot | Capture from work and from Discord | medium |
+| 9 | ✓ | Promotion ingest from content-hoarder (S3 spec) | A promoted CH item lands in the inbox as a capture | medium |
 
 After slice 8 → **Phase 5 dogfood gate**. Predictive partial sync (G10) stays gated on
 real usage to predict from; embeddings decision lives inside slice 6.
@@ -314,6 +315,166 @@ activation doc at `docs/email-discord-setup.md`. Remaining is Kenja wiring only
 `vault/inbox/` and in the next /fold run.
 
 ---
+
+## Slice 9 — Promotion ingest from content-hoarder (S3 spec)
+
+⏱ medium sitting · spec shipped 2026-07-31; **build shipped** (ported to
+main 2026-08-07) · ▶ remaining: wire the CH-side `promote` action to POST it
+(content-hoarder's own packet)
+
+Governing decision: life-os ADR 0027 (Accepted 2026-07-28, Option C hybrid) +
+`docs/delegation-roadmap.md` §S3. Promotion happens in a CH triage sprint — the
+resurface card proposes `promote`; an explicit accept (Kenja, on the card) pushes
+the item into `vault/inbox/` and stamps an `action_receipt` on the CH side. This
+spec is the PKMS-side destination; the build shipped (ported to main 2026-08-07).
+
+### Destination
+
+`vault/inbox/` — promotion is a capture; it enters the one inbox like every other
+ramp (Decision 0003; G2 "multiple ramps, one inbox"). Classification happens
+after, in /fold: a promoted item is **not** pre-filed as a reading note. Contrast
+slice 2's `pkms promote` (pull-side renderer straight to `vault/resources/reading/`
+for hoarder-DB threads): this slice is the push-side capture ramp for CH's
+triage-sprint promote action. Both coexist; /fold decides the destination.
+
+### Envelope mapping (CH `external_item` → `capture` contract)
+
+Transport: **extended `POST /capture`** (decision below). CH sends one JSON
+envelope per accepted promote; the handler flattens it into the standard inbox
+file via `write_capture` (frontmatter + body).
+
+| `capture` field | Source | Notes |
+|---|---|---|
+| `id` | inbox filename (PKMS-native) | `YYYY-MM-DD_HHMMSS_<slug>.md`, same as every ramp; no separate id artifact |
+| `captured_at` | ingest time (`write_capture` stamp) | `captured:` frontmatter keeps the inbox convention (= when it landed); CH's `captured_at` rides in provenance as `ch_captured_at` |
+| `source` | `content-hoarder` (fixed) | existing `?source=` query param |
+| `source_account_id` | `external_item.source_account.id` | frontmatter `source_account_id:` |
+| `raw_text` | **title + summary + url** (composition) | body: title line, blank, summary, blank, url line — raw markdown, no headings, zero pre-shaping; /fold proposes structure |
+| `raw_ref` | `external_item.url` | frontmatter `raw_ref:` (also hop 3 of the span) |
+| `context.{device,app}` | `{device: desktop, app: content-hoarder}` | flat frontmatter `context_device:` / `context_app:` (capture.py frontmatter is flat; the JSON envelope stays nested) |
+
+### Provenance — two-hop `source_span`
+
+Never flatten to the original URL: the CH hop is a live pointer into CH's DB that
+carries tags / decay / receipt state. Frontmatter keeps all three hops:
+
+| Hop | Field | Value |
+|---|---|---|
+| 1 — PKMS note | (the capture file itself) | `vault/inbox/<file>.md` |
+| 2 — CH item | `ch_item_id` + `ch_origin_ref` | `external_item.id` + `external_item.origin_ref` (namespaced stable pointer, e.g. `content-hoarder:fullname:reddit:t3_…`) |
+| 3 — original URL | `raw_ref` | `external_item.url` |
+
+`ch_origin_ref` is the load-bearing hop: CH's tags, decay state, and the promote
+`action_receipt` resolve through it — nothing is copied into PKMS except the item
+id. `ch_tags_hint` MAY ride along as a non-binding hint for /fold, never as a
+decision.
+
+### Transport decision: extended `POST /capture` (not file drop)
+
+**Decision: reuse `POST /capture`, extended additively.** Rationale:
+- Promotion is defined (ADR 0027) as a capture into the one inbox; the endpoint
+  is the existing single-writer path for exactly this (G2; slice-8 Discord bot
+  precedent). File drop would make content-hoarder a second writer into
+  `vault/inbox/` with its own naming/frontmatter implementation — a second
+  convention beside the existing one (prohibited), plus no ledger channel.
+- `write_capture` grants the shared invariants for free: timestamped filename,
+  same-second `-N` collision suffix, flat frontmatter, append-only.
+- The ledger stays inside one process: the handler checks/appends at the write
+  boundary (per-note pattern from `keep_ingest.py`, below). File drop would need
+  a poller + spool dir for the same dedupe — strictly more mechanism.
+- Token gate preserved: only capture-token holders write to the inbox. CH runs
+  on this machine and reads `/path/to/PKMS\.secrets\capture-token` (or the
+  build packet injects it via env) — a local secret handoff, no new account.
+
+Additive-only contract change (standing law: `/capture` changes only via a packet
+that says so — this spec is that packet):
+
+```json
+{
+  "text": "<title>\n\n<summary>\n\n<url>",
+  "source_account_id": "acct_…",
+  "raw_ref": "https://…",
+  "context": {"device": "desktop", "app": "content-hoarder"},
+  "ch_item_id": "ext_ch_item_001",
+  "ch_origin_ref": "content-hoarder:fullname:…",
+  "ch_captured_at": "2026-07-12T05:51:25Z"
+}
+```
+
+`text` stays the only required field; `source` stays a query param; every new
+field is optional — a plain human capture (no `ch_item_id`) is byte-for-byte the
+old behavior. The capture path gains zero decisions: the card's explicit promote
+accept (already made) is the only gate.
+
+**Idempotency / replay / duplicates.** `ch_item_id` is the dedupe key. Handler:
+`ch_item_id` present and in the ledger → 200 `already saved ✓ <existing name>`, no
+second file (replay-safe); else `write_capture` → ledger append → 200 `saved ✓
+<name>`. Acknowledge the one race — crash between write and ledger-append leaves a
+file without a ledger entry; a replayed POST then writes a same-content duplicate
+(`-2` suffix handles the name) which /fold dedupes (machine dedupe is the job,
+G2/G3). Window is one file write.
+
+**Ledger.** `.index/ch-promote-ledger.txt`, one `ch_item_id` per line, append-only
+— the `keep_ingest.py` per-note ledger pattern (`load_ledger`/`append_ledger`). A
+durable SQLite mirror (like `keep_completed`) is deferred unless the build packet
+finds a consumer needing queryable state — nothing does today: PKMS reads the
+ledger only for dedupe; CH reads receipt state from its own DB via `ch_origin_ref`.
+
+**CH-side handshake (coordination note, out of PKMS scope):** the promote
+`action_receipt` (ADR 0027 done-when) stamps on CH's side after the POST succeeds;
+PKMS's deterministic response body (`saved ✓ <name>` / `already saved ✓ <name>`) is
+the receipt's external evidence. Build packet MUST keep the success body
+content-verifiable.
+
+### S2 boundary (smart routing at capture)
+
+S2 decides which content classes route where at capture time; S3 is the
+destination spec for items CH has already decided to promote. Boundary: S2's
+routing table treats "CH-promoted item" as a post-dump input class — both specs
+share the hard rule that classification happens after the dump, never as a
+capture-time prompt — and if S2 later adds routing, promoted captures flow through
+the same post-dump classification unchanged. Nothing in S3 adds a decision to the
+write path; nothing in S2 moves the promote gate onto the dump path.
+
+### Scope
+
+`capture_service.py` `do_POST` (additive fields + ledger check/append), the
+`.index` ledger file, oracle tests. Not: `/fold` changes, S2 routing
+implementation, reading-note rendering (slice-2 `pkms promote` covers the pull
+side), CH-side work (its own packet).
+
+### Out of scope (explicit)
+
+- **Unsave-on-source** — deferred behind CH `action_receipt` infra (ADR 0027
+  §Decision.3); PKMS never touches Reddit/HN/YouTube saved lists.
+- **Auto-promote on save** — Option B rejected (ADR 0027); CH never pushes
+  without the explicit accept on the resurface card.
+
+### Decisions pre-made
+
+Transport = extended `POST /capture` (additive) · `source` = `content-hoarder` ·
+`raw_text` = title + summary + url · dedupe key = `ch_item_id` vs
+`.index/ch-promote-ledger.txt` · ledger = per-note file pattern, SQLite mirror
+deferred · context flattened to `context_device`/`context_app` · CH
+tags/decay/receipt resolve via `ch_origin_ref`, never flattened.
+
+✓ Done-when (build packet): a CH-promoted item (fixture `item-001`) lands in
+`vault/inbox/` as one capture file with the envelope frontmatter + two-hop span;
+a replayed POST adds no second file; a plain capture (no `ch_item_id`) behaves
+exactly as before; suite green at ≥ baseline.
+
+**Status (2026-08-07, agent):** build shipped — cherry-picked `ccecaf5` onto
+main (commit 99b674f). `do_POST` accepts the additive envelope (flattened to
+`source_account_id:` / `raw_ref:` / `context_device:` / `context_app:` /
+`ch_item_id:` / `ch_origin_ref:` / `ch_captured_at:` frontmatter; `text` still
+the only required field), dedupes via `.index/ch-promote-ledger.txt` — replay
+returns 200 `already saved ✓ <name>`, no second file; plain captures (no
+`ch_item_id`) byte-for-byte unchanged. 7 oracles in `tests/test_ch_promote_ingest.py`, green on main. Live smoke
+(promote one real CH item) deferred until the CH-side promote action is wired
+(its own packet).
+
+---
+
 
 ## After slice 8 — Phase 5 gate
 
