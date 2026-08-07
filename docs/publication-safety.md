@@ -17,7 +17,6 @@ These paths may be copied into a public mirror when they pass the safety checker
 
 ```text
 AGENTS.md
-CLAUDE.md
 DESIGN.md
 LICENSE
 PRODUCT.md
@@ -29,8 +28,7 @@ scripts/build_public_mirror.py
 src/**
 tests/**
 .github/workflows/**
-.claude/skills/**
-.agents/skills/impeccable/**
+.agents/skills/**
 docs/**
 vault/resources/adhd-design-language-repo.md
 vault/resources/research/**

@@ -2,7 +2,6 @@
 
 Layers on top of `/path/to/agent-hub/AGENTS.md` (global rules).
 This file is the repo-local source of truth for agents that understand the AGENTS.md standard.
-`CLAUDE.md` is kept only as a Claude Code compatibility shim that imports this file.
 
 ---
 
@@ -122,9 +121,9 @@ shortcut). Phone capture: docs/pixel-capture-setup.md.
 
 ## Agent layer (slice 3)
 
-- **/fold** (`.claude/skills/fold/`): folds `vault/inbox/` captures into the vault —
+- **/fold** (`.agents/skills/fold/`): folds `vault/inbox/` captures into the vault —
   proposal first, ONE pick-list question, applies on approval. **/resume**
-  (`.claude/skills/resume/`): reads back the breadcrumb at session start; writes it at
+  (`.agents/skills/resume/`): reads back the breadcrumb at session start; writes it at
   session end ("wrapping up" triggers write mode).
 - Daily notes carry stable section anchors (`## breadcrumb`, `## folded today`,
   `## notes` — `src/pkms/daily.py`): agents edit section *content*, never the headings.

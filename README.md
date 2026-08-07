@@ -143,11 +143,8 @@ permanent-install options, see `docs/firefox-newtab-setup.md`.
 
 ## Agent instructions
 
-Repo-local agent rules live in `AGENTS.md`, layered on top of your global
-agent rules. `CLAUDE.md` is a compatibility shim that imports `AGENTS.md` for
-Claude Code.
-
-Project-local Claude skills still live under `.claude/skills/`:
+Repo-local agent rules live in `AGENTS.md`, layered on top of your global agent
+rules. Project-local agent skills live under `.agents/skills/`:
 
 - `/fold` folds `vault/inbox/` captures into the vault after an approval step.
 - `/resume` reads/writes the daily breadcrumb around sessions.
