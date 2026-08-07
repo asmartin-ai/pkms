@@ -25,6 +25,10 @@ Dedupe ledger: `.index/email-ledger.txt` (append-only, one Message-ID per line).
 
 ## Discord bot (~10 min, K5)
 
+> **Fast path:** run `bash scripts/discord-bot-wizard.sh` — it opens each portal
+> page, captures the token into `.secrets/discord-bot-token`, and confirms every
+> stage. The manual steps below are what the wizard automates.
+
 1. https://discord.com/developers/applications → New Application → Bot.
 2. **Enable "Message Content Intent"** under Bot → Privileged Gateway Intents —
    without it the bot receives empty message bodies.
