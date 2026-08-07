@@ -1,6 +1,6 @@
 ---
 name: resume
-description: Re-entry breadcrumbs for the PKMS — read back where Kenja left off at session start, or write the breadcrumb at session end. Use when the user says /resume, "where was I", "what was I doing", or signals wrapping up ("done for today", "stopping here", "wrapping up").
+description: Re-entry breadcrumbs for the PKMS — read back where Kenja left off at session start, or write the breadcrumb at session end. Use when the user invokes /resume (any phrasing: "where was I", "what was I doing"), or signals wrapping up ("done for today", "stopping here").
 ---
 
 # /resume — breadcrumb at the breakpoint

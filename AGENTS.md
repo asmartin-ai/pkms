@@ -134,3 +134,12 @@ shortcut). Phone capture: docs/pixel-capture-setup.md.
 - Session-start briefing: the PowerShell profile runs `pkms today` in interactive
   shells only (guarded against `-NonInteractive`, so agent/tool shells never see it;
   `$env:PKMS_NO_BRIEFING=1` silences it).
+
+## Backlog & issues
+
+Backlog, decision gates, and specs track as GitHub issues on
+`asmartin-ai/pkms-canonical` (private — the public mirror carries no issues).
+NEXT.md holds only the current focus and next actions; everything deferred
+lives in an issue. Convention: `docs/agents/issue-tracker.md`; labels:
+`decision-gate` · `icebox` · `deferred` plus the five triage roles
+(`docs/agents/triage-labels.md`).

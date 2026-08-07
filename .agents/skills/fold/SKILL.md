@@ -1,6 +1,6 @@
 ---
 name: fold
-description: Fold vault/inbox/ captures into the vault — propose filing, wikilinks, and task extraction as a pick list, apply on approval. Use when the user says /fold, "fold the inbox", "process my captures", or when captures are waiting and the user asks what's next in the vault.
+description: Fold vault/inbox/ captures into the vault — propose filing, wikilinks, and task extraction as a pick list, apply on approval. Use when the user invokes /fold (any phrasing: "fold the inbox", "process my captures"), or when captures are waiting and the user asks what to do next.
 ---
 
 # /fold — the inbox folds itself
