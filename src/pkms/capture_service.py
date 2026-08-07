@@ -26,6 +26,7 @@ import json
 import os
 import secrets
 import subprocess
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import cast
@@ -72,6 +73,74 @@ _STATIC_TYPES = {
     ".png": "image/png",
     ".ico": "image/x-icon",
 }
+
+# --- Slice 9: content-hoarder promotion ledger (S3 spec) ---
+# Per-note ledger pattern from keep_ingest.py / discord_capture.py: an
+# append-only file in .index, one external id per line. Dedupes promoted CH
+# items so a replayed POST adds no second capture.
+CH_PROMOTE_LEDGER = "ch-promote-ledger.txt"
+
+# Serializes the S9 dedupe check → write → ledger-append under the threaded
+# server (see do_POST). One lock per process is enough — one server per run.
+_CH_PROMOTE_LOCK = threading.Lock()
+
+
+# Additive envelope fields (S3 spec): CH external_item -> capture frontmatter.
+# Unknown JSON fields are ignored so the capture path stays zero-decision.
+_ENVELOPE_FIELDS = ("source_account_id", "raw_ref", "ch_origin_ref", "ch_captured_at")
+
+
+def load_ch_ledger(index_dir: Path) -> set[str]:
+    p = index_dir / CH_PROMOTE_LEDGER
+    if not p.exists():
+        return set()
+    return {ln.strip() for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()}
+
+
+def append_ch_ledger(index_dir: Path, ch_item_id: str) -> None:
+    index_dir.mkdir(parents=True, exist_ok=True)
+    with (index_dir / CH_PROMOTE_LEDGER).open("a", encoding="utf-8") as f:
+        f.write(ch_item_id + "\n")
+
+
+def _envelope_to_frontmatter(payload: dict[str, object], ch_item_id: str) -> dict[str, str]:
+    """Flatten the promotion envelope to flat capture frontmatter (S3 spec).
+
+    Only known string fields are carried; context.{device,app} flattens to
+    context_device:/context_app:. Called only when ch_item_id is present, so a
+    plain capture never gains frontmatter keys.
+    """
+    extra: dict[str, str] = {"ch_item_id": ch_item_id}
+    for key in _ENVELOPE_FIELDS:
+        val = payload.get(key)
+        if isinstance(val, str) and val:
+            extra[key] = val
+    context = payload.get("context")
+    if isinstance(context, dict):
+        for part in ("device", "app"):
+            val = context.get(part)
+            if isinstance(val, str) and val:
+                extra[f"context_{part}"] = val
+    return extra
+
+
+def _find_capture_with_ch_item(vault: Path, ch_item_id: str) -> Path | None:
+    """Locate the vault file a promoted CH item was written to (replay body).
+
+    Scans the whole vault, not just inbox/: a promoted capture leaves inbox on
+    the first /fold, and the replay receipt promises the <existing name>.
+    Reads only the frontmatter head of each note; the vault is small and replay
+    is rare, so a linear scan is fine.
+    """
+    marker = f"ch_item_id: {ch_item_id}"
+    for p in vault.rglob("*.md"):
+        try:
+            head = p.read_text(encoding="utf-8", errors="replace")[:2048]
+        except OSError:
+            continue
+        if marker in head:
+            return p
+    return None
 
 
 def resolve_token(root: Path, token: str | None = None) -> str:
@@ -239,6 +308,7 @@ def make_server(
                 raw = self.rfile.read(length).decode("utf-8", errors="replace").strip()
                 # accept raw text, form-encoded 'text=', or JSON {"text": ...}
                 text = raw
+                payload: dict[str, object] | None = None
                 ctype = self.headers.get("Content-Type", "")
                 if "json" in ctype:
                     try:
@@ -255,7 +325,32 @@ def make_server(
 
                 query = parse_qs(urlparse(self.path).query)
                 source = query.get("source", ["web"])[0]
-                saved = write_capture(text, vault, source=source)
+
+                # Slice 9 (S3 spec): additive promotion envelope. A plain
+                # capture without ch_item_id is byte-for-byte the old behavior
+                # — no new frontmatter keys, no ledger interaction.
+                ch_item_id = ""
+                if payload is not None:
+                    raw_ch_id = payload.get("ch_item_id")
+                    if isinstance(raw_ch_id, str):
+                        ch_item_id = raw_ch_id.strip()
+                extra: dict[str, str] = {}
+                if ch_item_id:
+                    # S9 dedupe: check → write → ledger-append are one atomic
+                    # section — the endpoint is threaded, and a concurrent POST
+                    # with the same new ch_item_id must find the ledger entry
+                    # the first one just wrote (spec: no second file).
+                    with _CH_PROMOTE_LOCK:
+                        if ch_item_id in load_ch_ledger(index_dir):
+                            existing = _find_capture_with_ch_item(vault, ch_item_id)
+                            name = existing.name if existing else ""
+                            return self._send(200, f"already saved ✓ {name}".strip())
+                        if payload is not None:
+                            extra = _envelope_to_frontmatter(payload, ch_item_id)
+                        saved = write_capture(text, vault, source=source, extra=extra)
+                        append_ch_ledger(index_dir, ch_item_id)
+                else:
+                    saved = write_capture(text, vault, source=source, extra=extra)
                 self._send(200, f"saved ✓ {saved.name}")
             elif path_val == "/api/resurface":
                 if not self._authed():
