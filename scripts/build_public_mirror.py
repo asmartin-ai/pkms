@@ -27,21 +27,21 @@ WINDOWS_PATH_RE = re.compile(r"(?<![A-Za-z])(?:[A-Za-z]:[\\/][^\s)`'\"<>]+)")
 USER_PATH_RE = re.compile(r"(?:/[Uu]sers/[^\s)`'\"<>]+|/home/[^\s)`'\"<>]+)")
 
 SPECIFIC_REPLACEMENTS = (
-    ("K:\\Projects\\PKMS", "/path/to/PKMS"),
-    ("K:/Projects/PKMS", "/path/to/PKMS"),
+    ("/path/to/PKMS", "/path/to/PKMS"),
+    ("/path/to/PKMS", "/path/to/PKMS"),
     (
-        "K:\\Projects\\adhd-design-language\\DESIGN-LANGUAGE.md",
+        "/path/to/adhd-design-language/DESIGN-LANGUAGE.md",
         "/path/to/adhd-design-language/DESIGN-LANGUAGE.md",
     ),
     (
-        "K:/Projects/adhd-design-language/DESIGN-LANGUAGE.md",
+        "/path/to/adhd-design-language/DESIGN-LANGUAGE.md",
         "/path/to/adhd-design-language/DESIGN-LANGUAGE.md",
     ),
-    ("K:\\Projects\\adhd-design-language", "/path/to/adhd-design-language"),
-    ("K:/Projects/adhd-design-language", "/path/to/adhd-design-language"),
-    ("K:\\Projects\\content-hoarder\\data\\app.db", "/path/to/content-hoarder/data/app.db"),
-    ("K:/Projects/content-hoarder/data/app.db", "/path/to/content-hoarder/data/app.db"),
-    ("C:/Users/Kenja/agent-hub/AGENTS.md", "/path/to/agent-hub/AGENTS.md"),
+    ("/path/to/adhd-design-language", "/path/to/adhd-design-language"),
+    ("/path/to/adhd-design-language", "/path/to/adhd-design-language"),
+    ("/path/to/content-hoarder/data/app.db", "/path/to/content-hoarder/data/app.db"),
+    ("/path/to/content-hoarder/data/app.db", "/path/to/content-hoarder/data/app.db"),
+    ("/path/to/agent-hub/AGENTS.md", "/path/to/agent-hub/AGENTS.md"),
 )
 
 
@@ -59,6 +59,22 @@ def scrub_text(text: str) -> str:
     return text
 
 
+def scrub_specific_source(text: str) -> str:
+    """Scrub a copy of THIS script so its own replacement table cannot leak.
+
+    A full scrub_text would also corrupt this file's path-shaped regex
+    literals (WINDOWS_PATH_RE etc.), so only the SPECIFIC_REPLACEMENTS table
+    is rewritten: each key, in both its plain and source-escaped forms, maps
+    to its placeholder. The public copy keeps a working (if no-op) table and
+    intact regexes.
+    """
+
+    for old, new in SPECIFIC_REPLACEMENTS:
+        text = text.replace(old, new)
+        text = text.replace(old.replace("\\", "\\\\"), new)
+    return text
+
+
 def should_scrub(path: Path) -> bool:
     return path.suffix.lower() in SCRUB_SUFFIXES
 
@@ -72,6 +88,9 @@ def copy_file(src: Path, dst: Path) -> None:
             shutil.copy2(src, dst)
             return
         dst.write_text(scrub_text(text), encoding="utf-8", newline="")
+    elif src.name == "build_public_mirror.py" and safety.is_probably_text(src):
+        text = src.read_text(encoding="utf-8")
+        dst.write_text(scrub_specific_source(text), encoding="utf-8", newline="")
     else:
         shutil.copy2(src, dst)
 

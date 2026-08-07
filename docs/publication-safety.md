@@ -150,7 +150,10 @@ python scripts/check_publication_safety.py --mirror-manifest # print allowlisted
 - **Exempt from content scan** (`SELF_REFERENTIAL` set in the checker):
   `scripts/check_publication_safety.py`, `scripts/build_public_mirror.py`,
   `tests/test_publication_safety.py` — these contain path/regex/fixture
-  literals by design; exempting them is load-bearing.
+  literals by design; exempting them is load-bearing. **The mirror copy of
+  the builder is additionally scrubbed** (its `SPECIFIC_REPLACEMENTS` table
+  rewritten to placeholders, regexes untouched), so the real machine paths
+  that table maps cannot leak into the public repo.
 - **Mirror-aware path exemption:** files with a suffix in `SCRUB_SUFFIXES`
   = {.cmd, .css, .html, .json, .md, .toml, .txt, .yaml, .yml} skip
   local-path checks because the mirror's `should_scrub` rewrites those

@@ -4,6 +4,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_publication_safety.py"
 spec = importlib.util.spec_from_file_location("check_publication_safety", SCRIPT)
 assert spec is not None and spec.loader is not None
@@ -59,14 +61,14 @@ def test_content_risks_flag_realistic_publication_hazards():
     # Path checks apply to non-scrubbed suffixes (.py); emails/credentials
     # are checked for every suffix.
     text = """
-    cd K:\\Projects\\PKMS
-    database: K:/Projects/content-hoarder/data/app.db
+    cd K:\\Projects\\some-project
+    database: K:/Projects/some-project/data/app.db
     contact me at real.person@example.invalid
     REDDIT_CLIENT_SECRET=abc123abc123abc123
     """
     risks = safety.content_risks("src/pkms/example.py", text)
-    assert any("local path: K:\\Projects\\PKMS" in risk for risk in risks)
-    assert any("local path: K:/Projects/content-hoarder/data/app.db" in risk for risk in risks)
+    assert any("local path: K:\\Projects\\some-project" in risk for risk in risks)
+    assert any("local path: K:/Projects/some-project/data/app.db" in risk for risk in risks)
     assert any("raw email address: real.person@example.invalid" in risk for risk in risks)
     assert any("credential-shaped assignment" in risk for risk in risks)
 
@@ -74,7 +76,7 @@ def test_content_risks_flag_realistic_publication_hazards():
 def test_content_risks_skip_path_check_for_scrubbed_suffixes():
     # .md files are path-scrubbed by the mirror build, so local paths in them
     # are not flagged here (they cannot leak). Emails/credentials still are.
-    text = "See K:\\Projects\\PKMS — email real.person@example.invalid"
+    text = "See K:\\Projects\\some-project — email real.person@example.invalid"
     risks = safety.content_risks("docs/example.md", text)
     assert not any("local path" in r for r in risks)
     assert any("raw email address: real.person@example.invalid" in r for r in risks)
@@ -103,12 +105,15 @@ def test_history_risk_paths_include_private_archives_and_secret_names():
 
 
 def test_public_mirror_scrubs_machine_local_paths_from_text():
-    text = "See K:\\Projects\\PKMS and C:/Users/Kenja/agent-hub/AGENTS.md."
+    text = "See K:\\Projects\\some-project and C:/Users/Somebody/agent-hub/AGENTS.md."
     scrubbed = builder.scrub_text(text)
     assert "K:\\" not in scrubbed
     assert "C:/Users" not in scrubbed
-    assert "/path/to/PKMS" in scrubbed
-    assert "/path/to/agent-hub/AGENTS.md" in scrubbed
+    assert "/path/to/local-resource" in scrubbed
+    # Every SPECIFIC_REPLACEMENTS key (real canonical paths) scrubs to its
+    # placeholder — exercised generically so no real path is hardcoded here.
+    for old, new in builder.SPECIFIC_REPLACEMENTS:
+        assert new in builder.scrub_text(old)
 
 
 def test_public_mirror_does_not_scrub_python_source_by_suffix():
@@ -116,3 +121,19 @@ def test_public_mirror_does_not_scrub_python_source_by_suffix():
     assert not builder.should_scrub(Path("src/pkms/promote.py"))
     assert builder.should_scrub(Path("README.md"))
     assert builder.should_scrub(Path("src/pkms/web_ext/options/options.html"))
+
+
+def test_mirror_builder_copy_scrubs_its_own_replacement_table():
+    # The public copy of the builder must not ship the real paths its
+    # SPECIFIC_REPLACEMENTS table maps (identity leak), while keeping the
+    # script's regex literals intact — a full scrub_text would corrupt them.
+    if not any("K:" in old or "C:" in old for old, _ in builder.SPECIFIC_REPLACEMENTS):
+        pytest.skip("public mirror copy: replacement table already scrubbed")
+    table_source = (
+        '("K:\\\\Projects\\\\PKMS", "/path/to/PKMS"),\n'
+        '("K:/Projects/PKMS", "/path/to/PKMS")'
+    )
+    scrubbed = builder.scrub_specific_source(table_source)
+    assert "Projects" not in scrubbed
+    assert "K:" not in scrubbed
+    assert "/path/to/PKMS" in scrubbed
