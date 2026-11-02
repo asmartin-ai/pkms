@@ -164,14 +164,33 @@ python scripts/check_publication_safety.py --mirror-manifest # print allowlisted
 
 A failure does not automatically mean content must be deleted. Decide whether each finding should be scrubbed, moved to the future private canonical repo, explicitly accepted as public, or handled with a separate history rewrite.
 
-## Recommended workflow
+## Publishing
 
-1. Keep or create a private canonical repo/workspace for the full PKMS vault and local state.
-2. Generate a public mirror from the allowlist instead of pushing canonical `main` directly.
-3. Run `python scripts/build_public_mirror.py` to produce `exports/public-mirror/`.
-4. Run `python scripts/check_publication_safety.py --history` on the canonical checkout before changing remotes or history.
-5. Review findings manually. Do not rewrite history, delete files, or force-push without an explicit decision and backup bundle.
-6. Push only the generated sanitized mirror to the public repo.
+The only publish path is: build the candidate in `/tmp` → scan its full history → push with an
+explicit URL. The canonical checkout's `origin` push URL is disabled
+(`DISABLED-use-publish-mirror`), so the mirror cannot be pushed by habit.
+
+1. Work in the private canonical repo; never push it to a public remote.
+2. Build the candidate in `/tmp`: clone public `main`, overlay the allowlisted tree produced by
+   `python scripts/build_public_mirror.py`, commit.
+3. Scan the candidate's full history before the push:
+   `python scripts/check_publication_safety.py --history`, `gitleaks git --redact`, and the
+   private denylist `~/.config/git/publish-denylist.txt`. Never publish with findings.
+4. Verify and push fast-forward with an explicit URL (the credential helper resolves to a
+   different account than the token owner):
+
+   ```sh
+   git fetch origin main
+   git merge-base --is-ancestor origin/main HEAD || { echo "not a fast-forward"; exit 1; }
+   git push https://x-access-token:"$(GH_TOKEN= gh auth token -u asmartin-ai)"@github.com/asmartin-ai/pkms.git HEAD:main
+   ```
+
+5. A non-fast-forward means the build lost commits: stop and investigate. Do not force-push; a
+   rewrite only limits ordinary exposure, and already-public history stays reachable by SHA.
+
+`.github/workflows/leak-scan.yml` repeats the scan on every push and PR in the public repo:
+gitleaks over full history plus a tracked-file scan for personal machine paths and Tailscale
+addresses.
 
 ## Current repo state
 

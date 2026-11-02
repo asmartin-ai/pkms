@@ -1,0 +1,42 @@
+name: leak-scan
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: gitleaks full history
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_SUMMARY: "false"
+      - name: Scan every commit
+        run: gitleaks git --redact --no-banner .
+
+  personal-paths:
+    name: personal path patterns
+    runs-on: ubuntu-latest
+    env:
+      PERSONAL_PATH_RE: '(^|[^A-Za-z0-9_./-])/home/[a-z]|C:\\Users\\|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.'
+      PERSONAL_PATH_EXCLUDE: :(exclude).github/workflows/leak-scan.yml
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan tracked files
+        run: |
+          matches=$(git grep -nIE "$PERSONAL_PATH_RE" -- . $PERSONAL_PATH_EXCLUDE || true)
+          if [ -n "$matches" ]; then
+            printf '%s\n' "$matches"
+            echo "::error::personal path pattern found in tracked files; scrub it or add a documented exclusion"
+            exit 1
+          fi
