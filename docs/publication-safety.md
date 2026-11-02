@@ -32,7 +32,6 @@ tests/**
 .agents/skills/**
 docs/**
 vault/resources/adhd-design-language-repo.md
-vault/resources/research/**
 vault/projects/pkms-design/*.md
 ```
 
@@ -67,12 +66,16 @@ vault/inbox/**
 vault/media/**
 vault/areas/**
 vault/archive/**
+vault/resources/reading/**
+vault/resources/research/**
 vault/**/*.zip
 vault/**/*.tar
 vault/**/*.tar.gz
 vault/**/*.7z
+bakeoff/**
 exports/**
 spike/**
+NEXT.md
 .impeccable/live/sessions/**
 ```
 
@@ -87,8 +90,6 @@ These paths often contain useful public material, but they are private until int
 
 ```text
 vault/projects/**
-vault/resources/reading/**
-vault/resources/research/**
 .impeccable/critique/**
 docs/**
 scripts/*.ps1
@@ -97,7 +98,7 @@ scripts/*.ahk
 
 Examples of scrub targets:
 
-- local Windows or Unix paths (`/path/to/local-resource`, `/path/to/local-resource`, `/path/to/local-resource`)
+- local machine paths (Windows drive paths, `/Users/<user>/…`, `/home/<user>/…`)
 - raw email addresses, account IDs, client IDs, or API credentials
 - tokens, cookies, `.env` values, OAuth secrets, app passwords, and capture tokens
 - database paths, generated indexes, exports, caches, archives, and real fixtures
@@ -172,11 +173,20 @@ A failure does not automatically mean content must be deleted. Decide whether ea
 5. Review findings manually. Do not rewrite history, delete files, or force-push without an explicit decision and backup bundle.
 6. Push only the generated sanitized mirror to the public repo.
 
-## Current repo recommendation
+## Current repo state
 
-`asmartin-ai/pkms` is already public, so existing pushed history should be treated as already exposed. The safest path is:
+`asmartin-ai/pkms` is public and its history was rewritten on 2026-11-02 to
+remove private-by-default material that had reached it (personal research
+notes, reading captures, run logs, a research archive, and a private network
+address). Every commit, author and committer now carries the GitHub no-reply
+identity.
 
-- make this repo the public mirror target going forward;
-- create a future private canonical repo for full vault/local state;
-- avoid raw pushes from private canonical to public; and
-- handle any existing public-history scrub as a separate explicit operation.
+Going forward:
+
+- this repo is the public mirror target; the private canonical repo stays the
+  place where work happens;
+- never push the canonical repo raw to a public remote;
+- keep new personal vault material out of Git in the first place — the
+  `.gitignore` in this repo covers the private vault directories;
+- history that was already public cannot be recalled from clones; the rewrite
+  only limits ordinary exposure from here on.

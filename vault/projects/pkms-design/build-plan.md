@@ -90,7 +90,7 @@ Ships:
   never a backlog count (§3).
 - Tests: capture file format, token rejection, hotkey-path append, today-view render.
 
-the owner actions: ⏱ ~10 min — install/configure the HTTP Shortcuts tile from the doc I'll
+Owner actions: ⏱ ~10 min — install/configure the HTTP Shortcuts tile from the doc I'll
 write (`docs/pixel-capture-setup.md`); confirm `tailscale serve` maps the port.
 
 Design-language checkpoints: §1 (<2s, zero decisions, never opens a feed, instant
@@ -125,8 +125,8 @@ Design-language checkpoints: §5 (recognition, candidates), §6 (consume cost), 
 (transparent "why this" if anything is ranked), §3 (queue framing). Identity-content
 exclusion (§5) noted now, enforced when hoarder material enters *resurfacing* in slice 6.
 
-✓ Done-when: one real saved thread the owner actually wanted to read becomes a vault note he
-opens and reads — the B11 moment, executed on his pick.
+✓ Done-when: one real saved thread the owner actually wanted to read becomes a vault note they
+opens and reads — the B11 moment, executed on their pick.
 
 ---
 
@@ -262,7 +262,7 @@ Ships:
   first; sqlite-vec + local embeddings adopted only if the heuristic picks miss — the
   test is the owner's reaction to a week of real candidates, not a benchmark. Default: defer.
 
-✓ Done-when: a week of daily candidates judged relevant-enough by the owner (his bar from
+✓ Done-when: a week of daily candidates judged relevant-enough by the owner (their bar from
 G5: "if it hits uninteresting things, i might stop using it"); a dismissed item provably
 doesn't reappear inside its window.
 
@@ -303,7 +303,7 @@ Ships:
 - **Email-in**: poll the chosen address/label via Gmail API; matching mail → inbox file
   (`source: email`), subject = first line. The from-work ramp.
 - **Discord bot**: minimal bot; DM or dedicated channel → POST `/capture`
-  (`source: discord`). the owner action: ⏱ ~10 min — create the bot token + invite it.
+  (`source: discord`). Owner action: ⏱ ~10 min — create the bot token + invite it.
 - Both ramps idempotent and append-only; ingestion ledgers in `.index` (§1 dedupe, §9).
 
 **Status (2026-07-06, agent):** code + tests shipped on `main` — `pkms ingest email`,
@@ -479,7 +479,7 @@ returns 200 `already saved ✓ <name>`, no second file; plain captures (no
 ## After slice 8 — Phase 5 gate
 
 Dogfood period: the system runs the owner's real days. Phase 5 evaluation criteria come from
-[[10-synthesis]] RQ6 + the win scenario: is capture habitual, does folding stay debt-free,
+10-synthesis RQ6 + the win scenario: is capture habitual, does folding stay debt-free,
 do resurfacing picks land. Only after surviving Phase 5: umbrella items (career-ops
 dashboard, triage spin-off coordination with content-hoarder Epic 22).
 
@@ -493,7 +493,7 @@ when picked up.
   PKMS (due reshapes, surfaced reminders, capture follow-ups). Hard constraint from the
   research: **ration aggressively** — alert acceptance drops ~30% per repeat, so one
   ambient surface, varied form, silently-decaying queue, no accumulating debt and no
-  guilt/overdue framing ([[16-academic]] SC8/RT6, [[40-handoff-content-hoarder]] #9).
+  guilt/overdue framing (16-academic SC8/RT6, 40-handoff-content-hoarder #9).
   Open design questions: delivery channel (today-view card vs phone push vs Discord),
   what earns a reminder, and how reminders relate to the reshape clock and `[p]` paused
   reactivation conditions.
@@ -502,7 +502,7 @@ when picked up.
   `vault/inbox/`. E.g. YouTube videos → content-hoarder; Obsidian-style notes → the
   Obsidian vault (which content-hoarder already ingests); knowledge captures stay in the
   PKMS vault. Coordination point with content-hoarder (the triage inbox / system of record
-  for raw saves — [[40-handoff-content-hoarder]]); must preserve the sacred zero-decision
+  for raw saves — 40-handoff-content-hoarder); must preserve the sacred zero-decision
   capture path (classification happens after the dump, never as a prompt at capture time).
 - **Inbox surface in the new-tab/PWA** *(the owner, 2026-06-29)* — ✅ shipped 2026-07-04
   as packet P2(b): density-gated `#inbox-surface` + `GET /api/inbox-items`. Left here
@@ -516,7 +516,7 @@ when picked up.
   today-view card alone under-delivers; candidate second surface (still rationed, §5).
 - **Career-ops dashboard inside PKMS** — post-Phase-5 umbrella gate.
 - **Predictive partial sync (G10)** — reactivate when there is real usage to predict
-  from (post-dogfood); design is sketched in [[20-mobile-sync]] + G10.
+  from (post-dogfood); design is sketched in 20-mobile-sync + G10.
 - **Keep ingestion via API** — only if F1 fails; reactivation = a viable API route appears.
 - **Claude-CLI-style interactive terminal UI** (the owner, 2026-06-12) — a richer
   full-screen TUI for the today-view/triage surfaces (candidate tech: Textual — same

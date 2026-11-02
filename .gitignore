@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+**/.venv*/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Python tooling caches
+.pytest_cache/
+.pytest-tmp/
+.pytest-review-tmp/
+.pytest-*-tmp/
+.ruff_cache/
+.mypy_cache/
+
+# Local database (index is regenerated from the vault)
+*.db
+*.db-shm
+*.db-wal
+.index/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/settings.json
+*.swp
+*~
+
+# Secrets and local configuration
+.env
+*.env.local
+.secrets/
+
+# Personal vault content — kept local, never published
+vault/daily/
+vault/inbox/
+vault/media/
+vault/areas/
+vault/archive/
+vault/resources/reading/
+vault/resources/research/
+
+# Throwaway experiments and generated exports
+spike/
+exports/
+
+# Archives and bundled vault duplicates must not be added accidentally
+vault/**/*.zip
+vault/**/*.tar
+vault/**/*.tar.gz
+vault/**/*.7z
+
+# Agent run state
+.autonomous/
+.impeccable/live/sessions/

@@ -139,6 +139,6 @@ shortcut). Phone capture: docs/pixel-capture-setup.md.
 
 Backlog, decision gates, and specs track as GitHub issues on
 `asmartin-ai/pkms-canonical` (private — the public mirror carries no issues).
-NEXT.md holds only the current focus and next actions; everything deferred
+The current focus and next actions live in the tracker; everything deferred
 lives in an issue. Convention and label vocabulary: `docs/agents/issue-tracker.md`;
 triage roles in `docs/agents/triage-labels.md`.

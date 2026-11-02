@@ -8,8 +8,8 @@ objects (Lamplight rule): each tile is exactly ONE next action plus a quiet
 Data source:
   pkms.today.area_tiles(vault, index_dir) -> list[JsonDict]
     - Area notes are vault/areas/*.md (top level only). Missing or empty
-      areas/ -> [] (nothing renders until the owner authors his areas — the
-      agent never invents his life structure).
+      areas/ -> [] (nothing renders until the owner authors their areas — the
+      agent never invents their life structure).
     - Each tile has EXACTLY the keys: title, path, next_action,
       last_touched. No counts anywhere in the payload.
     - title: frontmatter title, else file stem.

@@ -18,10 +18,10 @@ Rules of the bridge (full version in that repo's README):
 - Single source of truth, consumed **by path reference, never copied**.
 - Either project's sessions may edit it — commit there, noting which project prompted
   the change.
-- Evidence stays in this vault ([[10-synthesis]] and the research notes); the repo
+- Evidence stays in the private vault (synthesis + research notes); the repo
   states the distilled rules. When research and the repo disagree, fix the repo.
 - Project-specific exceptions live in the project, pointing back at the rule they
   override.
 
 Decided 2026-06-12 as the pre-Phase-4 prerequisite (content-hoarder backlog Epic 23,
-option b — standalone repo). Related: [[decisions]], [[40-handoff-content-hoarder]].
+option b — standalone repo). Related: [[decisions]], content-hoarder handoff notes.

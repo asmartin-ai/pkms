@@ -39,9 +39,9 @@ new-tab/PWA front end in `src/pkms/web/` (packaged Firefox copy in
 | `vault/projects/pkms-design/sweep-findings-2026-06-17.md` | Bug/improvement ledger (mostly resolved; §1 headers say what's open). |
 | `docs/redesign/fable-{directions,report}.md` | The Lamplight visual system: rationale + verified state. |
 
-The research corpus behind all of this lives in `vault/resources/research/`
-(00 = ground truths, 10 = synthesis, 11–21 = tracks). Cite it when making a
-design argument; don't re-derive it.
+The design research corpus behind all of this lives in the private canonical
+repo and is not part of this public mirror. Where a design argument depends on
+it, cite the conclusion rather than the raw note.
 
 ---
 
@@ -74,8 +74,8 @@ design argument; don't re-derive it.
 **No-touch / never-run**
 - Never read-dump, edit, move, or delete: `vault/daily/**`, `vault/inbox/**`
   (personal content), `.index/**`, `.secrets/**`, `.venv/`, `.env`. Never
-  print secret values. (Tracked design notes under `vault/projects/` and
-  `vault/resources/research/` are fair to read.)
+  print secret values. (Tracked design notes under `vault/projects/` are fair
+  to read.)
 - Never run destructive/network CLI against the real vault: `delete`,
   `purge-done`, `decay --apply`, `bankruptcy --apply`, `reddit-sync`,
   `hn-sync`, `reddit-unsave`, `archive-media --apply`, `scan-media --apply`,
@@ -109,7 +109,7 @@ shell assets change.
 - Decide freely inside a packet's scope when consistent with the law and the
   closed gates — make the call, record it in the commit/report.
 - Needs the owner (present options, ONE question): reopening any G1–G10 gate; new
-  ambient surfaces or notification mechanics; anything touching his accounts,
+  ambient surfaces or notification mechanics; anything touching their accounts,
   credentials, or external services; visual-language pivots; deleting
   anything user-visible.
 - The user dislikes unpolished agent output: agent-built systems should be
@@ -185,7 +185,7 @@ Decisions pre-made: keep Google-Fonts loading (offline degrades to system
 stacks) — self-hosting woff2 is icebox material, not a blocker. Device
 feedback beyond copy/CSS tweaks (e.g. "too dark", layout pivots) = new
 direction conversation with the owner, not silent rework.
-✓ Done-when: branch merged by the owner (or his fix list executed and re-reviewed),
+✓ Done-when: branch merged by the owner (or their fix list executed and re-reviewed),
 `DESIGN.md` matches shipped reality, suite green at or above baseline.
 
 **Status (2026-07-04, agent):** lede__sub doubled-marker nit fixed and committed
@@ -295,16 +295,16 @@ credentials (K4/K5).
 ### P4 — F2: area tiles + populate `vault/areas/`
 ⏱ one heavy sitting · depends: P0 (visual system), best after P2 · branch `feat/area-tiles`
 Half design, half content. Build the life-domain tile row for the today-view
-(Projects / Career / Health / Money — start with Career, seeded from
-`vault/resources/research/21-career-ops-distill.md` conventions): each tile =
+(Projects / Career / Health / Money — start with Career, reusing the
+task-metadata conventions the vault already uses): each tile =
 exactly ONE next action + a quiet "last touched" line; no counts; tiles obey
 the Lamplight rule (they are dim desk objects — the lamp stays on the lead
 action). `vault/areas/` is empty: author the initial area notes WITH the owner
-(one options-question for which areas to start; don't invent his life
+(one options-question for which areas to start; don't invent their life
 structure). Next-action-per-area reuses `tasks.next_action_per_note`.
 ✓ Done-when: today-view (density=more+) shows one tile per populated area
 rendering live data; area notes exist as first-class vault notes; tests for
-the tile data source; the owner recognizes it as "mine" (his reaction is the
+the tile data source; the owner recognizes it as "mine" (their reaction is the
 acceptance bar, per the G5 precedent).
 
 **Status (2026-07-06, agent, autonomous run):** the AGENT half is shipped —
@@ -325,7 +325,7 @@ files (`frontmatter.load` → UnicodeDecodeError) — parked in §7 as M5.
 from `10-synthesis` RQ6 + the win scenario: is capture habitual, does folding
 stay debt-free, do resurfacing picks land, does re-entry work after gaps.
 NO instrumentation/telemetry — evidence comes from the owner's daily notes,
-/resume breadcrumbs, and his direct answers at review time (behavioral
+/resume breadcrumbs, and their direct answers at review time (behavioral
 monitoring was explicitly rejected in Phase 0).
 Then: 2 weeks of real use, agent hands off.
 Review sitting: walk the criteria with the owner (options, not essays), record
@@ -350,8 +350,8 @@ Discord), what earns a reminder, interaction with the 14d reshape clock and
 slice-shaped spec appended to `build-plan.md`. Build is a separate packet.
 
 ### S2 — Smart routing at capture (F5)
-Blocked on design + content-hoarder coordination
-(`vault/resources/research/40-handoff-content-hoarder.md`). Hard rule:
+Blocked on design + content-hoarder coordination (private handoff notes,
+not in this mirror). Hard rule:
 classification happens AFTER the dump — the capture path gains zero
 decisions. Deliverable: routing-table spec (what goes where, what stays),
 coordination notes with the content-hoarder session, slice-shaped spec.
@@ -373,7 +373,7 @@ life-os ADRs 0016/0017/0025/0026 Accepted). PKMS side is the destination spec:
 Deliverable: slice-shaped spec appended to `build-plan.md` (transport — file
 drop vs `POST /capture` — is the main open question; capture path gains zero
 decisions either way). Build is a separate packet. Coordinate with S2's
-routing table; read `vault/resources/research/40-handoff-content-hoarder.md`.
+routing table; the content-hoarder handoff notes stay in the private repo.
 
 ---
 

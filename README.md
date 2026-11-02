@@ -1,46 +1,85 @@
-# PKMS — Personal Knowledge Management System
+# PKMS — a personal knowledge system that doesn't shame you
 
-A hybrid personal knowledge management system designed around ADHD-friendly
-principles: **frictionless capture, no guilt mechanics, recognition over recall.**
+PKMS is a local-first personal knowledge management system built for one
+ADHD-shaped brain: **frictionless capture, no guilt mechanics, recognition over
+recall.** Thoughts land in an inbox in under two seconds, get folded into
+Markdown notes in batches, and come back later only when they're genuinely
+useful — never as an unread counter.
 
-Markdown files in `vault/` are the source of truth; a SQLite database in
-`.index/pkms.db` is a derived, regenerable index for fast search and backlink
-tracking. Delete the index any time — `pkms index` rebuilds it from the vault.
+Markdown files in `vault/` are the source of truth. A SQLite database in
+`.index/pkms.db` is a derived, regenerable index for search and backlinks.
+Delete the index any time — `pkms index` rebuilds it from the vault.
 
-## Design philosophy
+## Who it helps
 
-The system is built against a shared ADHD design language. Core rules that shape
-every surface:
+People who save more than they process: the note-taking graveyard, the 400 open
+tabs, the "I'll organise it later". PKMS is for a single user on their own
+machine, not a team or a hosted service. It assumes:
 
-- **Capture is sacred** — dumping a thought takes < 2s and zero decisions.
-- **No backlog shame** — no unread counts, overdue badges, or "you haven't…" copy.
-- **One next action** — surfaces show the single next step, not a wall of tasks.
-- **Resurfacing as curiosity** — old notes return as rationed "still interested in X?"
-  questions, never as a counter.
+- capture must be one keystroke and zero decisions, or it doesn't happen;
+- any visible backlog becomes a source of shame, so none is shown;
+- surfaces should offer **one** next action, not a wall of tasks;
+- old notes return as rationed "still interested in this?" questions, never as
+  a count.
 
-## Vault structure
+## What's here
 
+- **CLI** (`pkms`): capture, today view, tasks, search, resurface, promote,
+  index, ingest (Google Keep, email, Discord).
+- **Local web service** (`pkms serve`): capture endpoint plus a desktop
+  today-view, installable as a PWA over a private network.
+- **Firefox new-tab extension**: the today-view as the browser's new-tab page.
+- **Agent skills** (`.agents/skills/`): `/fold` turns inbox captures into
+  vault notes with an approval step; `/resume` leaves and reads a breadcrumb
+  across sessions.
+
+## Current state
+
+Working daily driver, single-user dogfood stage. The CLI, the local web/PWA
+surface, the Firefox new-tab extension, and the capture ramps (phone shortcut,
+email, Discord) are implemented and covered by the test suite in `tests/`.
+CI runs lint and tests on Linux; the maintainer's own setup is Windows, and
+phone capture goes over a private tailnet. Expect rough edges where the two
+meet — the setup docs are the honest record of what was actually run.
+
+## Quick start
+
+Requires Python 3.11+.
+
+**Linux / macOS**
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e ".[dev]"
+pkms capture "a thought worth keeping"
+pkms today
 ```
-vault/
-  daily/       # Daily notes, YYYY-MM-DD.md   (kept local, gitignored)
-  inbox/       # Raw captures awaiting folding (kept local, gitignored)
-  projects/    # Active project notes
-  areas/       # Ongoing responsibilities
-  resources/   # Reference material + research
-  archive/     # Completed / inactive notes
-```
 
-Notes use `[[wikilink]]` syntax for internal links; YAML frontmatter carries
-metadata (`tags`, `created`, `modified`, `status`). Tasks are `- [ ]` lines with
-optional `⏱size ▶first-action ✓done-when` metadata and state markers
-(`[ ]` open · `[x]` done · `[?]` stuck · `[~]` not-now · `[p]` paused · `[i]` iceboxed).
-
-## Setup
+**Windows (PowerShell)**
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
+pkms capture "a thought worth keeping"
+pkms today
+```
+
+Start the local web service (default port `8765`):
+
+```sh
+pkms serve                    # Linux / macOS
+```
+
+```powershell
+pkms serve                    # Windows, inside the activated venv
+```
+
+Check it:
+
+```sh
+curl http://localhost:8765/health     # → ok
 ```
 
 ## Common commands
@@ -63,113 +102,53 @@ pkms ingest email     # Pull labeled Gmail messages into the inbox (IMAP)
 pkms discord-bot      # Discord DMs → inbox (see docs/email-discord-setup.md)
 ```
 
-## Start the desktop service
+## Vault layout
 
-Run the web service from the repo so it uses this checkout's `vault/` and
-`.index/pkms.db`:
-
-```powershell
-.\.venv\Scripts\python.exe -m pkms.cli serve
+```
+vault/
+  daily/       # Daily notes, YYYY-MM-DD.md   (kept local, gitignored)
+  inbox/       # Raw captures awaiting folding (kept local, gitignored)
+  projects/    # Active project notes
+  areas/       # Ongoing responsibilities
+  resources/   # Reference material
+  archive/     # Completed / inactive notes
 ```
 
-Leave that terminal open. The service listens on port `8765`.
+Notes use `[[wikilink]]` syntax and YAML frontmatter (`tags`, `created`,
+`modified`, `status`). Tasks are `- [ ]` lines with optional
+`⏱size ▶first-action ✓done-when` metadata and state markers
+(`[ ]` open · `[x]` done · `[?]` stuck · `[~]` not-now · `[p]` paused · `[i]` iceboxed).
 
-Health check:
+## Optional ramps and surfaces
 
-```powershell
-curl http://localhost:8765/health
-```
+Setup walkthroughs live in `docs/`:
 
-Expected output:
+- `docs/pixel-capture-setup.md` — phone capture tile over a private network.
+- `docs/pixel-pwa-setup.md` — install the today-view as a phone PWA.
+- `docs/firefox-newtab-setup.md` — the new-tab extension, step by step.
+- `docs/email-discord-setup.md` — email and Discord in-ramps.
+- `docs/keep-setup.md` — Google Keep import.
 
-```text
-ok
-```
-
-If port `8765` is already in use, find and stop the old service first:
-
-```powershell
-Get-NetTCPConnection -LocalPort 8765 -State Listen |
-  Select-Object LocalAddress,LocalPort,OwningProcess
-
-Stop-Process -Id <OwningProcess>
-```
-
-Then start the service again with the command above.
-
-## Firefox new-tab setup
-
-1. Start the desktop service.
-2. Load the temporary extension from Firefox:
-
-   ```text
-   about:debugging#/runtime/this-firefox
-   ```
-
-   Click **Load Temporary Add-on…** and select:
-
-   ```text
-   src\pkms\web_ext\manifest.json
-   ```
-
-3. Get your capture token:
-
-   ```powershell
-   Get-Content .secrets\capture-token
-   ```
-
-4. Open Firefox add-ons:
-
-   ```text
-   about:addons
-   ```
-
-   Find **PKMS new-tab** → **Preferences** / **Options** and paste:
-
-   ```text
-   http://localhost:8765/web/?token=YOUR_TOKEN
-   ```
-
-5. Open a new tab. It should show the PKMS today-view. The top-level page is
-   packaged in the extension, so Firefox keeps the address bar clean; live data
-   is fetched from `pkms serve` with the token sent as `X-Capture-Token`.
-
-The reading surface shows notes with `reading: queued` frontmatter under
-`vault/resources/reading/`. Click a reading item to open the markdown note in
-your default local editor/app.
-
-Temporary add-ons disappear when Firefox restarts. For the full walkthrough and
-permanent-install options, see `docs/firefox-newtab-setup.md`.
-
-## Agent instructions
-
-Repo-local agent rules live in `AGENTS.md`, layered on top of your global agent
-rules. Project-local agent skills live under `.agents/skills/`:
-
-- `/fold` folds `vault/inbox/` captures into the vault after an approval step.
-- `/resume` reads/writes the daily breadcrumb around sessions.
+The Firefox extension is loaded as a temporary add-on from
+`src/pkms/web_ext/manifest.json`; the walkthrough covers the permanent-install
+options.
 
 ## Development
 
-```powershell
-.venv\Scripts\python.exe -m pytest tests -q
+```sh
+pip install -e ".[dev]"
+ruff check .
+pytest tests -q
 ```
 
-## Publication safety
+## This repository is a public mirror
 
-PKMS is split into two repos:
-
-- **`asmartin-ai/pkms-canonical`** (private) — canonical workspace with full vault state.
-  Work happens here; never push it raw to a public remote.
-- **`asmartin-ai/pkms`** (public) — sanitized mirror built from the allowlist. Push here
-  only after running the mirror build and safety checker.
-
-```powershell
-python scripts/build_public_mirror.py
-python scripts/check_publication_safety.py --history
-```
-
-Full policy: `docs/publication-safety.md`.
+PKMS is developed in a **private canonical repository** that also holds the
+owner's personal vault state — daily notes, inbox captures, media, reading
+queue and research notes. This repository is the reviewed public subset: code,
+tests, docs and design notes, with personal content left out. Issues and
+roadmap live in the private repo, so the issue tracker here is usually empty by
+design.
 
 ## License
 

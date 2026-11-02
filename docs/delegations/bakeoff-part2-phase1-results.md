@@ -2,8 +2,9 @@
 
 *Completed 2026-07-05. Phase 1 of the Part 2 bakeoff, activated by the content-hoarder
 completion signal on ntfy topic `<NTFY_TOPIC>` at 07:30 CDT (message time 1783253691).
-Plan: `/path/to/local-resource`.
-Raw data: `bakeoff/part2/results.csv` (22 Phase 1 runs + 3 Phase 0 smoke rows).*
+Plan: `docs/PKMS-Price-Performance-Bakeoff-Plan-2026-07-03.md`.
+Raw data: `bakeoff/part2/results.csv` (22 Phase 1 runs + 3 Phase 0 smoke rows) — the
+raw run data stays in the private canonical repo.*
 
 **Phase 1 only — Phase 2 (decision write-up + routing-table update) is the next step.**
 

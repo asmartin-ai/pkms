@@ -253,7 +253,7 @@ substrate does not change.
 - **What:** a row of life-domain tiles (Projects, Career, Health, Money/Finance), each
   showing **one** next action and a quiet "last touched" line — a glanceable life-OS.
 - **Data:** `vault/areas/` is currently empty; this feature populates it as first-class notes
-  (start with Career — research exists in `vault/resources/research/21-career-ops-distill.md`).
+  (start with Career).
   Next-action per area reuses the existing per-note ranking (see I3).
 - **Constraints:** each tile is exactly one next action so N domains ≠ a wall (§6); no counts.
 - **Acceptance:** the today-view shows one tile per populated area, each with a single next
@@ -369,7 +369,3 @@ oracle or a true one-liner) · **⏸ decide-first** · **🎨 design** (you / de
 - **Icebox (in `build-plan.md`):** when Fable 5 is restored, get its **blind** take on the
   visual-home UI (F1–F3) without the context of the existing mockup/branch — an independent
   design to compare, not refine.
-- **Judgment calls left to the user (private repo, low urgency):** four "the owner" self-references
-  in `vault/resources/research/21-career-ops-distill.md` and `00-ground-truths.md`, and a
-  hardcoded tailnet IP in `docs/pixel-capture-setup.md` — scrub to "the owner"/placeholder only
-  if consistency is wanted.

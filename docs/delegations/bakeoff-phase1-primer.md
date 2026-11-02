@@ -22,7 +22,7 @@ pipeline; Phase 1+ is the real measurement.
 
 | Item | Expected state | How to verify |
 |---|---|---|
-| PKMS branch | `feat/uiux-redesign` checked out, clean except the two doc edits from the Phase 0 follow-up session (`NEXT.md`, `docs/delegations/bakeoff-phase0-results.md`) — OR `main` if the owner has merged (K1 approved 2026-07-04; the merge is his action). Verify which before branching | `git status -sb`, `git branch --show-current` |
+| PKMS branch | `feat/uiux-redesign` checked out, clean except the two doc edits from the Phase 0 follow-up session (`NEXT.md`, `docs/delegations/bakeoff-phase0-results.md`) — OR `main` if the owner has merged (K1 approved 2026-07-04; the merge is their action). Verify which before branching | `git status -sb`, `git branch --show-current` |
 | PKMS test baseline | **402 passing** (391 redesign + 9 F-batch + 2 parametrization) | `/path/to/PKMS/.venv/Scripts/python.exe -m pytest -q` |
 | F-batch oracles | **GREEN** (the 3 fixes are merged via `c541b73`) — consumed as oracles; see §2 for the reuse decision | `git log --oneline 3cbc55b..HEAD \| grep -E "F[123]\|raw\|wake\|empty"` |
 | Skill fixes M17/M18/G1 | Baked into `agent-hub/skills/aider-headless-delegate/SKILL.md` (committed in the `agent-hub` repo) | `git -C /path/to/local-resource log --oneline -1 -- skills/aider-headless-delegate/SKILL.md` |
