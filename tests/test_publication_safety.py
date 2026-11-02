@@ -61,14 +61,14 @@ def test_content_risks_flag_realistic_publication_hazards():
     # Path checks apply to non-scrubbed suffixes (.py); emails/credentials
     # are checked for every suffix.
     text = """
-    cd /path/to\\some-project
-    database: /path/to/some-project/data/app.db
+    cd C:\\Users\\Somebody\\some-project
+    database: C:/Users/Somebody/some-project/data/app.db
     contact me at real.person@example.invalid
     REDDIT_CLIENT_SECRET=abc123abc123abc123
     """
     risks = safety.content_risks("src/pkms/example.py", text)
-    assert any("local path: /path/to\\some-project" in risk for risk in risks)
-    assert any("local path: /path/to/some-project/data/app.db" in risk for risk in risks)
+    assert any("local path: C:\\Users\\Somebody\\some-project" in risk for risk in risks)
+    assert any("local path: C:/Users/Somebody/some-project/data/app.db" in risk for risk in risks)
     assert any("raw email address: real.person@example.invalid" in risk for risk in risks)
     assert any("credential-shaped assignment" in risk for risk in risks)
 
@@ -76,7 +76,7 @@ def test_content_risks_flag_realistic_publication_hazards():
 def test_content_risks_skip_path_check_for_scrubbed_suffixes():
     # .md files are path-scrubbed by the mirror build, so local paths in them
     # are not flagged here (they cannot leak). Emails/credentials still are.
-    text = "See /path/to\\some-project — email real.person@example.invalid"
+    text = "See C:\\Users\\Somebody\\some-project — email real.person@example.invalid"
     risks = safety.content_risks("docs/example.md", text)
     assert not any("local path" in r for r in risks)
     assert any("raw email address: real.person@example.invalid" in r for r in risks)
@@ -105,9 +105,9 @@ def test_history_risk_paths_include_private_archives_and_secret_names():
 
 
 def test_public_mirror_scrubs_machine_local_paths_from_text():
-    text = "See /path/to\\some-project and C:/Users/Somebody/agent-hub/AGENTS.md."
+    text = "See C:\\Users\\Somebody\\some-project and C:/Users/Somebody/agent-hub/AGENTS.md."
     scrubbed = builder.scrub_text(text)
-    assert "K:\\" not in scrubbed
+    assert "C:\\Users" not in scrubbed
     assert "C:/Users" not in scrubbed
     assert "/path/to/local-resource" in scrubbed
     # Every SPECIFIC_REPLACEMENTS key (real canonical paths) scrubs to its
