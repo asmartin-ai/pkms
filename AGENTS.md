@@ -14,10 +14,10 @@ Push canonical `main` to `canonical` (private), and only when the user asks. Nev
 push canonical raw to `origin` (public); public updates go through the mirror build
 pipeline. Full policy: `docs/publication-safety.md`.
 
-Agents editing this repo must work in a `git worktree` under `/tmp/` branched
-off `main` — never in this checkout: live systemd services (`pkms-keep.timer`,
-`pkms-gmail.service`, `pkms-serve.service`) run from here. Only the architect
-fast-forwards `main` in place, after `bun run check` on each merged branch.
+In the canonical checkout, agents must work in a `git worktree` under `/tmp/`
+branched off `main` — never in the live checkout: systemd services run from it.
+Only the architect fast-forwards canonical `main` in place, after `bun run check`
+on each merged branch.
 
 ## Project overview
 
@@ -30,8 +30,8 @@ tasks, and resurfacing.
   ephemeral client view state; client plugins ship as compiled ES modules (import
   maps, no consumer build step). No React.
 - **Design language:** before designing any surface, flow, copy, or automation, read
-  `../adhd-design-language/DESIGN-LANGUAGE.md` (shared with content-hoarder;
-  reference by path, never copy).
+  `DESIGN.md`. Canonical contributors also consult the shared design language when
+  available; it is not included in the public mirror.
 
 ## Data safety and no-touch paths
 
@@ -123,28 +123,13 @@ pkms ingest [ramp]    # List ramps / pull one (keep, email, whatsapp, …)
 Ramp setup: `docs/keep-setup.md`, `docs/email-discord-setup.md`,
 `docs/whatsapp-setup.md`, `docs/phone-capture-setup.md`.
 
-## Agent skills
+## Canonical contributor context
 
-- **/fold** (`.agents/skills/fold/`): folds `vault/inbox/` captures into the vault —
-  proposal first, one pick-list question, applies on approval.
-- **/resume** (`.agents/skills/resume/`): reads back the breadcrumb at session start;
-  writes it at session end ("wrapping up" triggers write mode).
+The private canonical checkout includes additional agent skills and contributor
+guidance that are not published in the mirror. Its `/fold` skill handles inbox
+captures with a proposal and approval; `/resume` reads and writes session breadcrumbs.
 
-### Issue tracker
-
-GitHub issues on `pkms-canonical` (private), via `gh`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when needed. See `docs/agents/domain.md`.
-
-## Backlog and issues
-
-Backlog, decision gates, and specs track as GitHub issues on
-`pkms-canonical` (private — the public mirror carries no issues).
-`NEXT.md` holds only the current focus and next actions. Convention and labels:
-`docs/agents/issue-tracker.md`; triage roles in `docs/agents/triage-labels.md`.
+Backlog, decision gates, and specs track as GitHub issues on `pkms-canonical`
+(private; the public mirror carries no issues). The canonical checkout's
+`NEXT.md` holds the current focus and next actions. Its private contributor
+guidance covers the issue tracker, triage labels, and domain docs.
