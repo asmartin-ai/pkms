@@ -1,27 +1,15 @@
-// Minimal service worker for the PKMS new-tab/PWA shell.
-// Strategy: stale-while-revalidate for static assets — serve cached on the
-// request (instant tab-open, works offline) but fetch the network copy in the
-// background and update the cache, so the NEXT tab-open always reflects the
-// latest shell edit. (Pure cache-first served a stale shell forever when only
-// app.js/styles.css changed and sw.js didn't — a footgun for an iterated tool.)
-// /api/today is network-only (always-fresh data; if offline, the page shows
-// its error banner — sync is never load-bearing for correctness, §9).
-// v6: area tiles wired (/api/area-tiles + density-gated tile row) (2026-07-06)
-// — bump so installed PWAs pick up the new app.js/styles.css/index.html.
-// v5: inbox surface wired (/api/inbox-items + density-gated card row) (2026-07-04)
-// — bump so installed PWAs pick up the new app.js/styles.css instead of the v4 shell.
-// v4: search surface wired (recent-notes + /api/search?q=) (2026-07-04) — bump
-// so installed PWAs pick up the new app.js/styles.css instead of the v3 shell.
-// v3: lede__sub breadcrumb bullet-strip (2026-07-04) — bump so installed
-// PWAs pick up the new app.js instead of the stale v2 shell from cache.
-// v2: the "Lamplight" redesign (2026-07-02) — bump so installed PWAs pick up
-// the new shell instead of serving the stale Log Book II look from cache.
-const CACHE = "pkms-shell-v6";
+const CACHE = "pkms-shell-v11";
+
+const AUTH_CACHE = "pkms-auth";
+
 const SHELL = [
   "/web/",
   "/web/index.html",
   "/web/styles.css",
-  "/web/app.js",
+  "/web/htmx.min.js",
+  "/web/ext/json-enc.js",
+  "/web/shell.js",
+  "/web/auth-token.js",
   "/web/manifest.webmanifest",
   "/web/icon.svg",
 ];
@@ -42,25 +30,61 @@ self.addEventListener("activate", (e) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
+          keys.filter((k) => k !== CACHE && k !== AUTH_CACHE).map((k) => caches.delete(k)),
         ),
       ),
   );
   self.clients.claim();
 });
 
+async function replayShareWithToken(request) {
+  if (request.headers.get("x-capture-token")) return fetch(request);
+
+  const auth = await caches.open(AUTH_CACHE);
+  const stored = await auth.match("/__token");
+
+  if (!stored) return fetch(request);
+
+  const headers = new Headers(request.headers);
+
+  headers.set("X-Capture-Token", await stored.text());
+
+  const replayed = await fetch(new Request(request, { headers, redirect: "follow" }));
+
+  if (replayed.redirected) return Response.redirect(replayed.url, 303);
+
+  return replayed;
+}
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  // Never intercept the live data endpoint or capture POSTs — always network.
-  if (url.pathname.startsWith("/api/") || e.request.method !== "GET") return;
 
-  // Stale-while-revalidate: serve the cached copy immediately (instant tab-open,
-  // offline-capable) AND fetch the network copy in the background to refresh the
-  // cache — so the next tab-open picks up shell edits without a manual version
-  // bump. The cache is the fallback if the network fails (offline).
+  if (e.request.method === "POST" && url.pathname === "/web/share") {
+    const origin = e.request.headers.get("origin");
+
+    const sameOrigin =
+      origin === null || origin === "null" || new URL(origin).origin === self.location.origin;
+
+    e.respondWith(
+      sameOrigin
+        ? replayShareWithToken(e.request)
+        : new Response("cross-origin share rejected", { status: 403 }),
+    );
+
+    return;
+  }
+
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/partial/") ||
+    e.request.method !== "GET"
+  )
+    return;
+
   e.respondWith(
     (async () => {
       const cached = await caches.match(e.request);
+
       const network = fetch(e.request)
         .then((r) => {
           if (r.ok) {
@@ -70,14 +94,17 @@ self.addEventListener("fetch", (e) => {
               .then((c) => c.put(e.request, copy))
               .catch(() => {});
           }
+
           return r;
         })
         .catch(() => null);
+
       if (cached) {
-        // Revalidate in the background; serve stale now.
         network.catch(() => {});
+
         return cached;
       }
+
       return (await network) || caches.match("/web/index.html");
     })(),
   );

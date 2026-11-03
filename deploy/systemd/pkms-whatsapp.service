@@ -1,0 +1,15 @@
+[Unit]
+Description=Ingest WhatsApp messages from the wacli mirror into PKMS
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+# Backstop for a wedged wacli subprocess: the ramp drains every chat through
+# wacli while holding the single-drain lock (.ledger/whatsapp-lock.db), and
+# each call carries its own 30s kill timeout, so a healthy run that pages
+# several chats still finishes inside 2min. A hung one dies with the start
+# job instead — the timer ticks every 5 minutes, and a run still holding
+# the lock at the next tick would stack timer runs.
+TimeoutStartSec=2min
+ExecStart=/bin/sh -c 'exec "$${PKMS_HOME:?PKMS_HOME must name the PKMS checkout}/bin/pkms" ingest whatsapp'

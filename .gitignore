@@ -1,3 +1,6 @@
+# Bun / TypeScript (ADR 0034 port)
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -9,7 +12,7 @@ venv/
 dist/
 build/
 
-# Python tooling caches
+# Python tooling caches (mirrors content-hoarder/.gitignore)
 .pytest_cache/
 .pytest-tmp/
 .pytest-review-tmp/
@@ -17,11 +20,18 @@ build/
 .ruff_cache/
 .mypy_cache/
 
-# Local database (index is regenerated from the vault)
+# Database (index is regenerated from vault)
 *.db
 *.db-shm
 *.db-wal
 .index/
+.ledger/
+
+# Ramp spools (personal message text waiting to be drained into the vault)
+.incoming/
+
+# Keep attachments mirror (runtime artifact, sha256-named files)
+keep-media/
 
 # OS
 .DS_Store
@@ -33,21 +43,21 @@ desktop.ini
 *.swp
 *~
 
-# Secrets and local configuration
+# Secrets
 .env
 *.env.local
 .secrets/
 
-# Personal vault content — kept local, never published
-vault/daily/
-vault/inbox/
-vault/media/
-vault/areas/
-vault/archive/
-vault/resources/reading/
-vault/resources/research/
+# Claude Code machine-local permissions (skills/ stays tracked)
+.claude/settings.local.json
 
-# Throwaway experiments and generated exports
+# Autonomous/overnight run trail (local audit log; not part of the shipped project)
+.autonomous/
+
+# Impeccable live-mode runtime recovery state
+.impeccable/live/sessions/
+
+# Throwaway experiments and generated exports are local-only
 spike/
 exports/
 
@@ -57,6 +67,10 @@ vault/**/*.tar
 vault/**/*.tar.gz
 vault/**/*.7z
 
-# Agent run state
-.autonomous/
-.impeccable/live/sessions/
+# Personal vault content — kept local, not published (app recreates dirs on demand)
+vault/daily/
+vault/inbox/
+vault/sources/
+vault/media/
+vault/areas/
+vault/archive/

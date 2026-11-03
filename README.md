@@ -1,155 +1,73 @@
-# PKMS — a personal knowledge system that doesn't shame you
+# PKMS
 
-PKMS is a local-first personal knowledge management system built for one
-ADHD-shaped brain: **frictionless capture, no guilt mechanics, recognition over
-recall.** Thoughts land in an inbox in under two seconds, get folded into
-Markdown notes in batches, and come back later only when they're genuinely
-useful — never as an unread counter.
+PKMS is a personal knowledge management system built for ADHD-friendly capture and re-entry: put a thought somewhere quickly, find it later, and return to one next action instead of a wall of choices.
 
-Markdown files in `vault/` are the source of truth. A SQLite database in
-`.index/pkms.db` is a derived, regenerable index for search and backlinks.
-Delete the index any time — `pkms index` rebuilds it from the vault.
+Your Markdown vault is the source of truth. A local SQLite index supports search, backlinks, tasks and resurfacing; it can be rebuilt from the vault.
 
-## Who it helps
+## What it does
 
-People who save more than they process: the note-taking graveyard, the 400 open
-tabs, the "I'll organise it later". PKMS is for a single user on their own
-machine, not a team or a hosted service. It assumes:
+- Capture thoughts into an inbox and use a daily briefing to pick up where you left off.
+- Search notes, follow `[[wikilinks]]` and backlinks, and create daily or project notes.
+- Track tasks in Markdown, surface next actions, and revisit older notes with prompts.
+- Use a local web interface for capture and the today view, or connect the Firefox new-tab extension.
+- Optionally import and route sources from Google Keep, Gmail and WhatsApp, or capture through Discord. These integrations require separate setup and credentials.
+- Promote a hoarded Reddit thread into a reading note; connect an MCP client over stdio.
 
-- capture must be one keystroke and zero decisions, or it doesn't happen;
-- any visible backlog becomes a source of shame, so none is shown;
-- surfaces should offer **one** next action, not a wall of tasks;
-- old notes return as rationed "still interested in this?" questions, never as
-  a count.
+## Quickstart
 
-## What's here
-
-- **CLI** (`pkms`): capture, today view, tasks, search, resurface, promote,
-  index, ingest (Google Keep, email, Discord).
-- **Local web service** (`pkms serve`): capture endpoint plus a desktop
-  today-view, installable as a PWA over a private network.
-- **Firefox new-tab extension**: the today-view as the browser's new-tab page.
-- **Agent skills** (`.agents/skills/`): `/fold` turns inbox captures into
-  vault notes with an approval step; `/resume` leaves and reads a breadcrumb
-  across sessions.
-
-## Current state
-
-Working daily driver, single-user dogfood stage. The CLI, the local web/PWA
-surface, the Firefox new-tab extension, and the capture ramps (phone shortcut,
-email, Discord) are implemented and covered by the test suite in `tests/`.
-CI runs lint and tests on Linux; the maintainer's own setup is Windows, and
-phone capture goes over a private tailnet. Expect rough edges where the two
-meet — the setup docs are the honest record of what was actually run.
-
-## Quick start
-
-Requires Python 3.11+.
-
-**Linux / macOS**
+Install [Bun](https://bun.com/) 1.4.2 or newer, then clone this repository:
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -e ".[dev]"
-pkms capture "a thought worth keeping"
-pkms today
+git clone https://github.com/asmartin-ai/pkms.git
+cd pkms
+bun install --frozen-lockfile
+./bin/pkms capture "An idea to revisit"
+./bin/pkms index
+./bin/pkms today
+./bin/pkms search idea
 ```
 
-**Windows (PowerShell)**
+The launcher uses this checkout as `PKMS_HOME`. Add its `bin/` directory to your `PATH` to run `pkms` from elsewhere. On Windows, use `bin/pkms.cmd`.
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-pkms capture "a thought worth keeping"
-pkms today
-```
+Start the web service with `./bin/pkms serve` or `bun run start`. It listens on `127.0.0.1:8765` by default and prints the today-view address. The service creates a capture token in `.secrets/capture-token` when needed; use it in the address shown by the server and keep it private. Run `./bin/pkms --help` for the command list. Integrations are optional; see the [setup guides](#integration-guides) before enabling one.
 
-Start the local web service (default port `8765`):
+## Your vault and privacy
 
-```sh
-pkms serve                    # Linux / macOS
-```
+Notes are plain Markdown with YAML frontmatter. Tasks use Markdown checkboxes and support additional states and next-action metadata. Inbox captures and daily notes are kept under `vault/`; the derived index is `.index/pkms.db`. Run `./bin/pkms index` to rebuild it. Operational events and integration state also live locally, separately from the index; rebuilding the index is not a backup of that state.
 
-```powershell
-pkms serve                    # Windows, inside the activated venv
-```
+PKMS is local-first, not automatically private from every service: optional integrations connect to external accounts, and optional model-assisted routing can send source metadata and excerpts to a configured provider. Review the relevant setup guide and provider before enabling either. Protect credentials, captures and backups, especially if exposing the web service beyond your machine.
 
-Check it:
+## Integration guides
 
-```sh
-curl http://localhost:8765/health     # → ok
-```
+- [Google Keep](docs/keep-setup.md)
+- [Gmail and Discord](docs/email-discord-setup.md)
+- [WhatsApp](docs/whatsapp-setup.md)
+- [Phone capture](docs/phone-capture-setup.md) and [phone PWA](docs/phone-pwa-setup.md)
+- [Firefox new-tab extension](docs/firefox-newtab-setup.md)
+- [Hermes / MCP](docs/hermes-setup.md)
 
-## Common commands
+## Status
 
-```
-pkms capture "text"   # Dump a thought into the inbox (zero decisions)
-pkms today            # Front door: breadcrumb, inbox-as-progress, next actions
-pkms tasks            # One next action per note
-pkms tasks --done     # Done tasks, grouped by note path
-pkms tasks --all      # Open/stuck/not-now backlog
-pkms tasks --stash    # Paused/iceboxed tasks
-pkms search <query>   # Full-text search
-pkms promote <url>    # Turn a hoarded Reddit thread into a readable vault note
-pkms resurface        # Up to 3 curious questions from the vault, each with a why
-pkms did "thing"      # Log a done thing — counts today; retroactive welcome
-pkms index            # Rebuild the full index from the vault
-pkms serve            # Web service: capture endpoint + desktop today-view
-pkms ingest keep      # Pull Google Keep exports into the inbox
-pkms ingest email     # Pull labeled Gmail messages into the inbox (IMAP)
-pkms discord-bot      # Discord DMs → inbox (see docs/email-discord-setup.md)
-```
+PKMS is an actively developed personal project, not a hosted service or a packaged release. Interfaces and integrations can change; review setup and back up your own vault before relying on it. The public repository is a sanitized mirror of the TypeScript/Bun canonical project. See [publication safety](docs/publication-safety.md) for the boundary.
 
-## Vault layout
+### Changed from the Python version
 
-```
-vault/
-  daily/       # Daily notes, YYYY-MM-DD.md   (kept local, gitignored)
-  inbox/       # Raw captures awaiting folding (kept local, gitignored)
-  projects/    # Active project notes
-  areas/       # Ongoing responsibilities
-  resources/   # Reference material
-  archive/     # Completed / inactive notes
-```
+The public repository previously contained a Python implementation. The current implementation is TypeScript running on Bun, with different installation, commands and integrations. Use the instructions above rather than the old Python setup; do not assume existing scripts or integrations are drop-in compatible.
 
-Notes use `[[wikilink]]` syntax and YAML frontmatter (`tags`, `created`,
-`modified`, `status`). Tasks are `- [ ]` lines with optional
-`⏱size ▶first-action ✓done-when` metadata and state markers
-(`[ ]` open · `[x]` done · `[?]` stuck · `[~]` not-now · `[p]` paused · `[i]` iceboxed).
+## Related projects
 
-## Optional ramps and surfaces
-
-Setup walkthroughs live in `docs/`:
-
-- `docs/pixel-capture-setup.md` — phone capture tile over a private network.
-- `docs/pixel-pwa-setup.md` — install the today-view as a phone PWA.
-- `docs/firefox-newtab-setup.md` — the new-tab extension, step by step.
-- `docs/email-discord-setup.md` — email and Discord in-ramps.
-- `docs/keep-setup.md` — Google Keep import.
-
-The Firefox extension is loaded as a temporary add-on from
-`src/pkms/web_ext/manifest.json`; the walkthrough covers the permanent-install
-options.
+PKMS is part of the Khaos ecosystem alongside [Life OS](https://github.com/asmartin-ai/life-os-public), an architecture and design companion, and [Content Hoarder](https://github.com/asmartin-ai/content-hoarder), a local-first content library.
 
 ## Development
 
 ```sh
-pip install -e ".[dev]"
-ruff check .
-pytest tests -q
+bun install --frozen-lockfile
+bun run check
+bun run format:check
 ```
 
-## This repository is a public mirror
-
-PKMS is developed in a **private canonical repository** that also holds the
-owner's personal vault state — daily notes, inbox captures, media, reading
-queue and research notes. This repository is the reviewed public subset: code,
-tests, docs and design notes, with personal content left out. Issues and
-roadmap live in the private repo, so the issue tracker here is usually empty by
-design.
+`bun run check` runs lint, comment checks, typechecking, tests and publication safety checks.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE).

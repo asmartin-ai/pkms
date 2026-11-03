@@ -1,211 +1,35 @@
 # PKMS publication safety
 
-> Snapshot as of 2026-08-07. The publication boundary and generated-mirror
-> workflow are normative policy. **The split is now live:** `asmartin-ai/pkms-canonical`
-> (private, full vault state) and `asmartin-ai/pkms` (public, sanitized mirror).
+PKMS is developed in the private `pkms-canonical` repository and published as a sanitized mirror in `pkms`. Never push the private repository directly to the public remote. A public mirror update is a normal fast-forward commit on top of the existing public history, not a history rewrite or force-push.
 
-PKMS has two repos:
+## Publication boundary
 
-- **`pkms-canonical`** (private): the full local repo/vault, including captures, daily notes, personal notes, generated indexes, tokens, local paths, and unscrubbed research. **This is where work happens.** Never push it to a public remote.
-- **`pkms`** (public): the public mirror. Push here only after running the mirror build and safety checker.
+The authoritative allowlist and denylist are `PUBLIC_ALLOWLIST` and `PRIVATE_DENYLIST` in [`scripts/check_publication_safety.ts`](../scripts/check_publication_safety.ts). Review changes to them as changes to the publication boundary. The builder selects only tracked files that match the allowlist; unlisted files are private by default, even if they are useful documentation.
 
-## Public/private boundary
+The intended public surface includes the application and tests, the Bun package and tooling needed to run and check it, the README and project documents, explicitly selected setup guides and this policy, and public CI. The agent skill directories `.agents/`, `.claude/` and `.impeccable/`, personal vault material and internal planning or research are not part of that public surface. `AGENTS.md` remains public. There is no blanket grant for `docs/` or `vault/`.
 
-### Public-safe allowlist
+Secrets, local indexes, databases, credentials, private captures, daily notes, media and generated exports must not be published. A tracked file being allowlisted is not proof its contents are safe. Review the candidate tree, including fixtures, examples and documentation, for private data, machine-specific information and third-party material before publishing. Keep raw private evidence in the canonical workspace.
 
-These paths may be copied into a public mirror when they pass the safety checker:
+## Build and check
 
-```text
-AGENTS.md
-DESIGN.md
-LICENSE
-PRODUCT.md
-README.md
-pyproject.toml
-bin/pkms.cmd
-scripts/check_publication_safety.py
-scripts/build_public_mirror.py
-scripts/discord-bot-wizard.sh
-src/**
-tests/**
-.github/workflows/**
-.agents/skills/**
-docs/**
-vault/resources/adhd-design-language-repo.md
-vault/projects/pkms-design/*.md
+From the canonical checkout:
+
+```sh
+bun scripts/check_publication_safety.ts --history --mirror-manifest
+bun scripts/build_public_mirror.ts --manifest
 ```
 
-The vault entries above are **not** a blanket `vault/**` grant. Public vault content is opt-in by subtree or file, and still needs scrub review.
+The builder writes `exports/public-mirror/`, replacing its previous generated output. It uses the tracked-file manifest and scrubs certain local path shapes in supported text file types. It checks the resulting tree for denylisted paths and content risks, and rejects symlinks. `--root <directory>` selects a different checkout; the builder also accepts `--output <path>` within its `exports/` directory.
 
-### Always private denylist
+The checker flags tracked denylisted paths, untracked and unignored private paths, allowlist/denylist overlap, and selected content risks in the manifest. It reports possible private or generated paths added in history as warnings, not as proof of a leak or proof that history is clean. The checker and builder have self-referential scanning exemptions; eligible text suffixes receive local-path scrubbing rather than the same pre-build path check. Neither tool replaces review or a full-history secret scan. Findings can contain sensitive text: handle output privately and do not publish it.
 
-These paths must never be copied to the public mirror:
+## Overlay and publish
 
-```text
-.secrets/**
-.index/**
-keep-media/
-.venv/**
-**/.venv/**
-.pytest_cache/**
-dist/**
-build/**
-**/__pycache__/**
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-.env
-*.env.local
-*.pem
-*.key
-*.p12
-vault/daily/**
-vault/inbox/**
-vault/media/**
-vault/areas/**
-vault/archive/**
-vault/resources/reading/**
-vault/resources/research/**
-vault/**/*.zip
-vault/**/*.tar
-vault/**/*.tar.gz
-vault/**/*.7z
-bakeoff/**
-exports/**
-spike/**
-NEXT.md
-.impeccable/live/sessions/**
-```
+1. Start from a fresh clone of the public repository's current default branch in a temporary directory. Do not use the canonical checkout as the public Git repository.
+2. Build the reviewed candidate from the canonical checkout. In the temporary public clone, run `git rm -rq .` and then copy the generated mirror into the clone, preserving its `.git` directory. This overlay removes old public files that are no longer allowlisted as well as adding and updating files. Stage the copied files and review the complete resulting changes before committing.
+3. Commit the candidate on top of the fetched public branch. Run the publication checker against the candidate, scan its full history with `gitleaks git --redact`, and check the private denylist. Review and resolve findings before publishing; scans are not guarantees of safety. Treat scanner output and private denylist contents as sensitive.
+4. Fetch the public default branch again and verify that its tip is an ancestor of the candidate commit. Publish only if the update is a fast-forward. If the public branch moved, stop and rebuild or integrate its changes; never force-push.
 
-- `keep-media/` — the default Keep attachments dir, repo-root anchored
-  (`<repo-root>/keep-media/`). Covered by both `.gitignore` and the
-  checker's denylist, so attachments cannot leak into the mirror even if
-  the `PKMS_KEEP_MEDIA_DIR` env-var override fails.
+The public CI leak scan is an additional check, not a substitute for pre-publication review. Removing a file from the current public tree does not remove it from existing commits, clones or caches. Assume previously published history remains public; this process does not rewrite it.
 
-### Needs scrub / private by default
-
-These paths often contain useful public material, but they are private until intentionally reviewed:
-
-```text
-vault/projects/**
-.impeccable/critique/**
-docs/**
-scripts/*.ps1
-scripts/*.ahk
-```
-
-Examples of scrub targets:
-
-- local machine paths (Windows drive paths, `/Users/<user>/…`, `/home/<user>/…`)
-- raw email addresses, account IDs, client IDs, or API credentials
-- tokens, cookies, `.env` values, OAuth secrets, app passwords, and capture tokens
-- database paths, generated indexes, exports, caches, archives, and real fixtures
-- private daily notes, inbox captures, personal vault notes, or private media
-
-## Public research vs private vault contents
-
-Public research notes should be framed as reusable product/design research. Private vault notes are personal operational state. A research note can be public only when:
-
-1. it does not include raw captures, private daily context, personal account details, local database paths, or unreleased/private third-party data;
-2. source excerpts are legally and ethically shareable;
-3. local paths and machine-specific commands are replaced with generic placeholders; and
-4. the note is included in the allowlist intentionally, not because it happened to live under `vault/`.
-
-If a public research note depends on private vault evidence, summarize the public conclusion and keep the raw evidence private.
-
-## Safety check
-
-Build the generated mirror before publishing:
-
-```powershell
-python scripts/build_public_mirror.py
-```
-
-The generated output lands in `exports/public-mirror/` (gitignored). It copies only tracked allowlisted files and applies deterministic scrubs for canonical-only local path shapes.
-
-Run the canonical safety check before mirroring or moving work between public/private remotes:
-
-```powershell
-python scripts/check_publication_safety.py --history
-```
-
-Useful checker variants:
-
-```powershell
-python scripts/check_publication_safety.py                   # working tree + tracked content
-python scripts/check_publication_safety.py --history         # also scan historical path additions
-python scripts/check_publication_safety.py --mirror-manifest # print allowlisted mirror files
-```
-
-### Severities
-
-- **FAIL** (blocks publish, exit 1): tracked private path matches the
-  denylist; local path in a NON-scrub-suffix file; non-example raw email;
-  credential-shaped assignment; allowlist↔denylist overlap in the mirror
-  manifest; untracked-but-not-ignored denylist path.
-- **WARN** (exit 0): history findings only — paths matching
-  `HISTORY_RISK_PATTERNS` added in past commits but removed from the
-  current tree. Pre-existing (already public on origin) and unfixable
-  without a history rewrite (the user has authorized rewriting next).
-- **Exempt from content scan** (`SELF_REFERENTIAL` set in the checker):
-  `scripts/check_publication_safety.py`, `scripts/build_public_mirror.py`,
-  `tests/test_publication_safety.py` — these contain path/regex/fixture
-  literals by design; exempting them is load-bearing. **The mirror copy of
-  the builder is additionally scrubbed** (its `SPECIFIC_REPLACEMENTS` table
-  rewritten to placeholders, regexes untouched), so the real machine paths
-  that table maps cannot leak into the public repo.
-- **Mirror-aware path exemption:** files with a suffix in `SCRUB_SUFFIXES`
-  = {.cmd, .css, .html, .json, .md, .toml, .txt, .yaml, .yml} skip
-  local-path checks because the mirror's `should_scrub` rewrites those
-  paths. Email and credential checks apply to every file regardless of
-  suffix.
-
-A failure does not automatically mean content must be deleted. Decide whether each finding should be scrubbed, moved to the future private canonical repo, explicitly accepted as public, or handled with a separate history rewrite.
-
-## Publishing
-
-The only publish path is: build the candidate in `/tmp` → scan its full history → push with an
-explicit URL. The canonical checkout's `origin` push URL is disabled
-(`DISABLED-use-publish-mirror`), so the mirror cannot be pushed by habit.
-
-1. Work in the private canonical repo; never push it to a public remote.
-2. Build the candidate in `/tmp`: clone public `main`, overlay the allowlisted tree produced by
-   `python scripts/build_public_mirror.py`, commit.
-3. Scan the candidate's full history before the push:
-   `python scripts/check_publication_safety.py --history`, `gitleaks git --redact`, and the
-   private denylist `~/.config/git/publish-denylist.txt`. Never publish with findings.
-4. Verify and push fast-forward with an explicit URL (the credential helper resolves to a
-   different account than the token owner):
-
-   ```sh
-   git fetch origin main
-   git merge-base --is-ancestor origin/main HEAD || { echo "not a fast-forward"; exit 1; }
-   git push https://x-access-token:"$(GH_TOKEN= gh auth token -u asmartin-ai)"@github.com/asmartin-ai/pkms.git HEAD:main
-   ```
-
-5. A non-fast-forward means the build lost commits: stop and investigate. Do not force-push; a
-   rewrite only limits ordinary exposure, and already-public history stays reachable by SHA.
-
-`.github/workflows/leak-scan.yml` repeats the scan on every push and PR in the public repo:
-gitleaks over full history plus a tracked-file scan for personal machine paths and Tailscale
-addresses.
-
-## Current repo state
-
-`asmartin-ai/pkms` is public and its history was rewritten on 2026-11-02 to
-remove private-by-default material that had reached it (personal research
-notes, reading captures, run logs, a research archive, and a private network
-address). Every commit, author and committer now carries the GitHub no-reply
-identity.
-
-Going forward:
-
-- this repo is the public mirror target; the private canonical repo stays the
-  place where work happens;
-- never push the canonical repo raw to a public remote;
-- keep new personal vault material out of Git in the first place — the
-  `.gitignore` in this repo covers the private vault directories;
-- history that was already public cannot be recalled from clones; the rewrite
-  only limits ordinary exposure from here on.
+The public CI personal-path scan excludes only `.github/workflows/leak-scan.yml`, which contains the scan expression, and `tests/ts/publication-safety.test.ts`, which contains synthetic paths used to test the checker. These exclusions apply to that scan, not to every publication check.

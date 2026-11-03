@@ -1,0 +1,8 @@
+{%- for n in notes %}
+<li data-path="{{ n.path }}"
+    hx-post="/api/open-note" hx-ext="json-enc"
+    hx-vals='{"path": {{ n.path | json }}}' hx-swap="none">
+    {{ n.title }}
+    <small>{{ n.path }}{% if n.last_touched %} · {{ n.last_touched | touched }}{% endif %}</small>
+</li>
+{%- endfor %}

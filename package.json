@@ -1,0 +1,33 @@
+{
+  "name": "pkms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PKMS TypeScript core (ADR 0034 Bun port)",
+  "type": "module",
+  "scripts": {
+    "pkms": "bun run src/pkms/cli.ts",
+    "start": "bun run src/pkms/cli.ts serve",
+    "lint": "oxlint --deny-warnings .",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test tests/ts",
+    "check": "bun run lint && bun run lint:comments && bun run typecheck && bun run test && bun scripts/check_publication_safety.ts",
+    "format": "oxfmt src/pkms tests/ts scripts bin",
+    "format:check": "oxfmt --check src/pkms tests/ts scripts bin",
+    "lint:comments": "bun scripts/check-no-comments.ts"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.86.0",
+    "@types/bun": "1.4.2",
+    "@types/nunjucks": "^3.2.6",
+    "oxfmt": "0.71.0",
+    "oxlint": "1.86.0",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "fflate": "^0.8.3",
+    "js-yaml": "^5.4.2",
+    "nunjucks": "^3.2.4",
+    "zod": "4.6.5"
+  }
+}

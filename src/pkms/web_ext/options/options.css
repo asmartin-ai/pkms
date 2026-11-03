@@ -8,7 +8,9 @@
   --border: #ded3c0;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -30,13 +32,26 @@ main {
   box-shadow: 0 16px 40px rgb(77 70 63 / 0.12);
 }
 
-h1 { margin: 0 0 0.5rem; font-size: 1.35rem; }
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
 
-.lede, .help, #status { color: var(--muted); }
+.lede,
+.help,
+#status {
+  color: var(--muted);
+}
 
-form { display: grid; gap: 0.75rem; margin-top: 1.25rem; }
+form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
 
-label { font-weight: 700; }
+label {
+  font-weight: 700;
+}
 
 input {
   width: 100%;
@@ -60,7 +75,9 @@ button {
   cursor: pointer;
 }
 
-button:hover { filter: brightness(1.05); }
+button:hover {
+  filter: brightness(1.05);
+}
 
 code {
   padding: 0.1rem 0.35rem;

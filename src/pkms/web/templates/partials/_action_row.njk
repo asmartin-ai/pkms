@@ -1,0 +1,11 @@
+<li class="action{% if done %} action--done{% endif %}" data-note="{{ a.note }}">
+    <div class="action__title"><a href="#actions" data-go="actions">{{ a.title }}</a></div>
+    <div class="action__size">{% if a.size %}⏱ {{ a.size }}{% endif %}</div>
+    <div class="action__first">
+        <span class="action__first-verb">▶</span><span class="action__first-text">{{ a.first_action or a.text }}</span>
+    </div>
+    <div class="action__done-when">{{ a.text }}</div>
+    <button class="action__done-toggle" type="button" data-done-toggle="{{ a.note }}">
+        <span class="glyph">✓</span> {% if done %}done{% else %}mark done{% endif %}
+    </button>
+</li>

@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the PKMS engagement analysis Monday 08:00
+
+[Timer]
+OnCalendar=Mon *-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

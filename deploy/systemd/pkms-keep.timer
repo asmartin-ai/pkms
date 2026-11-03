@@ -1,0 +1,10 @@
+[Unit]
+Description=Pull Google Keep into PKMS every ten minutes
+
+[Timer]
+OnCalendar=*-*-* *:0/10:00
+Persistent=true
+Unit=pkms-keep.service
+
+[Install]
+WantedBy=timers.target

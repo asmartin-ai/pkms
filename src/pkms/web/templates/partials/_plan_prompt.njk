@@ -1,0 +1,15 @@
+<div class="plan-prompt" id="plan-prompt" data-path="{{ path }}">
+    <span class="plan-prompt__q">when will you do it?</span>
+    <span class="plan-prompt__picks">
+        {%- for pick in picks %}
+        <button class="plan-prompt__pick" type="button"
+            hx-post="/api/plan-answer" hx-ext="json-enc"
+            hx-vals='{"path": {{ path | json }}, "when": {{ pick | json }}}'
+            hx-swap="outerHTML">{{ pick }}</button>
+        {%- endfor %}
+        <button class="plan-prompt__skip" type="button"
+            hx-post="/api/plan-answer" hx-ext="json-enc"
+            hx-vals='{"path": {{ path | json }}, "skipped": true}'
+            hx-swap="outerHTML">skip</button>
+    </span>
+</div>

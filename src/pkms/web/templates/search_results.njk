@@ -1,0 +1,8 @@
+{%- for r in results %}
+<li data-path="{{ r.path }}"
+    hx-post="/api/open-note" hx-ext="json-enc"
+    hx-vals='{"path": {{ r.path | json }}, "origin": "search"}' hx-swap="none">
+    {{ r.title }}
+    <small>{{ r.path }}{% if r.excerpt %} · {{ r.excerpt }}{% endif %}</small>
+</li>
+{%- endfor %}

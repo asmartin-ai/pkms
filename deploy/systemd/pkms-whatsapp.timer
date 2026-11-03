@@ -1,0 +1,10 @@
+[Unit]
+Description=Ingest WhatsApp into PKMS every five minutes
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+Unit=pkms-whatsapp.service
+
+[Install]
+WantedBy=timers.target

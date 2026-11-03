@@ -1,0 +1,36 @@
+[Unit]
+Description=Mirror WhatsApp chats into the local wacli store
+After=network-online.target
+
+[Service]
+Type=exec
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+# Pairing is a human step: run `wacli auth` in a terminal, then on the phone
+# WhatsApp → Settings → Linked devices → Link a device and scan the QR. Never
+# pair from a service — there is no terminal to show a QR in. The store
+# (~/.local/state/wacli) holds a full-access linked-device session, so keep it
+# to yourself: chmod 700 ~/.local/state/wacli.
+#
+# Restart-loop guard: an unpaired store must sit inactive, not crash-loop.
+# RestartPreventExitStatus cannot do this — `wacli sync` exits 1 for every
+# fatal outcome (Go maps any error to os.Exit(1)), so gating on exit status 1
+# would also stop restarts on transient failures such as a dropped network.
+# ExecCondition runs `wacli doctor --json` first instead: unpaired leaves the
+# unit inactive with one journal line, paired starts sync normally. The gate
+# also covers re-checks on every restart, so a device logged out by WhatsApp
+# goes inactive on the next cycle rather than looping.
+# The condition greps doctor's stdout for authenticated followed by true,
+# separated only by punctuation/whitespace: the real payload is
+# ...{"authenticated":true,... and wacli marshals its envelope compactly. A
+# character class stands in for the quote so the pattern needs no backslash
+# escapes (systemd rewrites those, which silently breaks a grep argument).
+# Anything else — doctor erroring, the binary missing, "authenticated":false —
+# matches nothing, the condition fails, and the unit stays inactive.
+ExecCondition=/bin/sh -c 'exec /usr/bin/wacli doctor --json | grep -q "authenticated[[:punct:]][[:space:]]*:[[:space:]]*true"'
+ExecStart=/usr/bin/wacli sync --follow --presence-mode quiet --max-db-size 2GB
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

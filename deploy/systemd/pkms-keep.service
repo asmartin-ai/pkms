@@ -1,0 +1,9 @@
+[Unit]
+Description=Archive and capture Google Keep notes into PKMS
+
+[Service]
+Type=oneshot
+TimeoutStartSec=15min
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+ExecStart=/bin/sh -c 'exec "$${PKMS_HOME:?PKMS_HOME must name the PKMS checkout}/bin/pkms" ingest keep'

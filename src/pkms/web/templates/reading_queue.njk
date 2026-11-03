@@ -1,0 +1,19 @@
+{%- if items.length %}
+{%- for r in items %}
+<li class="reading-item">
+    <h3 class="reading-item__title">
+        <a href="#" data-path="{{ r.path }}"
+            hx-post="/api/open-note" hx-ext="json-enc"
+            hx-vals='{"path": {{ r.path | json }}}' hx-swap="none">{{ r.title }}</a>
+    </h3>
+    <div class="reading-item__row">
+        {% if r.minutes %}<span class="reading-item__cost">⏱ ~{{ r.minutes }} min</span>
+        {% else %}<span class="reading-item__cost" style="border:0;padding:0;color:var(--bone-faint);">long read</span>{% endif %}
+        <span>{{ r.why }}</span>
+        <span>queued {{ r.promoted | shortdate }}</span>
+    </div>
+</li>
+{%- endfor %}
+{%- else %}
+<li class="reading-item">nothing queued right now.</li>
+{%- endif %}

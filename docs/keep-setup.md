@@ -1,27 +1,25 @@
 # Google Keep ingest — full setup
 
-⏱ ~5 min for the master-token route · ▶ run the docker one-liner below
-(or the no-docker variant) · ✓ done when `pkms ingest keep` prints
-"keep connected ✓" or `pkms ingest keep-takeout <zip>` reports "X keep
-notes imported from takeout".
+Install the Bun dependencies first with `bun install --frozen-lockfile`.
+The `pkms` CLI connects to Google Keep with its Bun-native mobile-protocol
+transport; the Keep transport is part of the PKMS application.
 
-PKMS now has three ways to get Keep notes into the vault:
+PKMS has three ways to handle Keep notes:
 
 | Command | Auth | What it does | When to use |
 |---------|------|--------------|-------------|
-| `pkms ingest keep-takeout <zip>` | none (your own Takeout export) | One-shot bulk import of every Keep note. Idempotent. **Start here.** | First import of all history; periodic re-imports for a fresh snapshot. |
-| `pkms ingest keep` | master token in `.secrets/` | Live incremental sync via gkeepapi. First run primes a baseline; new notes flow in from there. | After Takeout, to capture new notes as you make them. |
+| `pkms ingest keep-takeout <zip>` | none (your own Takeout export) | One-shot bulk import into inbox from an offline export. Idempotent within this ramp. | When using a Takeout export instead of live access. |
+| `pkms ingest keep` | master token in `.secrets/` | First contact archives every non-trashed note, including Keep-archived notes, then runs routing. Later new/edited active notes go directly to inbox. | Initial searchable archive and ongoing capture. |
 | `pkms ingest keep-sweep [--apply]` | master token (destructive) | Trashes from Keep the captured notes that are old + unpinned. **Dry-run by default.** | Periodic cleanup once you trust the import. |
 
 **Attachments** are mirrored to a local media dir (Spec 10 pattern,
 sha256-named) and referenced from the capture via `file://` markdown
 image links. Default is `<repo-root>/keep-media/` — anchored at the
 project root, NOT the caller's working directory. Override with the
-`PKMS_KEEP_MEDIA_DIR` env var. The scheduled pull
-(`scripts/register-keep-pull.ps1`) pins `PKMS_KEEP_MEDIA_DIR` explicitly so
-the 4-hour task and interactive runs agree on the media dir.
+`PKMS_KEEP_MEDIA_DIR` env var. The Windows scheduled pull
+(`scripts/register-keep-pull.ps1`) pins `PKMS_KEEP_MEDIA_DIR` explicitly.
 
-## Path 1 — Takeout bulk import (recommended starting point)
+## Path 1 — Optional Takeout bulk import
 
 Takeout is the official Google export. It's read-only, needs no auth,
 brings all your Keep history in one shot, and re-runs are idempotent.
@@ -31,7 +29,7 @@ brings all your Keep history in one shot, and re-runs are idempotent.
 3. Click "Create export" → wait for the email → download the ZIP.
 4. Run:
    ```
-   pkms ingest keep-takeout /path/to/local-resource
+   pkms ingest keep-takeout ~/Downloads/takeout-20260726.zip
    ```
 5. Verify in your vault: `vault/inbox/2026-*.md` captures, and the media
    dir (default `<repo-root>/keep-media/`, or whatever `PKMS_KEEP_MEDIA_DIR`
@@ -41,63 +39,101 @@ You can re-run the importer any time with a fresh Takeout ZIP — the
 takeout ledger (`.index/keep-takeout-ledger.txt`) makes re-runs
 idempotent (already-imported notes are skipped).
 
-## Path 2 — Live gkeepapi sync
+Both Takeout JSON layouts are accepted: current exports use
+`createdTimestampUsec` / `userEditedTimestampUsec` and keep attachments
+beside the note JSONs in `Takeout/Keep/`; older exports nest timestamps
+under `timestamps` and keep media in `Takeout/attachments/`. The importer
+reads `.zip` files only, so unpack and re-zip a `.tgz` export first.
 
-This is the incremental capture path. Uses a **master token** extracted
-once from an Android device with Keep logged in. The token is
-high-blast-radius (it IS Google account access); treat like the capture
-token, store in `.secrets/`, gitignore.
+## Path 2 — Live Bun-native sync
+
+The incremental capture path uses PKMS's Bun-native Keep transport. It needs
+a **master token** extracted once from an Android device with Keep logged in.
+The token has account-wide access: treat it like the capture token and store
+it only in `.secrets/`, which is gitignored.
 
 ### 1. Get a master token
 
-The token dance needs an **OAuth token** first:
-
-1. Open a browser where you're logged into your Google account and visit
-   <https://accounts.google.com/EmbeddedSetup>
-2. Sign in. On the consent screen ("I agree"), agree — the page may then sit on
-   a spinner; that's fine.
-3. Open DevTools → Application → Cookies → `https://accounts.google.com` and
-   copy the value of the `oauth_token` cookie (starts with `oauth2_4/`).
-
-Then exchange it for a master token. **Docker variant** (gkeepapi's documented
-route):
-
-```
-docker run --rm -it --entrypoint /bin/sh python:3 -c "pip install gpsoauth; python3 -c 'import gpsoauth; print(gpsoauth.exchange_token(input(\"Email: \"), input(\"OAuth Token: \"), input(\"Android ID: \")))'"
-```
-
-**No-docker variant** (uses the project venv; gpsoauth ships with gkeepapi):
-
-```powershell
-.\.venv\Scripts\python.exe -c "import gpsoauth; print(gpsoauth.exchange_token(input('Email: '), input('OAuth Token: '), input('Android ID: ')))"
-```
-
-Android ID: any 16-hex-char string works (e.g. `0123456789abcdef`).
-The output dict's `Token` value (starts with `aas_et/`) is the master token.
+1. Open a browser where you're logged into Google and visit
+   <https://accounts.google.com/EmbeddedSetup>.
+2. Sign in and accept the consent screen. The page may remain on a spinner.
+3. Open DevTools → Application → Cookies → `https://accounts.google.com`;
+   copy the `oauth_token` cookie (starts with `oauth2_4/`).
+4. Use a trusted one-time Android OAuth token-exchange tool to exchange that
+   OAuth token for a Keep master token. Use a 16-hex-character Android ID.
+   The returned master token starts with `aas_et/`. PKMS does not store or
+   derive this token; its Bun transport uses it to authenticate directly.
 
 ### 2. Store it
 
-```powershell
-Set-Content -NoNewline .secrets\keep-email "you@example.com"
-Set-Content -NoNewline .secrets\keep-master-token "aas_et/..."
+```sh
+mkdir -p .secrets
+printf %s 'you@example.com' > .secrets/keep-email
+printf %s 'aas_et/...' > .secrets/keep-master-token
 ```
 
-(`.secrets/` is gitignored, same as the capture token.)
+Never commit or share either file.
 
 ### 3. First pull
 
-```powershell
+```sh
 pkms ingest keep
 ```
 
-The first run **connects and baselines** — it records what already exists in
-Keep without dumping years of history into the inbox. Only notes created after
-that point flow in. (Want some history anyway? Run Path 1 first.)
+When the live ledger file is absent, the first pull archives every non-trashed note
+under `vault/sources/keep/`, including notes archived in Keep. Original text,
+attachments and OCR are retained. The default rules router sends pinned notes,
+notes edited in the last 30 days (`keep.recent_days`) and open checklists edited
+in the last year (`keep.checklist_days`) to inbox. Notes you already archived in
+Keep stay archived unless pinned; everything else remains a searchable archive.
+No LLM setup is required.
 
-### 4. Optional: scheduled pull
+The initial ID snapshot and unfinished retries live in `.ledger/keep-bootstrap.json`.
+A failed image download leaves that entire note retryable as an archive, even if
+other notes finished and new notes arrive before the next pull. Later new/edited
+active notes retain the direct-to-inbox behavior. Existing archived Keep notes are
+not polled for edits after bootstrap.
 
-Once the first pull works, register the background pull (every 4 hours, silent,
-skips quietly when offline):
+Opening today triggers a background pull when `.ledger/last_pull_at` is more than
+two minutes old. The HTTP response does not await it; bulk work runs in a separate
+Bun process. Repeated opens share one worker, and a cross-process lock prevents a
+timer/manual pull from overlapping ingestion. Background errors are logged.
+
+### 4. Linux user services — operator installation
+
+The checked-in [user units](../deploy/systemd/) are not installed or enabled by
+development checks. After approving live operation, create
+`~/.config/pkms/runtime.env` with an absolute checkout path:
+
+```ini
+PKMS_HOME=/absolute/path/to/PKMS
+```
+
+Keep credentials remain in `.secrets/keep-email` and `.secrets/keep-master-token`;
+do not put credentials in this environment file. Units include the usual Bun
+locations in `PATH`; override `PATH` in the environment file if your install differs.
+An operator can then run from the checkout:
+
+```sh
+mkdir -p ~/.config/systemd/user
+cp deploy/systemd/pkms-keep.service deploy/systemd/pkms-keep.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now pkms-keep.timer
+```
+
+The calendar timer runs every ten minutes and catches up after downtime through
+`Persistent=true`. Its installed calendar controls scheduling; changing
+`keep_poll_minutes` in tuning alone does not rewrite the installed timer.
+Gmail and WhatsApp service definitions share the environment file but are installed
+separately after their account setup.
+
+Unit behavior follows the official [command expansion](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Command%20Lines),
+[environment-file](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=)
+and [persistent timer](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html#Persistent=) contracts.
+
+### 5. Optional Windows scheduled pull
+
+After the first pull works, register the background pull (every four hours):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\register-keep-pull.ps1
@@ -121,7 +157,7 @@ A note is eligible when ALL are true:
 
 ### Dry-run first
 
-```powershell
+```sh
 pkms ingest keep-sweep --age-days 30
 ```
 
@@ -138,35 +174,41 @@ DRY RUN · scanned 42 · eligible 3 (≥30d, unpinned, captured)
 
 After reading the dry-run report, if you're sure:
 
-```powershell
+```sh
 pkms ingest keep-sweep --age-days 30 --apply
 ```
 
-The sweep calls `note.trash()` (gkeepapi) which moves the note to Google's
-trash — recoverable for ~7 days before Google hard-deletes. The sweep
-records what it did in `.index/keep-sweep.json` for audit.
+The Bun-native transport moves trashed notes to Google's trash, recoverable
+for about seven days before Google hard-deletes them. The sweep records its
+actions in `.index/keep-sweep.json` for audit.
 
 ## Notes & caveats
 
 - **Master tokens are long-lived but can be revoked** by security events
   (password change, Google security checkup). Symptom: `pkms ingest keep` or
-  `pkms ingest keep-sweep` says the token may have expired → redo Path 2 step 1.
-- **The dedupe ledger** lives in `.index/keep-ledger.txt` (live) and
-  `.index/keep-takeout-ledger.txt` (Takeout). Wiping `.index` re-primes the
-  live baseline; re-running the takeout importer is naturally idempotent.
-- **Trashed Keep notes are never ingested.** Archiving in Keep is fine —
-  already-ingested notes aren't re-pulled.
+  `pkms ingest keep-sweep` prints `keep login failed (auth HTTP 4xx)` or a
+  Google error name → redo Path 2 step 1. The message names the reason on
+  purpose: Google's auth endpoint also answers 5xx and drops connections under
+  load, and that case is retried twice and then just passes on the next timer
+  run, so it is not a revoked token.
+- **Existing Keep completion/dedupe state remains in `.index/`**:
+  `keep-ledger.txt`, `keep-takeout-ledger.txt`, and the `keep_completed` table.
+  Use `pkms index` to rebuild derived search data; do not delete the entire
+  directory while relying on incremental Keep state. Canonical source archives,
+  bootstrap retries and pull timestamps live separately in `vault/sources/` and
+  `.ledger/`.
+- **Trashed Keep notes are never ingested.** Keep-archived notes are included on
+  first contact; later pulls preserve the existing active-note-only policy.
 - **Pinned notes are never deleted by the sweep.** If you want a pinned
   note gone, unpin it in Keep first, then re-run the sweep.
-- **Re-imports from Takeout** after a gkeepapi daemon has been running may
-  produce duplicate captures for the same physical note (the takeout
-  importer uses synthetic ids, gkeepapi uses Google's internal ids). You
-  can de-dupe by title in the vault, or just live with the duplicates —
-  the takeout path is the canonical import and gkeepapi is the
-  incremental layer on top.
+- Re-imports from Takeout after live sync may create duplicate captures for one
+  note: Takeout uses synthetic IDs, while live sync uses Google's internal
+  IDs. Choose live archive/routing or the offline Takeout bulk path deliberately
+  rather than assuming the two ID namespaces deduplicate one another.
 
 ## See also
 
-- ADR 0028 (`/path/to/local-resource`) —
+- ADR 0028 (life-os repo, `decisions/0028-google-keep-onramp.md`; purged from the
+  working tree in life-os `fd152a0`, still in its git history) —
   the design rationale and the safety-gate pattern
-- `keep_ingest.py` and `keep_takeout.py` in `src/pkms/`
+- `src/pkms/keep_ingest.ts` and `src/pkms/keep_transport.ts`.

@@ -15,7 +15,7 @@ that foregrounds re-entry prose and one next action, with restraint everywhere
 else. It should feel like a trusted desk note: readable, finite, and forgiving.
 
 - **Design lineage.** Lamplight is the lamp-mode reference of the shared ADHD
-  design language (`/path/to/adhd-design-language/DESIGN-LANGUAGE.md`,
+  design language (`../adhd-design-language/DESIGN-LANGUAGE.md`,
   `VISUAL-LANGUAGE.md` "Hearth" canon, accepted 2026-07-03). It lands unchanged
   as PKMS's visual layer. Build report: `docs/redesign/fable-report.md`;
   direction pick rationale: `docs/redesign/fable-directions.md`.
@@ -36,8 +36,6 @@ else. It should feel like a trusted desk note: readable, finite, and forgiving.
   else stays quiet.
 - **Density is user-controlled:** calm is the default; more/everything are
   opt-in.
-- **Shame-free affordances:** no red urgency, overdue treatment, streak pressure,
-  or raw backlog badges.
 
 ## Color
 
@@ -69,10 +67,6 @@ resurface accents (`--moss`), and fern completion accents (`--fern`).
 glow at a time. If two things are lit, the page is saying two things are next —
 fix the spec, not the CSS.
 
-Never introduce red for normal task or backlog states. Error messages should use
-the lamp/bone warning pattern unless a true destructive/error state requires a
-separate semantic treatment.
-
 ## Typography
 
 Three families, each with offline-friendly fallback stacks. Loaded via Google
@@ -82,7 +76,7 @@ Fonts (pre-existing pattern); self-hosting is a separate deferred decision.
 - **Body:** `Lexend` → -apple-system / Segoe UI / Roboto / Arial.
 - **Mono/metadata:** `JetBrains Mono` → Cascadia Code / SF Mono / Consolas.
 
-Fluid type scale (clamp-based, mobile-first — Pixel 6 column is the base, wide
+Fluid type scale (clamp-based, mobile-first — the phone column is the base, wide
 viewports are the enhancement):
 
 | Token | Range |
@@ -114,7 +108,7 @@ Primary shell:
 
 Responsive behavior (mobile-first):
 
-- Narrow/Pixel-6 base: single column, card stack, capture as a full-screen-
+- Narrow/phone base: single column, card stack, capture as a full-screen-
   feeling surface. Safe-area padding honored (`env(safe-area-inset-*)`).
 - Wide viewport: editorial poster; the desk widens, lamp glow stretches.
 - Avoid adding persistent sidebars or dashboard chrome unless a future surface
@@ -171,7 +165,7 @@ secondary. Confirmation copy should reinforce that the system owns later.
 ### Reading queue
 
 Reading items show title, consume-cost, why, and queue date. Clicking opens the
-markdown note locally. Do not show unread counts or pile language.
+markdown note locally.
 
 ### Actions
 
@@ -195,8 +189,6 @@ undo, and local open feedback.
 
 ## Anti-patterns To Avoid
 
-- Raw backlog or unread counters.
-- Red urgency for self-imposed tasks.
 - Motivational productivity copy.
 - Generic dashboard widgets or hero metrics.
 - Decorative glass, gradients, or identical card grids.
@@ -213,11 +205,11 @@ undo, and local open feedback.
 - Packaged Firefox extension copy: `src/pkms/web_ext/newtab.html`,
   `src/pkms/web_ext/styles.css`, `src/pkms/web_ext/app.js`, `src/pkms/web_ext/icon.svg`.
   Byte-identical to `src/pkms/web/` per the packaging rule (parity test-pinned).
-- Backend data/actions: `src/pkms/capture_service.py`, `src/pkms/today.py`.
+- Backend data/actions: `src/pkms/capture_service.ts`, `src/pkms/today.ts`.
 
 ## Hearth type/token convergence (shipped 2026-08-07)
 
-The Hearth visual language (`/path/to/adhd-design-language\VISUAL-LANGUAGE.md`,
+The Hearth visual language (`../adhd-design-language/VISUAL-LANGUAGE.md`,
 ratified 2026-07-03, gate G-B) type swaps are in: PKMS converged on the shared
 token schema and faces.
 

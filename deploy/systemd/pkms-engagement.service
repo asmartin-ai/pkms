@@ -1,0 +1,8 @@
+[Unit]
+Description=PKMS engagement tick (plan reminders, brief, streak observation)
+
+[Service]
+Type=exec
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+ExecStart=/bin/sh -c 'exec "$${PKMS_HOME:?PKMS_HOME must name the PKMS checkout}/bin/pkms" engagement-tick'

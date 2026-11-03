@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "synthetic credential fixtures in the publication safety tests"
+paths = ['^tests/ts/publication-safety\.test\.ts$']

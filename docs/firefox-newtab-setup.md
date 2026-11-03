@@ -46,13 +46,13 @@ re-entry lede and live data from `/api/today`, `/api/reading-queue`, and
 `/api/recognition-cards`. The URL bar stays on the extension new-tab page; the
 token is sent as `X-Capture-Token`, not shown in the address.
 
-## Mobile (Pixel 6, over tailnet)
+## Mobile (phone, over tailnet)
 
-The same page is the PWA. Browse to
-`http://<tailnet-host>:8765/web/?token=…` on the phone, then **"Add to Home
-Screen"** in Firefox — it installs as a standalone app with the offline shell
-(cache-first static assets; `/api/*` data and action routes always use the
-network).
+The same page is the PWA. All phone paths go through the `tailscale serve`
+HTTPS URL. Browse to `https://<desktop>.<tailnet>.ts.net/web/?token=…`
+on the phone, then **"Add to Home Screen"** in Firefox — it installs as a
+standalone app with the offline shell (cache-first static assets; `/api/*`
+data and action routes always use the network).
 
 ## Troubleshooting
 

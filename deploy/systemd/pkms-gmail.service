@@ -1,0 +1,13 @@
+[Unit]
+Description=Archive new Gmail inbox messages into PKMS
+
+[Service]
+Type=exec
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+ExecStart=/bin/sh -c 'exec "$${PKMS_HOME:?PKMS_HOME must name the PKMS checkout}/bin/pkms" ingest email --watch'
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

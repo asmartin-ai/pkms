@@ -1,0 +1,23 @@
+<div class="shelf__cell shelf__cell--resurface" id="resurface-cell"{% if not today.resurface %} hidden{% endif %}>
+    <div class="shelf__kicker shelf__kicker--moss">still curious?</div>
+    <div class="resurface" id="resurface">
+        {%- if today.resurface %}
+        <p class="resurface__question">{{ today.resurface.question }}</p>
+        <p class="resurface__why">{{ today.resurface.why }}</p>
+        <div class="resurface__actions">
+            <button type="button"
+                hx-post="/api/open-note" hx-ext="json-enc"
+                hx-vals='{"path": {{ today.resurface.path | json }}, "origin": "resurface"}'
+                hx-swap="none">open</button>
+            <button type="button"
+                hx-post="/api/resurface" hx-ext="json-enc"
+                hx-vals='{"path": {{ today.resurface.path | json }}, "action": "not-now"}'
+                hx-target="#resurface-cell" hx-swap="outerHTML">not now</button>
+            <button type="button" class="btn--ghost"
+                hx-post="/api/resurface" hx-ext="json-enc"
+                hx-vals='{"path": {{ today.resurface.path | json }}, "action": "let-go"}'
+                hx-target="#resurface-cell" hx-swap="outerHTML">let it go</button>
+        </div>
+        {%- endif %}
+    </div>
+</div>

@@ -49,10 +49,10 @@ JSON from `pkms serve`.
 
 ## Files
 
-| file            | role                                                  |
-| --------------- | ----------------------------------------------------- |
+| file            | role                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------- |
 | `manifest.json` | MV3 WebExtension manifest; declares the new-tab override, localhost permissions, and options page |
-| `newtab.html`   | packaged PKMS today-view shell |
-| `styles.css`    | packaged view styles copied from `src/pkms/web/` |
-| `app.js`        | packaged view logic; fetches localhost with `X-Capture-Token` |
-| `options/`      | settings page for saving the PKMS URL with token |
+| `newtab.html`   | packaged PKMS today-view shell                                                                    |
+| `styles.css`    | packaged view styles copied from `src/pkms/web/`                                                  |
+| `app.js`        | packaged view logic; fetches localhost with `X-Capture-Token`                                     |
+| `options/`      | settings page for saving the PKMS URL with token                                                  |

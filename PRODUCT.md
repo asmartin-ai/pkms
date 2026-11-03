@@ -6,7 +6,7 @@ product
 
 ## Users
 
-PKMS is for one primary user, the owner, using a personal knowledge system across desktop, browser new-tab, terminal, and phone capture contexts. The user context is ADHD-shaped: working memory drops, initiation friction matters more than information availability, and the interface must support episodic return after gaps without shame.
+PKMS is for a user managing personal knowledge across desktop, browser new-tab, terminal, and phone capture contexts. It is designed for ADHD: working memory can drop, initiation friction matters more than information availability, and the interface must support episodic return after gaps without shame.
 
 ## Product Purpose
 
@@ -27,18 +27,15 @@ Calm, humane, and quietly capable. The product should feel like a trusted desk s
 ## Anti-references
 
 - Momentum-style new tabs with hero clock, generic greeting, photo background, or focus-word theater.
-- Productivity dashboards that show raw backlog counts, overdue badges, streaks, red urgency, or "you haven't…" copy.
 - SaaS task managers that turn every capture into a to-do list and every saved item into a pile to clear.
-- Plugin/settings sprawl that invites perfectionism before use.
 - Decorative AI product clichés: generic cream SaaS cards, gradient text, glassmorphism, hero metrics, and identical card grids.
 
 ## Design Principles
 
 1. Capture is sacred: zero decisions, instant confirmation, no feed-open side effects.
 2. Recognition over recall: show candidates, breadcrumbs, and one next step before asking the user to remember or search.
-3. No backlog shame: counts are curated and framed as progress; empty states are rewards.
-4. One ambient surface at a time: resurfacing, reading, and tasks are rationed so the front door stays glanceable.
-5. Plain files remain the truth: visual state should reveal markdown/frontmatter decisions, not create hidden app-only state.
+3. One ambient surface at a time: resurfacing, reading, and tasks are rationed so the front door stays glanceable.
+4. Plain files remain the truth: visual state should reveal markdown/frontmatter decisions, not create hidden app-only state.
 
 ## Accessibility & Inclusion
 

@@ -1,0 +1,16 @@
+[Unit]
+Description=PKMS Discord bot (captures + two-way agent commands)
+
+[Service]
+Type=exec
+Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=%h/.config/pkms/runtime.env
+ExecStart=/bin/sh -c 'exec "$${PKMS_HOME:?PKMS_HOME must name the PKMS checkout}/bin/pkms" discord-bot'
+Restart=always
+RestartSec=5s
+# runBot exits 78 on a close code retrying cannot fix (bad token, disallowed
+# intents): each retry burns a Discord session-start, so let the unit stay down.
+RestartPreventExitStatus=78
+
+[Install]
+WantedBy=default.target

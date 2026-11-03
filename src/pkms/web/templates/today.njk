@@ -1,0 +1,246 @@
+<span hx-swap-oob="innerHTML:#masthead-date">{{ today.date | longdate }}</span>
+
+<div class="poster-body">
+    {% if freshStart %}
+    <div class="fresh-start" id="fresh-start">
+        <div class="fresh-start__title">New {{ "week" if freshStart.landmark == "week" else "month" }}.</div>
+        <form class="fresh-start__form" hx-post="/api/plan" hx-ext="json-enc" hx-swap="outerHTML">
+            <input class="fresh-start__input" type="text" name="thing" placeholder="one plan for it" required>
+            <button class="fresh-start__go" type="submit">plan it</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <p class="lede" id="lede">
+        {%- if not lead -%}
+            Nothing is asking for you right now.
+        {%- elif not today.breadcrumb or not today.breadcrumb.name -%}
+            It's been a few days. Nothing's overdue — here's where
+            <strong>{{ lead.title }}</strong> was when you last touched it.
+        {%- else -%}
+            Yesterday you were in <strong>{{ lead.title }}</strong>,
+            {{ lead.text }}.
+        {%- endif -%}
+    </p>
+
+    {%- set lines = (today.breadcrumb and today.breadcrumb.lines) or [] %}
+    <div class="lede__sub" id="lede-sub"{% if not lines.length %} hidden{% endif %}>
+        {%- if lines.length %}
+        <ul>
+            {%- for line in lines %}
+            <li>{{ line | stripbullet }}</li>
+            {%- endfor %}
+        </ul>
+        {%- endif %}
+    </div>
+
+    {% if lead %}
+    <div class="lead-continuation" id="lead-continuation" data-mode="continue"
+        data-note="{{ lead.note }}" hidden>
+        <button class="lead-continuation__primary" id="lead-action" type="button"
+            hx-post="/api/open-note" hx-ext="json-enc"
+            hx-vals='{"path": {{ lead.note | json }}}' hx-swap="none">
+            <span class="lead-continuation__label" id="lead-action-label">continue</span>
+            <span class="lead-continuation__title" id="lead-action-title">
+                {%- if lead.title %}Open {{ lead.title }}{% else %}Open the note{% endif -%}
+            </span>
+            <span class="lead-continuation__body" id="lead-action-body">
+                <span class="lead-continuation__verb">▶</span>{{ lead.first_action or lead.text }}
+            </span>
+            <span class="lead-continuation__meta" id="lead-action-meta">{{ leadMeta }}</span>
+        </button>
+        <div class="lead-continuation__secondary" id="lead-action-secondary">
+            <button class="lead-continuation__link" type="button" data-go="actions">view actions</button>
+        </div>
+    </div>
+    <div class="lead-continuation" id="lead-capture" data-mode="capture">
+        <button class="lead-continuation__primary" id="lead-action-capture" type="button" data-go="capture">
+            <span class="lead-continuation__label">nothing queued</span>
+            <span class="lead-continuation__title">Capture a thought</span>
+            <span class="lead-continuation__body">
+                <span class="lead-continuation__verb">+</span>Nothing needs an action right now.
+                Add the thing that just sparked.
+            </span>
+            <span class="lead-continuation__meta" id="lead-action-meta-capture">
+                {%- if today.inbox_new > 0 %}{{ today.inbox_new }} safe to fold in later{% else %}the system owns later{% endif -%}
+            </span>
+        </button>
+        <div class="lead-continuation__secondary" id="lead-action-secondary-capture" hidden></div>
+    </div>
+    {% else %}
+    <div class="lead-continuation" id="lead-continuation" data-mode="capture">
+        <button class="lead-continuation__primary" id="lead-action" type="button" data-go="capture">
+            <span class="lead-continuation__label" id="lead-action-label">nothing queued</span>
+            <span class="lead-continuation__title" id="lead-action-title">Capture a thought</span>
+            <span class="lead-continuation__body" id="lead-action-body">
+                <span class="lead-continuation__verb">+</span>Nothing needs an action right now.
+                Add the thing that just sparked.
+            </span>
+            <span class="lead-continuation__meta" id="lead-action-meta">
+                {%- if today.inbox_new > 0 %}{{ today.inbox_new }} safe to fold in later{% else %}the system owns later{% endif -%}
+            </span>
+        </button>
+        <div class="lead-continuation__secondary" id="lead-action-secondary" hidden></div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="shelf">
+    <div class="shelf__cell">
+        <div class="shelf__kicker">to fold in</div>
+        <div class="fold" id="fold">
+            {%- if today.inbox_new > 0 %}
+            <span class="fold__progress">{{ today.done_today }} / {{ today.inbox_new + today.done_today }}</span>
+            <span>{{ today.inbox_new }} new to fold in</span>
+            <span class="fold__hint">when something sparks</span>
+            {%- else %}
+            <span>nothing new to fold in.</span>
+            {%- endif %}
+        </div>
+    </div>
+
+    <div class="shelf__cell">
+        <div class="shelf__kicker">read next</div>
+        <div class="next-read{% if not nextRead %} next-read--empty{% endif %}" id="next-read">
+            {%- if not nextRead -%}
+                nothing queued to read.
+            {%- else -%}
+                {%- if nextRead.path %}<button class="next-read__title" type="button"
+                    hx-post="/api/open-note" hx-ext="json-enc"
+                    hx-vals='{"path": {{ nextRead.path | json }}}' hx-swap="none">{{ nextRead.title }}</button>
+                {%- else %}<span class="next-read__title">{{ nextRead.title }}</span>{% endif -%}
+                {%- if nextRead.minutes %}<span class="next-read__cost">⏱ ~{{ nextRead.minutes }} min</span>{% endif -%}
+            {%- endif %}
+        </div>
+    </div>
+
+    {% include "partials/_resurface_cell.njk" %}
+
+    <div class="shelf__cell">
+        <div class="shelf__kicker">done today</div>
+        {% set pebbleTotal = today.done_today %}
+        <div class="pebbles{% if pebbleTotal == 0 %} pebbles--empty{% endif %}" id="pebbles" data-count="{{ pebbleTotal }}">
+            {%- if pebbleTotal == 0 -%}
+                nothing finished yet — that's fine.
+            {%- else -%}
+                {%- for i in range(pebbleTotal) %}<span class="pebble"></span>{% endfor -%}
+                <span class="pebbles__caption">{{ pebbleTotal }} {{ "win" if pebbleTotal == 1 else "wins" }} today</span>
+            {%- endif %}
+        </div>
+    </div>
+
+    {% if streak %}
+    <div class="shelf__cell">
+        <div class="shelf__kicker">streak</div>
+        <div class="streak" id="streak">
+            {%- if streak.days == 0 -%}
+                not started — one thing today starts it.
+            {%- else -%}
+                <span class="streak__days">{{ streak.days }} day{{ "s" if streak.days != 1 }}</span>
+                <span class="streak__meta">· {{ streak.freezesLeft }} freeze{{ "s" if streak.freezesLeft != 1 }} left{% if not streak.todayCounted %} · today open{% endif %}</span>
+            {%- endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="rail block--optional"{% if not recognitionCards.length %} hidden{% endif %}>
+    <div class="rail__kicker">worth a glance</div>
+    <div class="cards" id="recognition-cards">
+        {%- for c in recognitionCards %}
+        <article class="card {{ 'card--reading' if c.kind == 'reading' else 'card--resurface' }}">
+            <span class="card__kind">{{ "reading" if c.kind == "reading" else "resurfacing" }}</span>
+            {%- if c.path %}
+            <button class="card__title card__title-button" type="button"
+                hx-post="/api/open-note" hx-ext="json-enc"
+                hx-vals='{"path": {{ c.path | json }}}' hx-swap="none">{{ c.title }}</button>
+            {%- else %}
+            <h3 class="card__title">{{ c.title }}</h3>
+            {%- endif %}
+            {%- if c.kind == "reading" and c.minutes %}<span class="card__cost">⏱ ~{{ c.minutes }} min</span>{% endif %}
+            <p class="card__why">{{ c.why }}</p>
+        </article>
+        {%- endfor %}
+    </div>
+</div>
+
+<div class="inbox-surface block--optional" id="inbox-surface"{% if not inboxItems.length %} hidden{% endif %}>
+    <div class="inbox-surface__kicker">safe here until folded</div>
+    <ul class="inbox-surface__items" id="inbox-items">
+        {%- for it in inboxItems %}
+        <li class="inbox-surface__item" data-path="{{ it.path }}">
+            <button class="inbox-surface__open" type="button"
+                hx-post="/api/open-note" hx-ext="json-enc"
+                hx-vals='{"path": {{ it.path | json }}}' hx-swap="none">
+                <span class="inbox-surface__preview">{{ it.preview or "(empty capture)" }}</span>
+            </button>
+            <small class="inbox-surface__meta">{{ it.source or "" }}{% if it.captured %} · {{ it.captured | touched }}{% endif %}</small>
+        </li>
+        {%- endfor %}
+    </ul>
+</div>
+
+<div class="area-tiles block--optional" id="area-tiles"{% if not areaTiles.length %} hidden{% endif %}>
+    <div class="area-tiles__kicker">the rest of the desk</div>
+    <div class="area-tiles__grid" id="area-tiles-grid">
+        {%- for t in areaTiles %}
+        <button class="area-tile" type="button" data-path="{{ t.path }}"
+            hx-post="/api/open-note" hx-ext="json-enc"
+            hx-vals='{"path": {{ t.path | json }}}' hx-swap="none">
+            <span class="area-tile__title">{{ t.title }}</span>
+            <span class="area-tile__action">{% if t.next_action %}▶ {{ t.next_action }}{% else %}resting — nothing asked of you{% endif %}</span>
+            <small class="area-tile__meta">{% if t.last_touched %}{{ t.last_touched | touched }}{% endif %}</small>
+        </button>
+        {%- endfor %}
+    </div>
+</div>
+
+{% if projects.length %}
+<div class="progress-rail block--optional" id="progress-rail">
+    <div class="progress-rail__kicker">projects moving</div>
+    <div class="progress-rail__list" id="progress-list">
+        {%- for p in projects %}
+        <div class="progress-item" data-path="{{ p.path }}">
+            <span class="progress-item__title">{{ p.title }}</span>
+            <span class="progress-bar" role="img" aria-label="{{ p.done }} of {{ p.total }}">
+                <span class="progress-bar__fill" style="width: {{ (p.done / p.total * 100) | round | int }}%"></span>
+            </span>
+            <span class="progress-item__count">{{ p.done }}/{{ p.total }}</span>
+        </div>
+        {%- endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="actions-block block--optional">
+    <div class="actions-block__kicker">one next action per note</div>
+    <ul class="actions" id="actions">
+        {%- for a in rest %}
+        {% include "partials/_action_row.njk" %}
+        {%- endfor %}
+    </ul>
+</div>
+
+<div class="actions-block block--optional snoozed-block" id="snoozed-surface"{% if not today.snoozed.length %} hidden{% endif %}>
+    <div class="actions-block__kicker">resting — not-now, not never</div>
+    <ul class="actions" id="snoozed-notes">
+        {%- for s in today.snoozed %}
+        <li class="action action--snoozed" data-note="{{ s.note }}">
+            <div class="action__title">
+                <button class="action__open" type="button"
+                    hx-post="/api/open-note" hx-ext="json-enc"
+                    hx-vals='{"path": {{ s.note | json }}}' hx-swap="none">{{ s.title }}</button>
+            </div>
+            <div class="action__done-when">on rest — it will ask again</div>
+        </li>
+        {%- endfor %}
+    </ul>
+</div>
+
+<div class="cleared is-hidden" id="cleared">
+    <div class="cleared__stamp">PAGE CLEARED</div>
+    <div class="cleared__sub">nothing owed. go well.</div>
+    <div class="pebbles cleared__pebbles" id="cleared-pebbles"></div>
+</div>
+
+<p class="invitation">come back when something sparks.</p>
