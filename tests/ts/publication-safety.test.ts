@@ -248,6 +248,7 @@ describe("native publication safety tools", () => {
       "GaBcDe",
       "abcdefghijklmnopqrstuvwxyz1234",
     ].join(".");
+
     const samples: Array<[string, string]> = [
       ["src/config.ts", `DISCORD_BOT_TOKEN=${discordToken}`],
       ["src/config.ts", "CAPTURE_TOKEN=abc123.def456.ghi789jkl"],
