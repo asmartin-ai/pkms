@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { writeCapture } from "../../src/pkms/capture.ts";
 import { DISCORD_LEDGER } from "../../src/pkms/discord_capture.ts";
 import { load } from "../../src/pkms/ledger.ts";
+import { operationalDir } from "../../src/pkms/operational.ts";
 import { runBot } from "../../src/pkms/discord_gateway.ts";
 import { mkTmp, rmTmp } from "./helpers.ts";
 
@@ -337,7 +338,7 @@ describe("author allowlist (S1)", () => {
       expect(bot.api.bodies).toEqual([]);
       expect(bot.api.reactions).toEqual([]);
       expect(listMd(bot.vault)).toEqual([]);
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set());
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set());
     } finally {
       bot.stop();
       await bot.bot;
@@ -404,7 +405,7 @@ describe("author allowlist (S1)", () => {
 
       expect(bot.api.bodies).toEqual([]);
       expect(listMd(bot.vault)).toEqual([]);
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set());
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set());
     } finally {
       bot.stop();
       await bot.bot;
@@ -457,7 +458,7 @@ describe("author allowlist (S1)", () => {
         expect.arrayContaining(users.map((id) => expect.stringContaining(`capture from ${id}`))),
       );
       expect(listMd(bot.vault)).toHaveLength(2);
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set(["13", "15"]));
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set(["13", "15"]));
     } finally {
       bot.stop();
       await bot.bot;
@@ -483,13 +484,13 @@ describe("unknown !word falls through to capture (S2)", () => {
         () =>
           listMd(bot.vault).length === 1 &&
           bot.api.reactions.length === 1 &&
-          load(bot.indexDir, DISCORD_LEDGER).has("7"),
+          load(operationalDir(bot.indexDir), DISCORD_LEDGER).has("7"),
       );
 
       const note = readFileSync(listMd(bot.vault)[0]!, "utf8");
 
       expect(note).toContain("!important call the bank");
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set(["7"]));
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set(["7"]));
       expect(bot.api.reactions).toEqual([
         `/api/v10/channels/dm/messages/7/reactions/${REACTION}/@me`,
       ]);
@@ -514,7 +515,7 @@ describe("unknown !word falls through to capture (S2)", () => {
         0,
       );
       expect(listMd(bot.vault)).toEqual([]);
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set());
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set());
     } finally {
       bot.stop();
       await bot.bot;
@@ -660,11 +661,13 @@ describe("failures never kill the bot (S8)", () => {
         }),
       );
       await waitFor(
-        () => listMd(bot.vault).length === 1 && load(bot.indexDir, DISCORD_LEDGER).has("10"),
+        () =>
+          listMd(bot.vault).length === 1 &&
+          load(operationalDir(bot.indexDir), DISCORD_LEDGER).has("10"),
       );
 
       expect(readFileSync(listMd(bot.vault)[0]!, "utf8")).toContain("after the failure");
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set(["10"]));
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set(["10"]));
     } finally {
       console.error = realError;
       bot.stop();
@@ -730,11 +733,13 @@ describe("failures never kill the bot (S8)", () => {
         }),
       );
       await waitFor(
-        () => listMd(bot.vault).length === 1 && load(bot.indexDir, DISCORD_LEDGER).has("12"),
+        () =>
+          listMd(bot.vault).length === 1 &&
+          load(operationalDir(bot.indexDir), DISCORD_LEDGER).has("12"),
       );
 
       expect(readFileSync(listMd(bot.vault)[0]!, "utf8")).toContain("after the failure");
-      expect(load(bot.indexDir, DISCORD_LEDGER)).toEqual(new Set(["12"]));
+      expect(load(operationalDir(bot.indexDir), DISCORD_LEDGER)).toEqual(new Set(["12"]));
     } finally {
       console.error = realError;
       bot.stop();

@@ -4,7 +4,6 @@ import { File } from "node:buffer";
 import {
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   realpathSync,
   statSync,
@@ -13,15 +12,16 @@ import {
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import nunjucks from "nunjucks";
 import { createHash } from "node:crypto";
-import { writeCapture, type WriteCaptureOptions } from "./capture.ts";
+import { writeCapture } from "./capture.ts";
 import { attachmentLink, guessExt, mediaDirFor } from "./keep_ingest.ts";
 import { extractText } from "./ocr.ts";
 import { connect } from "./db.ts";
 import { emit } from "./events.ts";
 import { pullKeepIfStale } from "./keep_pull.ts";
-import { append, load } from "./ledger.ts";
+import { PromotionHandoffSchema, receivePromotion } from "./promote.ts";
 import { dismiss, letGo } from "./resurface.ts";
 import { search } from "./search.ts";
+import { ask, retrieveEvidence, semanticIndex, semanticStatus } from "./rag.ts";
 import { readSource } from "./sources.ts";
 import { pyStrip } from "./textio.ts";
 import { resolveSecret } from "./secrets.ts";
@@ -100,39 +100,15 @@ function staticContentType(extension: string): string {
   }
 }
 
-export const CH_PROMOTE_LEDGER = "ch-promote-ledger.txt";
-
 const JsonValueSchema = z.json();
 
 type JsonValue = z.infer<typeof JsonValueSchema>;
 
-const StringSchema = z.string();
-
 const NumberSchema = z.number();
-
-const ContextEnvelopeSchema = z
-  .object({
-    device: z.string().optional(),
-    app: z.string().optional(),
-  })
-  .passthrough();
-
-const ENVELOPE_FIELDS = [
-  "source_account_id",
-  "raw_ref",
-  "ch_origin_ref",
-  "ch_captured_at",
-] as const;
 
 const EnvelopeSchema = z
   .object({
     text: JsonValueSchema.optional(),
-    ch_item_id: JsonValueSchema.optional(),
-    source_account_id: JsonValueSchema.optional(),
-    raw_ref: JsonValueSchema.optional(),
-    ch_origin_ref: JsonValueSchema.optional(),
-    ch_captured_at: JsonValueSchema.optional(),
-    context: JsonValueSchema.optional(),
   })
   .passthrough();
 
@@ -155,79 +131,6 @@ const OpenNoteRequestSchema = z
   .passthrough();
 
 type OpenNoteRequest = z.infer<typeof OpenNoteRequestSchema>;
-
-let chPromoteTail: Promise<void> = Promise.resolve();
-
-export function withChPromoteLock<T>(fn: () => T): Promise<T> {
-  const run = chPromoteTail.then(fn);
-  chPromoteTail = run.then(
-    () => undefined,
-    () => undefined,
-  );
-
-  return run;
-}
-
-export function envelopeToFrontmatter(
-  payload: CaptureEnvelope,
-  chItemId: string,
-): NonNullable<WriteCaptureOptions["extra"]> {
-  const extra: NonNullable<WriteCaptureOptions["extra"]> = { ch_item_id: chItemId };
-
-  for (const key of ENVELOPE_FIELDS) {
-    const parsed = StringSchema.safeParse(payload[key]);
-
-    if (parsed.success && parsed.data) extra[key] = parsed.data;
-  }
-
-  const context = ContextEnvelopeSchema.safeParse(payload.context);
-
-  if (context.success) {
-    for (const part of ["device", "app"] as const) {
-      const val = context.data[part];
-
-      if (val) extra[`context_${part}`] = val;
-    }
-  }
-
-  return extra;
-}
-
-export function findCaptureWithChItem(vault: string, chItemId: string): string | null {
-  const marker = `ch_item_id: ${chItemId}`;
-  const stack = [vault];
-
-  while (stack.length > 0) {
-    const dir = stack.pop()!;
-    let entries;
-
-    try {
-      entries = readdirSync(dir, { withFileTypes: true });
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      const p = join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        stack.push(p);
-      } else if (entry.isFile() && entry.name.endsWith(".md")) {
-        let head: string;
-
-        try {
-          head = readFileSync(p, "utf8").slice(0, 2048);
-        } catch {
-          continue;
-        }
-
-        if (head.includes(marker)) return p;
-      }
-    }
-  }
-
-  return null;
-}
 
 export function resolveToken(root: string, token?: string | null): string {
   if (token) return token;
@@ -425,31 +328,32 @@ export function makeServer(opts: MakeServerOptions) {
       text = new URLSearchParams(raw).getAll("text").find((v) => v !== "") ?? raw;
     }
 
+    if (payload && ("version" in payload || "ch_item_id" in payload)) {
+      const handoff = PromotionHandoffSchema.safeParse(payload);
+
+      if (!handoff.success)
+        return Response.json(
+          { error: "Invalid promotion handoff; version 1 is required." },
+          { status: 400 },
+        );
+
+      try {
+        return Response.json(receivePromotion(handoff.data, vault, indexDir));
+      } catch (error) {
+        return Response.json(
+          {
+            version: 1,
+            state: "unconfirmed",
+            delivery_id: handoff.data.delivery_id,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          { status: 500 },
+        );
+      }
+    }
+
     if (!pyStrip(text)) return send(400, "empty capture");
     const source = url.searchParams.getAll("source").find((v) => v !== "") ?? "web";
-    const parsedChItemId = StringSchema.safeParse(payload?.ch_item_id);
-    const chItemId = parsedChItemId.success ? parsedChItemId.data.trim() : "";
-
-    if (chItemId) {
-      return withChPromoteLock(() => {
-        if (load(indexDir, CH_PROMOTE_LEDGER).has(chItemId)) {
-          const existing = findCaptureWithChItem(vault, chItemId);
-          const name = existing ? basename(existing) : "";
-
-          if (isHtmx(req)) return sendHtmxRefresh();
-
-          return send(200, pyStrip(`already saved ✓ ${name}`));
-        }
-
-        const extra = payload !== null ? envelopeToFrontmatter(payload, chItemId) : {};
-        const saved = writeCapture(text, vault, { source, extra });
-        append(indexDir, CH_PROMOTE_LEDGER, [chItemId]);
-
-        if (isHtmx(req)) return sendHtmxRefresh();
-
-        return send(200, `saved ✓ ${basename(saved)}`);
-      });
-    }
 
     const saved = writeCapture(text, vault, { source, extra: {} });
 
@@ -549,6 +453,124 @@ export function makeServer(opts: MakeServerOptions) {
     const result = schema.safeParse(parsed);
 
     return result.success ? result.data : null;
+  };
+
+  const ragJson = <T extends object>(body: T, status = 200) =>
+    Response.json(body, {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    });
+
+  const handleRag = async (req: Request, url: URL): Promise<Response> => {
+    if (!authed(req, url)) return ragJson({ error: "Token required" }, 403);
+
+    if (!sameOrigin(req, url)) return ragJson({ error: "Cross-origin request rejected" }, 403);
+
+    try {
+      if (req.method === "GET" && url.pathname === "/api/rag/status") {
+        const configured = ["rag-llm-base-url", "rag-llm-api-key", "rag-llm-model"].every((name) =>
+          Boolean(resolveSecret(root, name)),
+        );
+
+        return ragJson({ ...semanticStatus(vault, indexDir), providerConfigured: configured });
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/rag/source") {
+        const target = safeVaultFile(vault, url.searchParams.get("ref"));
+
+        if (!target) return ragJson({ error: "Source no longer exists" }, 404);
+        const start = Number(url.searchParams.get("start"));
+        const end = Number(url.searchParams.get("end"));
+
+        if (
+          !Number.isInteger(start) ||
+          start < 1 ||
+          !Number.isInteger(end) ||
+          end < start ||
+          end - start > 100
+        ) {
+          return ragJson({ error: "Invalid citation line range" }, 400);
+        }
+
+        const lines = readFileSync(target, "utf8").replace(/\r\n?/g, "\n").split("\n");
+
+        if (end > lines.length)
+          return ragJson({ error: "Citation range is stale; search again" }, 409);
+        const expected = url.searchParams.get("text");
+
+        if (
+          expected &&
+          !lines
+            .slice(start - 1, end)
+            .join("\n")
+            .includes(expected)
+        ) {
+          return ragJson({ error: "Citation text changed; search again" }, 409);
+        }
+
+        return ragJson({
+          ref: url.searchParams.get("ref"),
+          startLine: start,
+          endLine: end,
+          text: lines
+            .slice(start - 1, end)
+            .map((line, i) => `${start + i}: ${line}`)
+            .join("\n"),
+        });
+      }
+
+      if (req.method !== "POST") return ragJson({ error: "Not found" }, 404);
+
+      if (url.pathname === "/api/rag/index") {
+        const payload = await readJsonPayload(
+          req,
+          z.object({ offline: z.boolean().default(false) }),
+        );
+
+        if (!payload) return ragJson({ error: "Invalid request" }, 400);
+
+        return ragJson(await semanticIndex(vault, indexDir, payload));
+      }
+
+      const payload = await readJsonPayload(
+        req,
+        z.object({
+          query: z.string().trim().min(1).max(2000),
+          semantic: z.boolean().default(false),
+          offline: z.boolean().default(false),
+          allowRemote: z.boolean().default(false),
+        }),
+      );
+
+      if (!payload) return ragJson({ error: "A question of 1–2000 characters is required" }, 400);
+
+      if (url.pathname === "/api/rag/search") {
+        return ragJson(await retrieveEvidence(payload.query, vault, indexDir, payload));
+      }
+
+      if (url.pathname === "/api/rag/ask") {
+        if (!payload.allowRemote || payload.offline) {
+          return ragJson(
+            {
+              error:
+                "Ask requires per-query consent to send full evidence text, and is unavailable offline",
+            },
+            403,
+          );
+        }
+
+        return ragJson(
+          await ask(payload.query, vault, indexDir, {
+            ...payload,
+            readSecret: (name) => resolveSecret(root, name),
+          }),
+        );
+      }
+
+      return ragJson({ error: "Not found" }, 404);
+    } catch (error) {
+      return ragJson({ error: error instanceof Error ? error.message : String(error) }, 422);
+    }
   };
 
   const handleResurface = async (req: Request, url: URL): Promise<Response> => {
@@ -705,6 +727,8 @@ export function makeServer(opts: MakeServerOptions) {
   const fetchHandler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const path = url.pathname;
+
+    if (path.startsWith("/api/rag/")) return handleRag(req, url);
 
     if (req.method === "GET") {
       if (path === "/health") return send(200, "ok");

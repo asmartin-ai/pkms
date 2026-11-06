@@ -334,8 +334,8 @@ describe("Keep mobile transport", () => {
   test("corrupt state cache falls back to a baseline sync and is replaced", async () => {
     const root = mkdtempSync(join(Bun.env.TMPDIR ?? "/tmp", "pkms-keep-cache-"));
     temporaryRoots.push(root);
-    mkdirSync(root, { recursive: true });
-    writeFileSync(join(root, "keep-state.json"), "{", "utf8");
+    mkdirSync(join(root, ".ledger"), { recursive: true });
+    writeFileSync(join(root, ".ledger", "keep-state.json"), "{", "utf8");
     let syncs = 0;
 
     const server = Bun.serve({
@@ -352,15 +352,21 @@ describe("Keep mobile transport", () => {
     try {
       const base = server.url.origin;
 
-      const keep = await makeKeep("keep@example.com", "synthetic-master-token", root, {
-        authUrl: `${base}/auth`,
-        apiUrl: `${base}/notes/v1/`,
-      });
+      const keep = await makeKeep(
+        "keep@example.com",
+        "synthetic-master-token",
+        join(root, ".index"),
+        {
+          authUrl: `${base}/auth`,
+          apiUrl: `${base}/notes/v1/`,
+        },
+      );
 
       expect(syncs).toBe(1);
       expect(
-        KeepStateSchema.parse(JSON.parse(readFileSync(join(root, "keep-state.json"), "utf8")))
-          .keep_version,
+        KeepStateSchema.parse(
+          JSON.parse(readFileSync(join(root, ".ledger", "keep-state.json"), "utf8")),
+        ).keep_version,
       ).toBe("baseline-v1");
       expect(keep.all()).toEqual([]);
     } finally {
@@ -371,9 +377,9 @@ describe("Keep mobile transport", () => {
   test("a server-forced full resync recovers with a fresh client", async () => {
     const root = mkdtempSync(join(Bun.env.TMPDIR ?? "/tmp", "pkms-keep-resync-"));
     temporaryRoots.push(root);
-    mkdirSync(root, { recursive: true });
+    mkdirSync(join(root, ".ledger"), { recursive: true });
     writeFileSync(
-      join(root, "keep-state.json"),
+      join(root, ".ledger", "keep-state.json"),
       JSON.stringify({ keep_version: "stale-v1", labels: [], nodes: [] }),
       "utf8",
     );
@@ -408,16 +414,22 @@ describe("Keep mobile transport", () => {
     try {
       const base = server.url.origin;
 
-      const keep = await makeKeep("keep@example.com", "synthetic-master-token", root, {
-        authUrl: `${base}/auth`,
-        apiUrl: `${base}/notes/v1/`,
-      });
+      const keep = await makeKeep(
+        "keep@example.com",
+        "synthetic-master-token",
+        join(root, ".index"),
+        {
+          authUrl: `${base}/auth`,
+          apiUrl: `${base}/notes/v1/`,
+        },
+      );
 
       expect(syncs).toBe(2);
       expect(keep.all().map((node) => node.title)).toContain("Local transport note");
       expect(
-        KeepStateSchema.parse(JSON.parse(readFileSync(join(root, "keep-state.json"), "utf8")))
-          .keep_version,
+        KeepStateSchema.parse(
+          JSON.parse(readFileSync(join(root, ".ledger", "keep-state.json"), "utf8")),
+        ).keep_version,
       ).toBe("fresh-v1");
     } finally {
       server.stop(true);

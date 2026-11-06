@@ -123,7 +123,7 @@ describe("test_indexer.py::test_reindex_removes_deleted_notes", () => {
 });
 
 describe("test_indexer.py::test_reshape_clock_survives_reindex_and_resets_on_edit", () => {
-  test("unchanged line keeps its clock; edited line prunes it and starts fresh", () => {
+  test("unchanged line keeps its clock; edited line starts fresh", () => {
     const { vault, indexDir } = makeVault();
     cleaned.push(join(vault, ".."));
     indexVault(vault, indexDir);
@@ -157,11 +157,6 @@ describe("test_indexer.py::test_reshape_clock_survives_reindex_and_resets_on_edi
     );
     indexVault(vault, indexDir);
     const conn3 = connect(indexDir);
-    expect(
-      conn3
-        .query<{ c: number }, SQLQueryBindings[]>("SELECT count(*) c FROM task_seen WHERE hash=?")
-        .get(row.h)!.c,
-    ).toBe(0);
 
     const fresh = conn3
       .query<{ first_seen: string }, SQLQueryBindings[]>(

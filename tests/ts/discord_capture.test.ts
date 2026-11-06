@@ -12,6 +12,7 @@ import {
   shouldCapture,
 } from "../../src/pkms/discord_capture.ts";
 import { load } from "../../src/pkms/ledger.ts";
+import { operationalDir } from "../../src/pkms/operational.ts";
 import { runBot } from "../../src/pkms/discord_gateway.ts";
 import { mkTmp, rmTmp } from "./helpers.ts";
 
@@ -77,7 +78,7 @@ describe("Discord capture", () => {
         }),
       ).toBe(true);
       expect(posted).toEqual(["a thought"]);
-      expect(load(indexDir, DISCORD_LEDGER)).toEqual(new Set(["msg-1"]));
+      expect(load(operationalDir(indexDir), DISCORD_LEDGER)).toEqual(new Set(["msg-1"]));
       expect(
         await captureMessage("a thought", "msg-1", indexDir, {
           post: (t) => {
@@ -103,7 +104,7 @@ describe("Discord capture", () => {
       await expect(captureMessage("lost?", "msg-2", indexDir, { post: boom })).rejects.toThrow(
         "service down",
       );
-      expect(load(indexDir, DISCORD_LEDGER).has("msg-2")).toBe(false);
+      expect(load(operationalDir(indexDir), DISCORD_LEDGER).has("msg-2")).toBe(false);
     } finally {
       rmTmp(root);
     }
@@ -278,7 +279,7 @@ describe("Discord Gateway integration", () => {
       expect(bodies.every((body) => body.includes("source: discord"))).toBe(true);
       expect(bodies.some((body) => body.includes("message 3"))).toBe(true);
       expect(bodies.some((body) => body.includes("message 4"))).toBe(true);
-      expect(load(join(root, ".index"), DISCORD_LEDGER)).toEqual(new Set(["3", "4"]));
+      expect(load(join(root, ".ledger"), DISCORD_LEDGER)).toEqual(new Set(["3", "4"]));
     } finally {
       controller.abort();
       gatewayServer.stop(true);

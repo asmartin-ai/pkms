@@ -1,4 +1,5 @@
 import { append, load } from "./ledger.ts";
+import { operationalDir } from "./operational.ts";
 
 export const DISCORD_LEDGER = "discord-ledger.txt";
 
@@ -55,9 +56,11 @@ export async function captureMessage(
   indexDir: string,
   { post }: CaptureMessageOptions,
 ): Promise<boolean> {
-  if (load(indexDir, DISCORD_LEDGER).has(messageId)) return false;
+  const stateDir = operationalDir(indexDir);
+
+  if (load(stateDir, DISCORD_LEDGER).has(messageId)) return false;
   await post(text);
-  append(indexDir, DISCORD_LEDGER, [messageId]);
+  append(stateDir, DISCORD_LEDGER, [messageId]);
 
   return true;
 }

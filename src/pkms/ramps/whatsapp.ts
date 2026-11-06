@@ -5,6 +5,7 @@ import { z } from "zod";
 import { stamp, writeCapture } from "../capture.ts";
 import { emit } from "../events.ts";
 import { append, load } from "../ledger.ts";
+import { operationalDir } from "../operational.ts";
 import { appendText, pyStrip, readText, writeText } from "../textio.ts";
 import {
   assertAuthenticated,
@@ -98,7 +99,8 @@ async function captureFromStore(
   const instinctSecret = ctx.readSecret("whatsapp-instinct-jid");
   const instinctJid = instinctSecret === null ? null : normalizeJid(instinctSecret);
   const after = windowStart(ctx.indexDir);
-  const seen = load(ctx.indexDir, WHATSAPP_LEDGER);
+  const stateDir = operationalDir(ctx.indexDir);
+  const seen = load(stateDir, WHATSAPP_LEDGER);
   const instinct: WacliMessage[] = [];
   let newest: number | null = null;
 
@@ -138,7 +140,7 @@ async function captureFromStore(
               now: new Date(at),
               extra: { whatsapp_id: row.msgId },
             });
-            append(ctx.indexDir, WHATSAPP_LEDGER, [row.msgId]);
+            append(stateDir, WHATSAPP_LEDGER, [row.msgId]);
             counts.self += 1;
           } else if (jid === instinctJid) {
             instinct.push(row);
@@ -167,7 +169,7 @@ async function captureFromStore(
 
   for (const row of instinct) {
     appendInstinctLine(ctx, row);
-    append(ctx.indexDir, WHATSAPP_LEDGER, [row.msgId]);
+    append(stateDir, WHATSAPP_LEDGER, [row.msgId]);
     counts.instinct += 1;
   }
 
@@ -217,7 +219,7 @@ function windowStart(indexDir: string): Date {
 }
 
 function readCursor(indexDir: string): number | null {
-  const path = join(indexDir, WHATSAPP_CURSOR);
+  const path = join(operationalDir(indexDir), WHATSAPP_CURSOR);
 
   if (!existsSync(path)) return null;
 
@@ -237,8 +239,9 @@ function advanceCursor(indexDir: string, newestMs: number): void {
 
   if (cursor !== null && newestMs <= cursor) return;
 
-  mkdirSync(indexDir, { recursive: true });
-  writeText(join(indexDir, WHATSAPP_CURSOR), `${new Date(newestMs).toISOString()}\n`);
+  const stateDir = operationalDir(indexDir);
+  mkdirSync(stateDir, { recursive: true });
+  writeText(join(stateDir, WHATSAPP_CURSOR), `${new Date(newestMs).toISOString()}\n`);
 }
 
 function pad(n: number): string {
@@ -255,7 +258,7 @@ function appendInstinctLine(ctx: RampContext, msg: WacliMessage): void {
 }
 
 function rollingNote(ctx: RampContext, day: string, at: Date): string {
-  const ledgerDir = join(ctx.root, ".ledger");
+  const ledgerDir = operationalDir(ctx.indexDir);
   const inbox = join(ctx.vault, "inbox");
   const created: string[] = [];
 

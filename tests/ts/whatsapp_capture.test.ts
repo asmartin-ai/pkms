@@ -10,6 +10,7 @@ import {
 import { join } from "node:path";
 import { stamp } from "../../src/pkms/capture.ts";
 import { append, load } from "../../src/pkms/ledger.ts";
+import { operationalDir } from "../../src/pkms/operational.ts";
 import { NotConnectedError } from "../../src/pkms/ramps/email.ts";
 import {
   WHATSAPP_CURSOR,
@@ -244,12 +245,12 @@ function makeCtx(secrets: Record<string, string> = {}): RampContext {
 }
 
 function seedCursor(ctx: RampContext, iso: string): void {
-  mkdirSync(ctx.indexDir, { recursive: true });
-  writeFileSync(join(ctx.indexDir, WHATSAPP_CURSOR), `${iso}\n`);
+  mkdirSync(operationalDir(ctx.indexDir), { recursive: true });
+  writeFileSync(join(operationalDir(ctx.indexDir), WHATSAPP_CURSOR), `${iso}\n`);
 }
 
 function cursorLines(ctx: RampContext): string[] {
-  return readFileSync(join(ctx.indexDir, WHATSAPP_CURSOR), "utf8")
+  return readFileSync(join(operationalDir(ctx.indexDir), WHATSAPP_CURSOR), "utf8")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "");
@@ -294,7 +295,7 @@ describe("whatsapp ramp", () => {
     expect(readInbox(ctx, note)).toContain(
       "source: whatsapp\nwhatsapp_id: s1\n---\n\nbuy oat milk\n",
     );
-    expect(load(ctx.indexDir, WHATSAPP_LEDGER).has("s1")).toBe(true);
+    expect(load(operationalDir(ctx.indexDir), WHATSAPP_LEDGER).has("s1")).toBe(true);
   });
 
   test("a short page ends the chat and the walk moves to the next one", async () => {
@@ -349,7 +350,8 @@ describe("whatsapp ramp", () => {
     rows.push(msg("n2", SELF_PN, at(7, 9, 11), { text: "new two" }));
     rows.push(msg("n3", SELF_PN, at(7, 9, 12), { text: "new three" }));
 
-    for (const row of rows.slice(0, 150)) append(ctx.indexDir, WHATSAPP_LEDGER, [row.msgId]);
+    for (const row of rows.slice(0, 150))
+      append(operationalDir(ctx.indexDir), WHATSAPP_LEDGER, [row.msgId]);
 
     const fake = makeFake(rows);
     const report = await drainWhatsApp(ctx, { runner: fake.run });
@@ -452,7 +454,7 @@ describe("whatsapp ramp", () => {
     expect(readInbox(ctx, `${stamp(new Date(at(7, 9, 5)))}_chart-of-rent.md`)).toContain(
       "chart of rent\n",
     );
-    expect(load(ctx.indexDir, WHATSAPP_LEDGER).has("s2")).toBe(false);
+    expect(load(operationalDir(ctx.indexDir), WHATSAPP_LEDGER).has("s2")).toBe(false);
   });
 
   test("Instinct media without text lands as a placeholder line; reactions stay skipped", async () => {
@@ -489,7 +491,7 @@ describe("whatsapp ramp", () => {
         `- ${hhmm(at(7, 9, 13))} instinct: [document: lease 2026.pdf]\n` +
         `- ${hhmm(at(7, 9, 16))} instinct: what is in the photo?\n`,
     );
-    expect(load(ctx.indexDir, WHATSAPP_LEDGER).has("i5")).toBe(false);
+    expect(load(operationalDir(ctx.indexDir), WHATSAPP_LEDGER).has("i5")).toBe(false);
 
     const again = await drainWhatsApp(ctx, { runner: fake.run });
 

@@ -13,6 +13,7 @@ import { join, resolve } from "node:path";
 import { connect, type DB } from "./db.ts";
 import { writeCapture } from "./capture.ts";
 import { append, load } from "./ledger.ts";
+import { operationalDir } from "./operational.ts";
 import { extractText } from "./ocr.ts";
 import { indexVault } from "./indexer.ts";
 import { recordKeepPull } from "./keep_pull.ts";
@@ -299,7 +300,7 @@ export async function makeKeep(
   transport: KeepTransportOptions = {},
 ): Promise<Keep> {
   const build = (): Keep => new Keep(email, masterToken, undefined, transport);
-  const statePath = join(indexDir, STATE);
+  const statePath = join(operationalDir(indexDir), STATE);
   let state: KeepState | null = null;
 
   if (existsSync(statePath)) {
@@ -327,10 +328,8 @@ export async function makeKeep(
 }
 
 function cacheKeepState(indexDir: string, statePath: string, keep: Keep): Keep {
-  try {
-    mkdirSync(indexDir, { recursive: true });
-    writeFileSync(statePath, JSON.stringify(keep.dump()), "utf8");
-  } catch {}
+  mkdirSync(operationalDir(indexDir), { recursive: true });
+  writeFileSync(statePath, JSON.stringify(keep.dump()), "utf8");
 
   return keep;
 }
@@ -514,7 +513,8 @@ async function ingestKeepUnlocked(
   const doWriteCapture = opts.writeCaptureFn ?? writeCapture;
 
   const mediaDir = opts.mediaDir ?? mediaDirFor(root);
-  const ledger = load(indexDir, LEDGER);
+  const stateDir = operationalDir(indexDir);
+  const ledger = load(stateDir, LEDGER);
   const completions = loadCompletionIndex(indexDir);
   const completed = new Set(completions.keys());
   const stored = listSources(vault, { source: "keep" });
@@ -528,13 +528,13 @@ async function ingestKeepUnlocked(
       : [],
   );
 
-  if (!existsSync(join(indexDir, LEDGER))) {
+  if (!existsSync(join(stateDir, LEDGER))) {
     if (!existsSync(bootstrapPath)) {
       for (const note of notes) pendingArchive.add(note.id);
       saveBootstrap(root, pendingArchive);
     }
 
-    append(indexDir, LEDGER, []);
+    append(stateDir, LEDGER, []);
   }
 
   const toProcess = notes.filter(
@@ -638,7 +638,7 @@ async function ingestKeepUnlocked(
         pinned,
       });
 
-      if (!ledger.has(note.id)) append(indexDir, LEDGER, [note.id]);
+      if (!ledger.has(note.id)) append(stateDir, LEDGER, [note.id]);
 
       if (archiving) {
         pendingArchive.delete(note.id);
@@ -737,7 +737,7 @@ export interface SweepOptions {
 }
 
 function loadSweepState(indexDir: string): SweepState {
-  const p = join(indexDir, SWEEP_STATE);
+  const p = join(operationalDir(indexDir), SWEEP_STATE);
 
   if (!existsSync(p)) return { swept: {} };
 
@@ -749,8 +749,9 @@ function loadSweepState(indexDir: string): SweepState {
 }
 
 function saveSweepState(indexDir: string, state: SweepState): void {
-  mkdirSync(indexDir, { recursive: true });
-  writeFileSync(join(indexDir, SWEEP_STATE), JSON.stringify(state, null, 2), "utf8");
+  const stateDir = operationalDir(indexDir);
+  mkdirSync(stateDir, { recursive: true });
+  writeFileSync(join(stateDir, SWEEP_STATE), JSON.stringify(state, null, 2), "utf8");
 }
 
 export async function sweepOldUnpinned(

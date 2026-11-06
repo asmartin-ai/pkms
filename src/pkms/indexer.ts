@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import type { SQLQueryBindings } from "bun:sqlite";
 import { z } from "zod";
@@ -49,11 +50,12 @@ function parseYaml(s: string): Frontmatter {
 
 export function loadPost(text: string) {
   const stripped = pyStrip(text);
+  const strippedOffset = stripped ? text.indexOf(stripped) : text.length;
   const body = stripped.startsWith("\ufeff") ? stripped.slice(1) : stripped;
   const matches = [...body.matchAll(FM_BOUNDARY)];
 
   if (matches.length < 2 || matches[0]!.index !== 0) {
-    return { data: {}, content: stripped };
+    return { data: {}, content: stripped, contentOffset: strippedOffset };
   }
 
   const first = matches[0]!;
@@ -61,7 +63,16 @@ export function loadPost(text: string) {
   const fm = body.slice(first.index! + first[0].length, second.index!);
   const rawContent = body.slice(second.index! + second[0].length);
 
-  return { data: parseYaml(fm), content: pyStrip(rawContent) };
+  const content = pyStrip(rawContent);
+
+  const contentOffset =
+    strippedOffset +
+    (stripped.startsWith("\ufeff") ? 1 : 0) +
+    second.index! +
+    second[0].length +
+    (content ? rawContent.indexOf(content) : rawContent.length);
+
+  return { data: parseYaml(fm), content, contentOffset };
 }
 
 function nowIso(): string {
@@ -171,12 +182,12 @@ export function indexVault(
   const today = isoLocalDate(new Date());
 
   const insertNote = db.query(
-    `INSERT INTO notes (path, title, created, modified, tags, content, indexed_at)
-     VALUES (?,?,?,?,?,?,?)
+    `INSERT INTO notes (path, title, created, modified, tags, content, indexed_at, source_hash)
+     VALUES (?,?,?,?,?,?,?,?)
      ON CONFLICT(path) DO UPDATE SET
        title=excluded.title, created=excluded.created,
        modified=excluded.modified, tags=excluded.tags,
-       content=excluded.content, indexed_at=excluded.indexed_at`,
+       content=excluded.content, indexed_at=excluded.indexed_at, source_hash=excluded.source_hash`,
   );
 
   const deleteLinks = db.query("DELETE FROM links WHERE source=?");
@@ -203,9 +214,12 @@ export function indexVault(
     for (const mdPath of walkMdFiles(vaultRoot)) {
       const rel = relative(vaultRoot, mdPath).replace(/\\/g, "/");
       let post: { data: Frontmatter; content: string };
+      let sourceHash: string;
 
       try {
-        post = loadPost(decodeFatal(mdPath));
+        const raw = decodeFatal(mdPath);
+        post = loadPost(raw);
+        sourceHash = createHash("sha256").update(raw).digest("hex");
       } catch {
         console.log(`  skipped (unreadable): ${rel}`);
         seen.add(rel);
@@ -237,6 +251,7 @@ export function indexVault(
         tags,
         content.startsWith("\ufeff") ? "\ufeff" + content : content,
         nowIso(),
+        sourceHash,
       );
 
       deleteLinks.run(rel);
@@ -280,12 +295,6 @@ export function indexVault(
         if (verbose) console.log(`  removed ${row.path}`);
       }
     }
-
-    db.exec(
-      `DELETE FROM task_seen WHERE NOT EXISTS
-       (SELECT 1 FROM tasks t
-        WHERE t.note_path = task_seen.note_path AND t.hash = task_seen.hash)`,
-    );
 
     db.exec("INSERT INTO notes_fts(notes_fts) VALUES('rebuild')");
     db.exec(FTS_TRIGGERS);

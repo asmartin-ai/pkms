@@ -36,7 +36,7 @@ brings all your Keep history in one shot, and re-runs are idempotent.
    is set to) has the attachments (sha256-named).
 
 You can re-run the importer any time with a fresh Takeout ZIP — the
-takeout ledger (`.index/keep-takeout-ledger.txt`) makes re-runs
+takeout ledger (`.ledger/keep-takeout-ledger.txt`) makes re-runs
 idempotent (already-imported notes are skipped).
 
 Both Takeout JSON layouts are accepted: current exports use
@@ -191,12 +191,12 @@ actions in `.index/keep-sweep.json` for audit.
   purpose: Google's auth endpoint also answers 5xx and drops connections under
   load, and that case is retried twice and then just passes on the next timer
   run, so it is not a revoked token.
-- **Existing Keep completion/dedupe state remains in `.index/`**:
-  `keep-ledger.txt`, `keep-takeout-ledger.txt`, and the `keep_completed` table.
-  Use `pkms index` to rebuild derived search data; do not delete the entire
-  directory while relying on incremental Keep state. Canonical source archives,
-  bootstrap retries and pull timestamps live separately in `vault/sources/` and
-  `.ledger/`.
+- **Keep operational state lives in `.ledger/`**, separate from the disposable
+  search index. It includes completion records, dedupe ledgers, sync state,
+  sweep state, bootstrap retries and pull timestamps. Canonical source archives
+  remain in `vault/sources/`. Existing installations must complete the
+  [explicit state migration](../README.md#upgrade-existing-operational-state)
+  before deleting their old index. Back up `.ledger/` with the vault and media.
 - **Trashed Keep notes are never ingested.** Keep-archived notes are included on
   first contact; later pulls preserve the existing active-note-only policy.
 - **Pinned notes are never deleted by the sweep.** If you want a pinned

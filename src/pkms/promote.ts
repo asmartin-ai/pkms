@@ -1,19 +1,28 @@
-import { Database, type SQLQueryBindings } from "bun:sqlite";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  linkSync,
+  mkdirSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { z } from "zod";
+import { frontmatterValue } from "./capture.ts";
+import { loadPost } from "./indexer.ts";
+import { append, load } from "./ledger.ts";
+import { operationalDir } from "./operational.ts";
+import { emit } from "./events.ts";
 import { isoLocalDate } from "./tasks.ts";
 
 const JsonSchema = z.json();
 
 export type JsonValue = z.infer<typeof JsonSchema>;
-
-const MetadataSchema = z
-  .object({
-    subreddit: z.string().nullable().optional(),
-    permalink: z.string().nullable().optional(),
-  })
-  .passthrough();
 
 const EexistErrorSchema = z.object({ code: z.literal("EEXIST") });
 
@@ -49,33 +58,6 @@ const StatsSchema = z.object({
 
 type Stats = z.infer<typeof StatsSchema>;
 
-const FetchRowSchema = z.object({
-  title: z.string().nullable(),
-  author: z.string().nullable(),
-  url: z.string().nullable(),
-  created_utc: z.number().nullable(),
-  saved_utc: z.number().nullable(),
-  metadata: z.string().nullable(),
-  thread_json: z.string(),
-});
-
-const SearchRowSchema = z.object({
-  fullname: z.string(),
-  title: z.string().nullable(),
-  saved_utc: z.number().nullable(),
-  metadata: z.string().nullable(),
-});
-
-function defaultHoarderDb(): string {
-  const override = process.env.PKMS_HOARDER_DB;
-
-  if (override) return override;
-
-  return resolve(import.meta.dir, "..", "..", "..", "content-hoarder", "data", "app.db");
-}
-
-export const HOARDER_DB = defaultHoarderDb();
-
 export const READING_DIR = ["resources", "reading"] as const;
 
 export const WPM = 200;
@@ -87,14 +69,6 @@ export const MAX_DEPTH = 4;
 const URL_ID_RE = /(?:redd\.it|reddit\.com)\/(?:r\/[^/]+\/comments\/|comments\/)?([a-z0-9]{5,9})/i;
 
 const BARE_ID_RE = /^(?:t3_)?([a-z0-9]{5,9})$/i;
-
-export function connectHoarder(dbPath: string = HOARDER_DB): Database {
-  if (!existsSync(dbPath)) {
-    throw new Error(`content-hoarder DB not found: ${dbPath}`);
-  }
-
-  return new Database(dbPath, { readonly: true });
-}
 
 export function extractPostId(query: string): string | null {
   if (query.includes("/") || query.includes(".")) {
@@ -113,78 +87,55 @@ export function extractPostId(query: string): string | null {
   return null;
 }
 
-export interface Thread {
-  id: string;
-  title: string | null;
-  author: string | null;
-  url: string | null;
-  created_utc: number | null;
-  saved_utc: number | null;
-  subreddit: string | null;
-  permalink: string | null;
-  thread_json: JsonValue[];
+export const ThreadSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  author: z.string().nullable(),
+  url: z.string().nullable(),
+  created_utc: z.number().nullable(),
+  saved_utc: z.number().nullable(),
+  subreddit: z.string().nullable(),
+  permalink: z.string().nullable(),
+  thread_json: z.array(JsonSchema),
+});
+
+export type Thread = z.infer<typeof ThreadSchema>;
+
+export const PromotionHandoffSchema = z
+  .object({
+    version: z.literal(1),
+    delivery_id: z.string().regex(/^[a-f0-9]{64}$/),
+    destination: z.enum(["inbox", "reading"]),
+    ch_item_id: z.string().min(1),
+    ch_origin_ref: z.string().min(1),
+    ch_captured_at: z.string().min(1),
+    text: z.string().trim().min(1),
+    title: z.string().optional(),
+    url: z.string().optional(),
+    context: z.object({ device: z.string(), app: z.literal("content-hoarder") }),
+    thread: ThreadSchema.optional(),
+  })
+  .refine((handoff) => handoff.destination !== "reading" || handoff.thread !== undefined, {
+    message: "Reading promotion requires a cached thread",
+  });
+
+export type PromotionHandoff = z.infer<typeof PromotionHandoffSchema>;
+
+export interface DeliveryResult {
+  version: 1;
+  state: "confirmed" | "duplicate" | "failed";
+  delivery_id: string;
+  note_path?: string;
+  error?: string;
 }
 
-export function fetchThread(conn: Database, postId: string): Thread | null {
-  const row = conn
-    .query<unknown, SQLQueryBindings[]>(
-      `SELECT i.title, i.author, i.url, i.created_utc, i.saved_utc, i.metadata,
-              rt.thread_json
-       FROM reddit_threads rt JOIN items i ON i.fullname = rt.fullname
-       WHERE rt.fullname = ?`,
-    )
-    .get(`reddit:t3_${postId}`);
-
-  if (row === null) return null;
-  const parsedRow = FetchRowSchema.parse(row);
-  const meta = MetadataSchema.parse(JSON.parse(parsedRow.metadata || "{}"));
-
-  return {
-    id: postId,
-    title: parsedRow.title,
-    author: parsedRow.author,
-    url: parsedRow.url,
-    created_utc: parsedRow.created_utc,
-    saved_utc: parsedRow.saved_utc,
-    subreddit: meta.subreddit === undefined ? "" : meta.subreddit,
-    permalink: meta.permalink === undefined ? parsedRow.url : meta.permalink,
-    thread_json: z.array(JsonSchema).parse(JSON.parse(parsedRow.thread_json)),
-  };
-}
+export const CH_PROMOTE_LEDGER = "ch-promote-ledger.txt";
 
 export interface PromoteCandidate {
   id: string;
   title: string | null;
   subreddit: string | null;
   saved: string;
-}
-
-export function searchThreads(conn: Database, terms: string, limit = 8): PromoteCandidate[] {
-  const like = `%${terms}%`;
-
-  const rows = conn
-    .query<unknown, SQLQueryBindings[]>(
-      `SELECT i.fullname, i.title, i.saved_utc, i.metadata
-       FROM reddit_threads rt JOIN items i ON i.fullname = rt.fullname
-       WHERE i.kind = 'post' AND (i.title LIKE ? OR i.search_text LIKE ?)
-       ORDER BY i.saved_utc DESC LIMIT ?`,
-    )
-    .all(like, like, limit);
-
-  const out: PromoteCandidate[] = [];
-
-  for (const raw of rows) {
-    const r = SearchRowSchema.parse(raw);
-    const meta = MetadataSchema.parse(JSON.parse(r.metadata || "{}"));
-    out.push({
-      id: r.fullname.startsWith("reddit:t3_") ? r.fullname.slice("reddit:t3_".length) : r.fullname,
-      title: r.title,
-      subreddit: meta.subreddit === undefined ? "" : meta.subreddit,
-      saved: day(r.saved_utc),
-    });
-  }
-
-  return out;
 }
 
 function day(utc: number | null | undefined): string {
@@ -391,31 +342,151 @@ export function renderNote(thread: Thread, opts: { today?: string } = {}) {
   return { note, minutes };
 }
 
-export function writeNote(note: string, title: string, vault: string): string {
-  const reading = join(vault, ...READING_DIR);
-  mkdirSync(reading, { recursive: true });
+function existingPromotion(vault: string, handoff: PromotionHandoff): string | null {
+  if (!existsSync(vault)) return null;
+  const directories = [vault];
 
-  const slug =
-    title
-      .slice(0, 60)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "thread";
+  while (directories.length > 0) {
+    const directory = directories.pop()!;
 
-  let path = join(reading, `${slug}.md`);
-  let n = 1;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
 
-  for (;;) {
-    try {
-      writeFileSync(path, note, { encoding: "utf8", flag: "wx" });
+      if (entry.isDirectory()) directories.push(path);
 
-      return path;
-    } catch (error) {
-      if (!EexistErrorSchema.safeParse(error).success) throw error;
-      n += 1;
-      path = join(reading, `${slug}-${n}.md`);
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+      const { data } = loadPost(readFileSync(path, "utf8"));
+
+      if (data.promotion_delivery_id === handoff.delivery_id) return path;
+
+      if (data.promotion_delivery_id !== undefined) continue;
+      const destination = data.reading !== undefined ? "reading" : "inbox";
+
+      if (destination !== handoff.destination) continue;
+
+      if (data.ch_item_id === handoff.ch_item_id) return path;
+
+      if (
+        destination === "reading" &&
+        handoff.thread?.permalink &&
+        data.source === handoff.thread.permalink
+      )
+        return path;
     }
   }
+
+  return null;
+}
+
+function writePromotion(path: string, text: string): boolean {
+  const directory = dirname(path);
+  mkdirSync(directory, { recursive: true });
+  const temporary = `${path}.${randomUUID()}.tmp`;
+  const fd = openSync(temporary, "wx", 0o600);
+
+  try {
+    writeFileSync(fd, text, "utf8");
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+
+  try {
+    try {
+      linkSync(temporary, path);
+    } catch (error) {
+      if (EexistErrorSchema.safeParse(error).success) return false;
+      throw error;
+    }
+
+    const directoryFd = openSync(directory, "r");
+
+    try {
+      fsyncSync(directoryFd);
+    } finally {
+      closeSync(directoryFd);
+    }
+
+    return true;
+  } finally {
+    unlinkSync(temporary);
+  }
+}
+
+export function receivePromotion(
+  handoff: PromotionHandoff,
+  vault: string,
+  indexDir: string,
+): DeliveryResult {
+  const stateDir = operationalDir(indexDir);
+  const ledger = load(stateDir, CH_PROMOTE_LEDGER);
+  const result = { version: 1 as const, delivery_id: handoff.delivery_id };
+  const existing = existingPromotion(vault, handoff);
+
+  if (existing) {
+    if (!ledger.has(handoff.delivery_id))
+      append(stateDir, CH_PROMOTE_LEDGER, [handoff.delivery_id]);
+
+    return { ...result, state: "duplicate", note_path: relative(vault, existing) };
+  }
+
+  if (
+    ledger.has(handoff.delivery_id) ||
+    (handoff.destination === "inbox" && ledger.has(handoff.ch_item_id))
+  ) {
+    return {
+      ...result,
+      state: "failed",
+      error:
+        "This delivery was recorded, but its note is no longer present. The note was not recreated.",
+    };
+  }
+
+  const extra = {
+    promotion_delivery_id: handoff.delivery_id,
+    promotion_destination: handoff.destination,
+    ch_item_id: handoff.ch_item_id,
+    ch_origin_ref: handoff.ch_origin_ref,
+    ch_captured_at: handoff.ch_captured_at,
+    context_device: handoff.context.device,
+    context_app: handoff.context.app,
+  };
+
+  const fields = Object.entries(extra)
+    .map(([key, value]) => `${key}: ${frontmatterValue(value)}`)
+    .join("\n");
+
+  const body =
+    handoff.destination === "reading"
+      ? renderNote(ThreadSchema.parse(handoff.thread)).note
+      : `---\ncaptured: ${new Date().toISOString()}\nsource: content-hoarder\n---\n\n${handoff.text}\n`;
+
+  const content = `---\n${fields}\n${body.slice(4)}`;
+
+  const directory =
+    handoff.destination === "reading" ? join(vault, ...READING_DIR) : join(vault, "inbox");
+
+  const path = join(directory, `ch-${handoff.delivery_id}.md`);
+  const created = writePromotion(path, content);
+
+  if (!created) {
+    const { data } = loadPost(readFileSync(path, "utf8"));
+
+    if (data.promotion_delivery_id !== handoff.delivery_id)
+      throw new Error("Promotion filename is occupied by a different note");
+  }
+
+  append(stateDir, CH_PROMOTE_LEDGER, [handoff.delivery_id]);
+  const notePath = relative(vault, path);
+
+  if (created)
+    emit(dirname(vault), "capture_written", {
+      source: "content-hoarder",
+      ref: notePath,
+      payload: { path: notePath },
+    });
+
+  return { ...result, state: created ? "confirmed" : "duplicate", note_path: notePath };
 }
 
 export interface PromoteResult {
@@ -424,29 +495,69 @@ export interface PromoteResult {
   title?: string | null;
   candidates?: PromoteCandidate[];
   missing?: string;
+  error?: string;
 }
 
-export function promote(query: string, vault: string, dbPath?: string): PromoteResult {
-  const conn = connectHoarder(dbPath || HOARDER_DB);
+const CandidatesSchema = z.object({
+  version: z.literal(1),
+  candidates: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string().nullable(),
+      subreddit: z.string().nullable(),
+      saved: z.string(),
+    }),
+  ),
+});
 
-  try {
-    const postId = extractPostId(query);
+export async function promote(
+  query: string,
+  vault: string,
+  options: { indexDir?: string; baseUrl?: string; fetchImpl?: typeof fetch } = {},
+): Promise<PromoteResult> {
+  const base = (options.baseUrl ?? process.env.PKMS_HOARDER_URL ?? "http://127.0.0.1:8788").replace(
+    /\/+$/,
+    "",
+  );
 
-    if (postId === null) {
-      return { candidates: searchThreads(conn, query) };
-    }
+  const postId = extractPostId(query);
 
-    const thread = fetchThread(conn, postId);
+  const path =
+    postId === null ? `?q=${encodeURIComponent(query)}` : `/${encodeURIComponent(postId)}`;
 
-    if (thread === null) {
-      return { missing: postId };
-    }
+  const response = await (options.fetchImpl ?? fetch)(`${base}/api/promotion/threads${path}`, {
+    signal: AbortSignal.timeout(15000),
+    redirect: "error",
+  });
 
-    const { note, minutes } = renderNote(thread);
-    const path = writeNote(note, String(thread.title ?? ""), vault);
+  if (postId !== null && response.status === 404) return { missing: postId };
 
-    return { note: path, minutes, title: thread.title };
-  } finally {
-    conn.close();
-  }
+  if (!response.ok)
+    throw new Error(
+      `Content Hoarder lookup failed (HTTP ${response.status}). Start the local app and check PKMS_HOARDER_URL.`,
+    );
+
+  if (postId === null)
+    return { candidates: CandidatesSchema.parse(await response.json()).candidates };
+
+  const payload = z
+    .object({ version: z.literal(1), handoff: PromotionHandoffSchema })
+    .parse(await response.json());
+
+  if (payload.handoff.destination !== "reading" || payload.handoff.thread?.id !== postId)
+    throw new Error("Content Hoarder returned a different promotion");
+
+  const receipt = receivePromotion(
+    payload.handoff,
+    vault,
+    options.indexDir ?? join(dirname(vault), ".index"),
+  );
+
+  if (receipt.state === "failed") return { error: receipt.error };
+
+  return {
+    note: join(vault, receipt.note_path!),
+    minutes: renderNote(payload.handoff.thread).minutes,
+    title: payload.handoff.thread.title,
+  };
 }

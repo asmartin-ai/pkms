@@ -19,62 +19,75 @@ export function cmdCapture(argv: string[]): number {
   return 0;
 }
 
-function printPromoted(result: { note?: string; minutes?: number }): void {
+function printPromoted(result: { note?: string; minutes?: number; error?: string }): number {
+  if (!result.note) {
+    print(`[red]${esc(result.error ?? "Promotion was not confirmed.")}[/red]`);
+
+    return 1;
+  }
+
   const rel = result.note!.slice(VAULT().length + 1).replaceAll("\\", "/");
   print(
     `[green]promoted ✓[/green] vault/${rel}` +
       `  [dim]· queued · ~${result.minutes} min read[/dim]`,
   );
   print("[dim]it'll show in pkms today until you read it (flip 'reading: queued' when done)[/dim]");
+
+  return 0;
 }
 
 export async function cmdPromote(argv: string[]): Promise<number> {
-  const query = argv.join(" ");
-  const result = promote(query, VAULT());
+  try {
+    const query = argv.join(" ");
+    const result = await promote(query, VAULT());
 
-  if ("candidates" in result && result.candidates) {
-    const cands = result.candidates;
+    if ("candidates" in result && result.candidates) {
+      const cands = result.candidates;
 
-    if (!cands.length) {
-      print("[yellow]Nothing hydrated matches.[/yellow] Try other words, or paste the thread URL.");
+      if (!cands.length) {
+        print(
+          "[yellow]Nothing hydrated matches.[/yellow] Try other words, or paste the thread URL.",
+        );
+
+        return 0;
+      }
+
+      print("[bold]which one?[/bold]");
+      cands.forEach((c, i) => {
+        const bits = [
+          c.subreddit ? `r/${c.subreddit}` : "",
+          c.saved ? `saved ${c.saved}` : "",
+        ].filter(Boolean);
+
+        const tail = bits.length ? `  [dim]${bits.join(" · ")}[/dim]` : "";
+        print(`  [cyan]${i + 1}.[/cyan] ${esc(c.title!.slice(0, 80))}${tail}`);
+      });
+      const choice = await promptLine("\npromote which? (number · Enter to skip)");
+
+      if (choice === null) return 0;
+      const trimmed = choice.trim();
+      const n = Number(trimmed);
+
+      if (!/^\d+$/.test(trimmed) || n < 1 || n > cands.length) return 0;
+
+      return printPromoted(await promote(`t3_${cands[n - 1]!.id}`, VAULT()));
+    }
+
+    if ("missing" in result && result.missing) {
+      print(
+        `[yellow]Not in the hoard yet[/yellow] (id ${result.missing}). ` +
+          "Save it in content-hoarder first — fresh-URL fetch is on the build plan (F2).",
+      );
 
       return 0;
     }
 
-    print("[bold]which one?[/bold]");
-    cands.forEach((c, i) => {
-      const bits = [
-        c.subreddit ? `r/${c.subreddit}` : "",
-        c.saved ? `saved ${c.saved}` : "",
-      ].filter(Boolean);
+    return printPromoted(result);
+  } catch (error) {
+    print(`[red]${esc(error instanceof Error ? error.message : String(error))}[/red]`);
 
-      const tail = bits.length ? `  [dim]${bits.join(" · ")}[/dim]` : "";
-      print(`  [cyan]${i + 1}.[/cyan] ${esc(c.title!.slice(0, 80))}${tail}`);
-    });
-    const choice = await promptLine("\npromote which? (number · Enter to skip)");
-
-    if (choice === null) return 0;
-    const trimmed = choice.trim();
-    const n = Number(trimmed);
-
-    if (!/^\d+$/.test(trimmed) || n < 1 || n > cands.length) return 0;
-    printPromoted(promote(`t3_${cands[n - 1]!.id}`, VAULT()));
-
-    return 0;
+    return 1;
   }
-
-  if ("missing" in result && result.missing) {
-    print(
-      `[yellow]Not in the hoard yet[/yellow] (id ${result.missing}). ` +
-        "Save it in content-hoarder first — fresh-URL fetch is on the build plan (F2).",
-    );
-
-    return 0;
-  }
-
-  printPromoted(result);
-
-  return 0;
 }
 
 function promptLine(promptText: string): Promise<string | null> {

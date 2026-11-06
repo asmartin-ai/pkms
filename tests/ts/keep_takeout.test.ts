@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { zipSync, strToU8 } from "fflate";
-import { TAKEOUT_LEDGER, importTakeout, renderTakeoutReport } from "../../src/pkms/keep_takeout.ts";
+import { importTakeout, renderTakeoutReport } from "../../src/pkms/keep_takeout.ts";
 import { loadPost } from "../../src/pkms/indexer.ts";
 import { mkTmp, rmTmp } from "./helpers.ts";
 
@@ -411,7 +411,6 @@ describe("keep_takeout (ports src/pkms/keep_takeout.py)", () => {
 
       const r1 = await importTakeout(zpath, vault, index, { mediaDir: join(root, "media") });
       expect(r1.notes).toBe(1);
-      expect(existsSync(join(index, TAKEOUT_LEDGER))).toBe(true);
 
       const db = join(index, "pkms.db");
 

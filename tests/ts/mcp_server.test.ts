@@ -43,7 +43,7 @@ interface ToolOutcome {
 }
 
 type ToolArgs =
-  | { query: string; limit?: number }
+  | { query: string; limit?: number; semantic?: boolean; offline?: boolean; allow_remote?: boolean }
   | { text: string }
   | { since: string }
   | { days: number }
@@ -323,7 +323,7 @@ const TodayPayloadSchema = z.object({
 });
 
 describe("mcp server", () => {
-  test("listTools answers exactly the six allowlisted tools, each described", async () => {
+  test("listTools answers exactly the allowlisted tools, each described", async () => {
     const harness = await attach(fixture());
     const listed = await harness.client.listTools();
 
@@ -368,6 +368,53 @@ describe("mcp server", () => {
     expect(rows[0]!.path).toBe("projects/alpha.md");
     expect(rows[0]!.title).toBe("Alpha Project");
     expect(rows[0]!.excerpt).toContain("dragonfruit");
+  });
+
+  test("evidence_search returns original lines without any app answer provider", async () => {
+    const harness = await attach(fixture(), {
+      readSecret: () => {
+        throw new Error("No provider needed");
+      },
+    });
+
+    const result = await harness.call("evidence_search", {
+      query: "dragonfruit",
+      semantic: true,
+      offline: true,
+    });
+
+    expect(result.ok).toBe(true);
+    const payload = JSON.parse(result.text);
+    expect(payload.mode).toBe("lexical");
+    expect(payload.warning).toContain("empty");
+    expect(payload.evidence[0]).toMatchObject({
+      source: "pkms",
+      ref: "projects/alpha.md",
+      text: "alpha quantum dragonfruit",
+      startLine: 7,
+      endLine: 7,
+    });
+  });
+
+  test("ask refuses implicit consent and offline generation", async () => {
+    const harness = await attach(fixture(), {
+      readSecret: () => {
+        throw new Error("Must not read provider configuration");
+      },
+    });
+
+    const denied = await harness.call("ask", { query: "dragonfruit" });
+    expect(denied.ok).toBe(false);
+    expect(denied.text).toContain("consent");
+
+    const offline = await harness.call("ask", {
+      query: "dragonfruit",
+      allow_remote: true,
+      offline: true,
+    });
+
+    expect(offline.ok).toBe(false);
+    expect(offline.text).toContain("Offline");
   });
 
   test("search rejects out-of-range limits at the boundary", async () => {

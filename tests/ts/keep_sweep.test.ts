@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import {
   SWEEP_STATE,
   recordCompleted,
@@ -13,6 +13,7 @@ import {
   SweepStateSchema,
 } from "../../src/pkms/keep_ingest.ts";
 import { mkTmp, rmTmp } from "./helpers.ts";
+import { operationalDir } from "../../src/pkms/operational.ts";
 
 class FakeKeep implements KeepClient {
   private notes: KeepNote[];
@@ -71,11 +72,13 @@ function isoDaysAgo(days: number): string {
 }
 
 function indexDir(): string {
-  return mkTmp();
+  return join(mkTmp(), ".index");
 }
 
 function readState(dir: string) {
-  return SweepStateSchema.parse(JSON.parse(readFileSync(join(dir, SWEEP_STATE), "utf8")));
+  return SweepStateSchema.parse(
+    JSON.parse(readFileSync(join(operationalDir(dir), SWEEP_STATE), "utf8")),
+  );
 }
 
 describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
@@ -93,7 +96,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.deleted).toBe(0);
       expect(keep.trashedIds).toEqual([]);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -114,7 +117,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(nOld.trashed).toBe(true);
       expect(nRecent.trashed).toBe(false);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -131,7 +134,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.eligible_ids).toEqual(["c"]);
       expect(report.skipped_recent).toBe(2);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -145,7 +148,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.eligible).toBe(0);
       expect(report.skipped_pinned).toBe(1);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -158,7 +161,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.eligible).toBe(0);
       expect(report.skipped_uncaptured).toBe(1);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -172,7 +175,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.eligible).toBe(0);
       expect(report.skipped_grandfathered).toBe(1);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -192,7 +195,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.skipped_archived).toBe(1);
       expect(report.eligible).toBe(0);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -208,7 +211,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(report.skipped_uncaptured).toBe(1);
       expect(n.trashed).toBe(false);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -222,7 +225,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(n.trashed).toBe(false);
       expect(report.skipped_uncaptured).toBe(1);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -238,7 +241,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect("a" in state.swept).toBe(true);
       expect(state.swept.a.age_days_at_delete).toBeGreaterThanOrEqual(60);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -249,9 +252,9 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       const keep = new FakeKeep([plainNote("a")]);
       recordCompleted(dir, "a", { keepCreatedAt: isoDaysAgo(60) });
       await sweepOldUnpinned(keep, dir, { ageDays: 30, dryRun: true });
-      expect(existsSync(join(dir, SWEEP_STATE))).toBe(false);
+      expect(existsSync(join(operationalDir(dir), SWEEP_STATE))).toBe(false);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -266,7 +269,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       expect(line).toContain("DRY RUN");
       expect(line).toContain("eligible 1");
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -285,7 +288,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       const state = readState(dir);
       expect("a" in state.swept).toBe(true);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -307,7 +310,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       const state = readState(dir);
       expect("a" in state.swept).toBe(false);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -329,7 +332,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
         new Set(Object.keys(state.swept).filter((k) => k === "a" || k === "b")),
       );
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -351,7 +354,7 @@ describe("sweep_old_unpinned (ports tests/test_keep_sweep.py)", () => {
       const state = readState(dir);
       expect(Object.keys(state.swept)).toEqual([]);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 });
@@ -378,7 +381,7 @@ describe("sweep safety (K3)", () => {
       expect(edited.trashed).toBe(false);
       expect("edited-note" in readState(dir).swept).toBe(false);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 
@@ -398,7 +401,7 @@ describe("sweep safety (K3)", () => {
 
       expect(renderSweepReport(report)).toContain("edited since capture 1");
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmTmp(dirname(dir));
     }
   });
 

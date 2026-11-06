@@ -1,6 +1,7 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { attachOperational } from "./operational.ts";
 
 export const FTS_TRIGGERS = `
 -- External-content FTS5 tables must be kept in sync via triggers;
@@ -32,7 +33,8 @@ CREATE TABLE IF NOT EXISTS notes (
     modified    TEXT,
     tags        TEXT,                      -- JSON array
     content     TEXT    NOT NULL,
-    indexed_at  TEXT    NOT NULL
+    indexed_at  TEXT    NOT NULL,
+    source_hash TEXT    NOT NULL DEFAULT ''
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
@@ -66,43 +68,38 @@ CREATE TABLE IF NOT EXISTS tasks (
     UNIQUE(note_path, line)
 );
 
--- Reshape clock (slice 5). Survives reindexes: INSERT OR IGNORE keeps the
--- original first_seen while a line is unchanged; an edited line gets a new
--- hash and a fresh clock (human touch strips machine marks, §4).
-CREATE TABLE IF NOT EXISTS task_seen (
-    note_path   TEXT NOT NULL,
-    hash        TEXT NOT NULL,
-    first_seen  TEXT NOT NULL,              -- ISO date this exact line appeared
-    PRIMARY KEY (note_path, hash)
-);
-
--- Durable, queryable record of keep IDs that have been fully captured
--- (slice 4 + G1 oracle). The flat ledger at .index/keep-ledger.txt is
--- append-only and cheap, but if a crash interrupts a batch the file alone
--- cannot answer "which notes *completed* before the failure?" — the SQLite
--- store can. The ingest code records here right after write_capture succeeds.
---
--- v4: source ('takeout' or 'live') + keep_created_at + pinned snapshot.
--- The sweep needs the original Keep creation time to compute age; older
--- rows pre-dating v4 will have NULL keep_created_at and are skipped by the
--- sweep (they're grandfathered, which is the safe default for a destructive
--- operation on the user's own data).
-CREATE TABLE IF NOT EXISTS keep_completed (
-    id              TEXT PRIMARY KEY,
-    completed_at    TEXT NOT NULL,
-    source          TEXT NOT NULL DEFAULT 'live',
-    keep_created_at TEXT,
-    pinned          INTEGER NOT NULL DEFAULT 0
-);
-
 -- Derived source visibility; canonical routing decisions live in frontmatter.
 CREATE TABLE IF NOT EXISTS source_routes (
     path        TEXT PRIMARY KEY,
     route       TEXT NOT NULL
 );
+
+-- Rebuildable semantic evidence; never contains operational state.
+CREATE TABLE IF NOT EXISTS rag_sources (
+    path TEXT PRIMARY KEY,
+    hash TEXT NOT NULL,
+    version TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS rag_chunks (
+    id INTEGER PRIMARY KEY,
+    path TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    start_line INTEGER NOT NULL,
+    end_line INTEGER NOT NULL,
+    embedding BLOB NOT NULL,
+    UNIQUE(path, ordinal)
+);
+CREATE INDEX IF NOT EXISTS rag_chunks_path ON rag_chunks(path);
+CREATE TABLE IF NOT EXISTS rag_state (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    pid INTEGER,
+    updated_at TEXT,
+    error TEXT
+);
 `;
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 7;
 
 export type DB = Database;
 
@@ -110,48 +107,47 @@ export function connect(indexDir: string): Database {
   mkdirSync(indexDir, { recursive: true });
   const db = new Database(join(indexDir, "pkms.db"));
 
-  db.exec("PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL");
+  try {
+    db.exec("PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL");
+    attachOperational(db, indexDir);
 
-  const curVersion = db
-    .query<{ user_version: number }, SQLQueryBindings[]>("PRAGMA user_version")
-    .get()!.user_version;
+    const curVersion = db
+      .query<{ user_version: number }, SQLQueryBindings[]>("PRAGMA user_version")
+      .get()!.user_version;
 
-  const current =
-    curVersion === SCHEMA_VERSION &&
-    db
-      .query<{ n: number }, SQLQueryBindings[]>(
-        "SELECT 1 AS n FROM sqlite_master WHERE type='table' AND name='source_routes'",
-      )
-      .get() !== null;
-
-  if (!current && curVersion <= SCHEMA_VERSION) {
-    const cols = new Set(
+    const current =
+      curVersion === SCHEMA_VERSION &&
       db
-        .query<{ name: string }, SQLQueryBindings[]>("PRAGMA table_info(tasks)")
-        .all()
-        .map((r) => r.name),
-    );
+        .query<{ n: number }, SQLQueryBindings[]>(
+          "SELECT 1 AS n FROM sqlite_master WHERE type='table' AND name='source_routes'",
+        )
+        .get() !== null;
 
-    if (cols.size > 0 && !cols.has("state")) {
-      db.exec("DROP TABLE tasks");
+    if (!current && curVersion <= SCHEMA_VERSION) {
+      const cols = new Set(
+        db
+          .query<{ name: string }, SQLQueryBindings[]>("PRAGMA table_info(tasks)")
+          .all()
+          .map((r) => r.name),
+      );
+
+      if (cols.size > 0 && !cols.has("state")) {
+        db.exec("DROP TABLE tasks");
+      }
+
+      const noteCols = db.query<{ name: string }, []>("PRAGMA table_info(notes)").all();
+
+      if (noteCols.length && !noteCols.some((column) => column.name === "source_hash")) {
+        db.exec("ALTER TABLE notes ADD COLUMN source_hash TEXT NOT NULL DEFAULT ''");
+      }
+
+      db.exec(SCHEMA);
+      db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
     }
 
-    const kcCols = new Set(
-      db
-        .query<{ name: string }, SQLQueryBindings[]>("PRAGMA table_info(keep_completed)")
-        .all()
-        .map((r) => r.name),
-    );
-
-    if (kcCols.size > 0 && !kcCols.has("source")) {
-      db.exec("ALTER TABLE keep_completed ADD COLUMN source TEXT NOT NULL DEFAULT 'live'");
-      db.exec("ALTER TABLE keep_completed ADD COLUMN keep_created_at TEXT");
-      db.exec("ALTER TABLE keep_completed ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
-    }
-
-    db.exec(SCHEMA);
-    db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+    return db;
+  } catch (error) {
+    db.close();
+    throw error;
   }
-
-  return db;
 }

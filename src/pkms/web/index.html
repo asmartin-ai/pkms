@@ -147,6 +147,44 @@
           <p class="search__fallback-note">
             free-text is the secondary path — recognition usually beats recall here.
           </p>
+          <details id="rag-panel">
+            <summary>Evidence search &amp; Ask</summary>
+            <p>
+              Search stays local. Semantic search uses a local model and only current indexed notes.
+            </p>
+            <p id="rag-status" role="status" aria-live="polite">Open to load index status.</p>
+            <button id="rag-index" type="button">Update semantic index</button>
+            <button id="rag-refresh" type="button">Refresh status</button>
+            <p>
+              Indexing is explicit. Its first online run downloads the pinned local model; later
+              runs skip unchanged notes. No embedding runs while typing.
+            </p>
+            <form id="rag-form">
+              <label for="rag-question">Question or search</label>
+              <textarea id="rag-question" maxlength="2000" required rows="3"></textarea>
+              <label
+                ><input id="rag-semantic" type="checkbox" /> Hybrid semantic + keyword search</label
+              >
+              <label
+                ><input id="rag-offline" type="checkbox" /> Offline (cached local inference only; no
+                Ask)</label
+              >
+              <label
+                ><input id="rag-consent" type="checkbox" /> For this question only, send my question
+                and full retrieved note passages to the configured answer provider.</label
+              >
+              <button type="submit" name="mode" value="search">Search evidence</button>
+              <button type="submit" name="mode" value="ask">Ask provider</button>
+            </form>
+            <p id="rag-message" role="status" aria-live="polite"></p>
+            <div id="rag-answer"></div>
+            <ol id="rag-evidence"></ol>
+          </details>
+          <dialog id="rag-source">
+            <h2 id="rag-source-title">Source lines</h2>
+            <pre id="rag-source-text"></pre>
+            <button id="rag-source-close" type="button">Close source</button>
+          </dialog>
         </div>
       </section>
 
@@ -158,6 +196,7 @@
 
     <script src="auth-token.js" defer></script>
     <script src="shell.js" defer></script>
+    <script src="rag.js" defer></script>
     <script src="htmx.min.js" defer></script>
     <script src="ext/json-enc.js" defer></script>
     <script>

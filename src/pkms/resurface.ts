@@ -64,14 +64,6 @@ function daysBetween(later: Date, earlierIso: string): number {
   return Math.round((laterUtc - Date.UTC(y!, m! - 1, d!)) / 86_400_000);
 }
 
-function ensureOffersTable(db: DB): void {
-  db.exec(`CREATE TABLE IF NOT EXISTS resurface_offers (
-               path         TEXT PRIMARY KEY,
-               offer_count  INTEGER NOT NULL DEFAULT 0,
-               rest_until   TEXT NOT NULL DEFAULT ''
-           )`);
-}
-
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}/;
 
 function noteDate(row: NoteRow): string {
@@ -83,7 +75,6 @@ function noteDate(row: NoteRow): string {
 export function candidates(db: DB, opts: { today?: Date; k?: number } = {}): Candidate[] {
   const today = opts.today ?? new Date();
   const k = opts.k ?? 3;
-  ensureOffersTable(db);
   const todayIso = isoLocalDate(today);
   const activeCutoff = isoLocalDate(shiftDays(today, -ACTIVE_WINDOW_DAYS));
   const dormantCutoff = isoLocalDate(shiftDays(today, -DORMANT_AFTER_DAYS));
@@ -232,7 +223,6 @@ export function filterNever(vault: string, cands: Candidate[]): Candidate[] {
 
 export function markOffered(db: DB, paths: string[], opts: { today?: Date } = {}): void {
   const today = opts.today ?? new Date();
-  ensureOffersTable(db);
   const until = isoLocalDate(shiftDays(today, OFFER_REST_DAYS));
 
   for (const p of paths) {
@@ -246,7 +236,6 @@ export function markOffered(db: DB, paths: string[], opts: { today?: Date } = {}
 
 export function dismiss(db: DB, path: string, opts: { today?: Date } = {}): void {
   const today = opts.today ?? new Date();
-  ensureOffersTable(db);
   const until = isoLocalDate(shiftDays(today, DISMISS_REST_DAYS));
   db.query<unknown, SQLQueryBindings[]>(
     `INSERT INTO resurface_offers (path, offer_count, rest_until) VALUES (?,0,?)

@@ -195,7 +195,7 @@ describe("sw.js activate handler", () => {
   test("keeps pkms-auth cache and deletes old shell caches", async () => {
     const entries: FakeCacheEntry[] = [
       { key: "pkms-shell-v10", value: new Response("old") },
-      { key: "pkms-shell-v11", value: new Response("current") },
+      { key: "pkms-shell-v12", value: new Response("current") },
       { key: "pkms-auth", value: new Response("token") },
       { key: "other-cache", value: new Response("other") },
     ];
@@ -214,7 +214,7 @@ describe("sw.js activate handler", () => {
     expect(deletedKeys).toContain("pkms-shell-v10");
     expect(deletedKeys).toContain("other-cache");
 
-    expect(deletedKeys).not.toContain("pkms-shell-v11");
+    expect(deletedKeys).not.toContain("pkms-shell-v12");
     expect(deletedKeys).not.toContain("pkms-auth");
   });
 

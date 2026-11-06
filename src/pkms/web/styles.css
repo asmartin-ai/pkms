@@ -1544,3 +1544,73 @@ body.density-everything .block--optional {
   font-family: var(--font-mono);
   font-size: var(--step--1);
 }
+
+#rag-panel {
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.5rem;
+}
+#rag-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+#rag-panel p,
+#rag-panel label {
+  margin-block: 0.75rem;
+}
+#rag-form {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+#rag-question {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  background: var(--night-raised);
+  color: var(--bone);
+  border: 1px solid var(--hairline);
+  font: inherit;
+}
+#rag-panel button,
+#rag-source button {
+  padding: 0.5rem 0.75rem;
+  background: var(--night-raised);
+  color: var(--bone);
+  border: 1px solid var(--hairline);
+  border-radius: 0.3rem;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+#rag-panel button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+#rag-message,
+#rag-status {
+  color: var(--bone-dim);
+}
+#rag-answer,
+#rag-evidence p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#rag-evidence li {
+  margin-block: 1rem;
+}
+#rag-source {
+  max-width: min(90vw, 60rem);
+  max-height: 85vh;
+  background: var(--night-raised);
+  color: var(--bone);
+  border: 1px solid var(--hairline);
+  padding: 1.5rem;
+}
+#rag-source::backdrop {
+  background: #0009;
+}
+#rag-source pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

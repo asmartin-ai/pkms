@@ -3,6 +3,8 @@ import { join, resolve, sep } from "node:path";
 import { spawn } from "node:child_process";
 import { indexVault } from "../indexer.ts";
 import { search as searchIndex, backlinks, stemOf as stem, resolveNote } from "../search.ts";
+import { ask, retrieveEvidence, semanticIndex, semanticStatus } from "../rag.ts";
+import { resolveSecret } from "../secrets.ts";
 import { emit, readEvents, type ReadEventsOptions } from "../events.ts";
 import { connect } from "../db.ts";
 import { staleTasks, nextActionPerNote } from "../tasks.ts";
@@ -42,6 +44,44 @@ export function cmdIndex(argv: string[]): number {
   return 0;
 }
 
+export async function cmdSemanticIndex(argv: string[]): Promise<number> {
+  const { flags } = parseArgs(argv, { "--offline": "bool", "--status": "bool" });
+
+  const result = bool(flags, "--status")
+    ? semanticStatus(VAULT(), INDEX())
+    : await semanticIndex(VAULT(), INDEX(), {
+        offline: bool(flags, "--offline"),
+        onProgress: (stats) => {
+          if ((stats.indexed + stats.skipped + stats.stale) % 25 === 0) {
+            console.error(JSON.stringify({ progress: stats }));
+          }
+        },
+      });
+
+  console.log(JSON.stringify(result, null, 2));
+
+  return 0;
+}
+
+export async function cmdAsk(argv: string[]): Promise<number> {
+  const { flags, positionals } = parseArgs(argv, {
+    "--allow-remote": "bool",
+    "--semantic": "bool",
+    "--offline": "bool",
+  });
+
+  const result = await ask(positionals.join(" "), VAULT(), INDEX(), {
+    allowRemote: bool(flags, "--allow-remote"),
+    semantic: bool(flags, "--semantic"),
+    offline: bool(flags, "--offline"),
+    readSecret: (name) => resolveSecret(root(), name),
+  });
+
+  console.log(JSON.stringify(result, null, 2));
+
+  return 0;
+}
+
 export function cmdEvents(argv: string[]): number {
   const { flags } = parseArgs(argv, { "--since": "value", "--kind": "value" });
   const since = str(flags, "--since", "");
@@ -70,14 +110,28 @@ export function cmdEvents(argv: string[]): number {
   return 0;
 }
 
-export function cmdSearch(argv: string[]): number {
+export async function cmdSearch(argv: string[]): Promise<number> {
   const { flags, positionals } = parseArgs(argv, {
     "--limit": "value",
     "-n": "value",
     "--raw": "bool",
+    "--semantic": "bool",
+    "--offline": "bool",
   });
 
   const query = positionals.join(" ");
+
+  if (bool(flags, "--semantic")) {
+    const result = await retrieveEvidence(query, VAULT(), INDEX(), {
+      semantic: true,
+      offline: bool(flags, "--offline"),
+      limit: num(flags, "--limit", 20),
+    });
+
+    console.log(JSON.stringify(result, null, 2));
+
+    return 0;
+  }
 
   const results = searchIndex(query, INDEX(), {
     limit: num(flags, "--limit", 20),

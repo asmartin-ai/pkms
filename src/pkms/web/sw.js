@@ -1,4 +1,4 @@
-const CACHE = "pkms-shell-v11";
+const CACHE = "pkms-shell-v12";
 
 const AUTH_CACHE = "pkms-auth";
 
@@ -9,6 +9,7 @@ const SHELL = [
   "/web/htmx.min.js",
   "/web/ext/json-enc.js",
   "/web/shell.js",
+  "/web/rag.js",
   "/web/auth-token.js",
   "/web/manifest.webmanifest",
   "/web/icon.svg",

@@ -24,10 +24,12 @@
     "typescript": "7.0.2"
   },
   "dependencies": {
+    "@huggingface/transformers": "4.3.2",
     "@modelcontextprotocol/sdk": "1.32.1",
     "fflate": "^0.8.3",
     "js-yaml": "^5.4.2",
     "nunjucks": "^3.2.4",
+    "sqlite-vec": "0.1.9",
     "zod": "4.6.5"
   }
 }

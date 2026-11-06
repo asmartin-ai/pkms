@@ -1,6 +1,8 @@
 import { rampNames, findRamp } from "./ramps/index.ts";
 import {
   cmdIndex,
+  cmdSemanticIndex,
+  cmdAsk,
   cmdEvents,
   cmdSearch,
   cmdBacklinks,
@@ -22,6 +24,7 @@ import { cmdRoute, cmdIngestRamp, INGEST_COMMANDS } from "./cli/ingest-commands.
 import { cmdDiscordBot } from "./cli/discord-commands.ts";
 import { cmdServe, cmdMcp } from "./cli/serve.ts";
 import { print } from "./cli/output.ts";
+import { cmdMigrateDurableState } from "./cli/state-commands.ts";
 
 export { projectRoot, setRoot } from "./cli/context.ts";
 
@@ -31,6 +34,9 @@ type CliCommandHandler = (argv: string[]) => number | Promise<number>;
 
 const COMMANDS = new Map<string, CliCommandHandler>([
   ["index", cmdIndex],
+  ["semantic-index", cmdSemanticIndex],
+  ["ask", cmdAsk],
+  ["migrate-durable-state", cmdMigrateDurableState],
   ["events", cmdEvents],
   ["route", cmdRoute],
   ["search", cmdSearch],
@@ -98,9 +104,18 @@ function printUsage(): void {
   print();
   print("Commands:");
   print("  index       Rebuild the full index from the vault");
+  print(
+    "  semantic-index  Incrementally embed current Markdown (--offline/--status); first run downloads the pinned model",
+  );
+  print(
+    "  ask         Grounded answer (--allow-remote sends question and full evidence to configured provider; --semantic/--offline)",
+  );
+  print("  migrate-durable-state  Inspect legacy state; --apply moves it out of the index");
   print("  events      Inspect the operational ledger (--since/--kind)");
   print("  route       Route pending archives (--source/--limit/--dry-run)");
-  print("  search      Full-text search across all notes (--raw for FTS5 syntax)");
+  print(
+    "  search      Full-text search (--raw); opt-in --semantic returns cited hybrid evidence (--offline)",
+  );
   print("  backlinks   Show notes that link to a given note");
   print("  tasks       One next action per note (--all/--stash/--stale/--done)");
   print("  resurface   Up to three curious questions (--not-now/--let-go)");

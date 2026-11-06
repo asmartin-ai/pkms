@@ -7,6 +7,7 @@ import { unzipSync } from "fflate";
 import { writeCapture } from "./capture.ts";
 import { attachmentLink, completedKeepIds, recordCompleted } from "./keep_ingest.ts";
 import { append, load } from "./ledger.ts";
+import { operationalDir } from "./operational.ts";
 
 export const TAKEOUT_LEDGER = "keep-takeout-ledger.txt";
 
@@ -298,7 +299,8 @@ export async function importTakeout(
     media = mediaDir;
   }
 
-  const ledger = load(indexDir, TAKEOUT_LEDGER);
+  const stateDir = operationalDir(indexDir);
+  const ledger = load(stateDir, TAKEOUT_LEDGER);
   const report = emptyReport();
   report.media_dir = media;
 
@@ -416,7 +418,7 @@ export async function importTakeout(
         keepCreatedAt: keepCreated,
         pinned: isPinned,
       });
-      append(indexDir, TAKEOUT_LEDGER, [noteId]);
+      append(stateDir, TAKEOUT_LEDGER, [noteId]);
       ledger.add(noteId);
       completed.add(noteId);
       report.notes += 1;

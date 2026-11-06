@@ -94,8 +94,8 @@ folded note. The notes created per day are recorded in
    own lifecycle: it keeps syncing even when no PKMS process is running.
 2. **The ramp** (`pkms ingest whatsapp`) reads the store read-only and writes
    the notes. Messages are deduped by WhatsApp message id against
-   `.index/whatsapp-ledger.txt`, so re-running is a no-op and a crash mid-run
-   loses nothing.
+   `.ledger/whatsapp-ledger.txt`, so re-running skips recorded messages.
+   Back up `.ledger/`; existing installations need the [state migration](../README.md#upgrade-existing-operational-state).
 
 `.secrets/`, `.index/`, and `.ledger/` are gitignored.
 
@@ -206,11 +206,11 @@ whatsapp: captured 2 (self 1, instinct 1), skipped 0
 
 Check the result:
 
-- **Cursor** — `.index/whatsapp-cursor.txt` records how far the ramp has read.
+- **Cursor** — `.ledger/whatsapp-cursor.txt` records how far the ramp has read.
   The first run only looks at the last **two days**, and every later run
   re-reads the last **hour** before the cursor, so a message that arrived while
   the ramp was down is still caught. History is never backfilled.
-- **Dedupe** — every message id lands in `.index/whatsapp-ledger.txt`; re-running
+- **Dedupe** — every captured message id lands in `.ledger/whatsapp-ledger.txt`; re-running
   the drain over the same messages is a no-op.
 - **Notes** — the self message is one note in `vault/inbox/`, the Instinct
   message appends a line to that day's rolling note.

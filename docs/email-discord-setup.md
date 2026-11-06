@@ -128,7 +128,7 @@ deleted.
    `--channel-id <id>` to also listen in one channel. A ✅ reaction = saved to
    `vault/inbox/`.
 
-Dedupe ledger: `.index/discord-ledger.txt`. A session the Gateway refuses
+Dedupe ledger: `.ledger/discord-ledger.txt`; existing installations need the [state migration](../README.md#upgrade-existing-operational-state). A session the Gateway refuses
 (bad token, disallowed intent — close 4004/4010–4014) stops the bot with a
 logged reason instead of retrying forever.
 

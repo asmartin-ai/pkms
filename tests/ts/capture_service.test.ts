@@ -27,20 +27,16 @@ import { writeCapture } from "../../src/pkms/capture.ts";
 import type { SQLQueryBindings } from "bun:sqlite";
 import { connect } from "../../src/pkms/db.ts";
 import {
-  CH_PROMOTE_LEDGER,
   MAX_SHARE_FILES,
   MAX_SHARE_FILE_BYTES,
-  envelopeToFrontmatter,
-  findCaptureWithChItem,
   makeServer,
   resolveToken,
   run,
   safeVaultFile,
 } from "../../src/pkms/capture_service.ts";
-import { load } from "../../src/pkms/ledger.ts";
 import { indexVault, loadPost } from "../../src/pkms/indexer.ts";
 import { isoLocalDate } from "../../src/pkms/tasks.ts";
-import { readText, splitLines } from "../../src/pkms/textio.ts";
+import { readText } from "../../src/pkms/textio.ts";
 import { makeVault, mkTmp, rmTmp, writeNote } from "./helpers.ts";
 import { readEvents } from "../../src/pkms/events.ts";
 
@@ -247,37 +243,6 @@ describe("capture_service helpers (ports src/pkms/capture_service.py)", () => {
     }
   });
 
-  test("envelopeToFrontmatter: known strings + context flatten", () => {
-    const extra = envelopeToFrontmatter(
-      {
-        source_account_id: "acct_1",
-        raw_ref: "https://x.example",
-        ch_origin_ref: "content-hoarder:fullname:reddit:t3_x",
-        ch_captured_at: "2026-07-12T05:51:25Z",
-        context: { device: "desktop", app: "content-hoarder" },
-        mystery: "ignored",
-        empty_str: "",
-        not_str: 42,
-      },
-      "ext_1",
-    );
-
-    expect(extra).toEqual({
-      ch_item_id: "ext_1",
-      source_account_id: "acct_1",
-      raw_ref: "https://x.example",
-      ch_origin_ref: "content-hoarder:fullname:reddit:t3_x",
-      ch_captured_at: "2026-07-12T05:51:25Z",
-      context_device: "desktop",
-      context_app: "content-hoarder",
-    });
-  });
-
-  test("envelopeToFrontmatter: no context dict, no context_* keys", () => {
-    const extra = envelopeToFrontmatter({ source_account_id: "a" }, "ext_2");
-    expect(extra).toEqual({ ch_item_id: "ext_2", source_account_id: "a" });
-  });
-
   test("safeVaultFile: resolves an existing vault .md note", () => {
     const { vault, indexDir } = makeVault();
 
@@ -340,25 +305,6 @@ describe("capture_service helpers (ports src/pkms/capture_service.py)", () => {
       }
 
       expect(safeVaultFile(vault, "note.md")).toBeNull();
-    } finally {
-      rmTmp(vault, indexDir);
-    }
-  });
-  test("findCaptureWithChItem: finds by frontmatter marker anywhere in vault", () => {
-    const { vault, indexDir } = makeVault();
-
-    try {
-      const saved = writeCapture("a promoted thought", vault, {
-        source: "content-hoarder",
-        extra: { ch_item_id: "ext_find_1" },
-      });
-
-      expect(findCaptureWithChItem(vault, "ext_find_1")).toBe(saved);
-      expect(findCaptureWithChItem(vault, "ext_missing")).toBeNull();
-
-      const moved = join(vault, "projects", basename(saved));
-      renameSync(saved, moved);
-      expect(findCaptureWithChItem(vault, "ext_find_1")).toBe(moved);
     } finally {
       rmTmp(vault, indexDir);
     }
@@ -1042,12 +988,13 @@ describe("POST /capture body shapes (ports tests/test_capture.py)", () => {
 });
 
 const ENVELOPE = CapturePayloadSchema.parse({
+  version: 1,
+  delivery_id: "a".repeat(64),
+  destination: "inbox",
   text:
     "Reliance on LLMs is killing people's mental models\n\n" +
     "A senior-dev discussion about mental-model erosion after heavy LLM use.\n\n" +
     "https://www.reddit.com/r/ExperiencedDevs/comments/fixture001/",
-  source_account_id: "acct_fixture_reddit_personal",
-  raw_ref: "https://www.reddit.com/r/ExperiencedDevs/comments/fixture001/",
   context: { device: "desktop", app: "content-hoarder" },
   ch_item_id: "ext_ch_item_001",
   ch_origin_ref: "content-hoarder:fullname:reddit:t3_fixture001",
@@ -1062,153 +1009,93 @@ created: 2026-01-01
 An old idea worth maybe resurfacing.
 `;
 
-describe("CH-promote ingest (ports tests/test_ch_promote_ingest.py)", () => {
+describe("versioned Content Hoarder delivery", () => {
   let vault = "";
   let indexDir = "";
   let base = "";
+
+  const reply = (body: string) =>
+    z
+      .object({
+        version: z.literal(1),
+        state: z.enum(["confirmed", "duplicate", "failed"]),
+        delivery_id: z.string(),
+        note_path: z.string().optional(),
+      })
+      .parse(JSON.parse(body));
 
   beforeEach(() => {
     ({ vault, indexDir } = makeVault());
     base = startService(vault, indexDir);
   });
-  afterEach(() => rmTmp(vault, indexDir));
+  afterEach(() => rmTmp(dirname(vault)));
 
-  test("envelope fields land in frontmatter", async () => {
-    const { status, body } = await postJson(
-      `${base}/capture?source=content-hoarder`,
-      ENVELOPE,
-      TOKEN,
-    );
-
-    expect(status).toBe(200);
-    expect(body.startsWith("saved ✓")).toBe(true);
-    const files = inboxFiles(vault);
-    expect(files.length).toBe(1);
-    const note = readText(join(vault, "inbox", files[0]!));
-    expect(note).toContain("source: content-hoarder");
-    expect(note).toContain("source_account_id: acct_fixture_reddit_personal");
-    expect(note).toContain(
-      "raw_ref: https://www.reddit.com/r/ExperiencedDevs/comments/fixture001/",
-    );
-    expect(note).toContain("context_device: desktop");
-    expect(note).toContain("context_app: content-hoarder");
-    expect(note).toContain("ch_item_id: ext_ch_item_001");
-    expect(note).toContain("ch_origin_ref: content-hoarder:fullname:reddit:t3_fixture001");
-    expect(note).toContain("ch_captured_at: 2026-07-12T05:51:25Z");
-    expect(note).toContain("Reliance on LLMs");
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set(["ext_ch_item_001"]));
-  });
-
-  test("replay adds no second file and names the existing one", async () => {
-    const r1 = await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    const r2 = await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    expect(r1.status).toBe(200);
-    expect(r1.body.startsWith("saved ✓")).toBe(true);
-    expect(r2.status).toBe(200);
-    expect(r2.body.startsWith("already saved ✓")).toBe(true);
-    const files = inboxFiles(vault);
-    expect(files.length).toBe(1);
-    expect(r2.body).toBe(`already saved ✓ ${files[0]}`);
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set(["ext_ch_item_001"]));
-  });
-
-  test("replay after manual file removal still dedupes", async () => {
-    await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    unlinkSync(join(vault, "inbox", inboxFiles(vault)[0]!));
-    const { status, body } = await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    expect(status).toBe(200);
-    expect(body.startsWith("already saved ✓")).toBe(true);
-    expect(inboxFiles(vault)).toEqual([]);
-  });
-
-  test("replay after /fold moved the note still names it", async () => {
-    await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    const name = inboxFiles(vault)[0]!;
-    const moved = join(vault, "projects", name);
-    renameSync(join(vault, "inbox", name), moved);
-    const { status, body } = await postJson(`${base}/capture`, ENVELOPE, TOKEN);
-    expect(status).toBe(200);
-    expect(body).toBe(`already saved ✓ ${name}`);
-    expect(inboxFiles(vault)).toEqual([]);
-  });
-
-  test("plain JSON capture without ch_item_id is unchanged", async () => {
-    const { status } = await postJson(`${base}/capture`, { text: "plain thought" }, TOKEN);
-    expect(status).toBe(200);
-    const note = readText(join(vault, "inbox", inboxFiles(vault)[0]!));
-
-    for (const key of [
-      "ch_item_id:",
-      "ch_origin_ref:",
-      "ch_captured_at:",
-      "source_account_id:",
-      "raw_ref:",
-      "context_device:",
-      "context_app:",
-    ]) {
-      expect(note).not.toContain(key);
-    }
-
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set());
-  });
-
-  test("envelope fields ignored without ch_item_id", async () => {
-    const { status } = await postJson(
-      `${base}/capture`,
-      {
-        text: "thought",
-        source_account_id: "acct_x",
-        raw_ref: "https://x.example",
-        context: { device: "desktop", app: "some-app" },
-      },
-      TOKEN,
-    );
-
-    expect(status).toBe(200);
-    const note = readText(join(vault, "inbox", inboxFiles(vault)[0]!));
-    expect(note).not.toContain("source_account_id:");
-    expect(note).not.toContain("raw_ref:");
-    expect(note).not.toContain("context_device:");
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set());
-  });
-
-  test("empty text still rejected even with envelope", async () => {
-    const { status } = await postJson(`${base}/capture`, { ...ENVELOPE, text: "   \n " }, TOKEN);
-    expect(status).toBe(400);
-    expect(inboxFiles(vault)).toEqual([]);
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set());
-  });
-
-  test("ledger is append-only; unknown fields ignored", async () => {
-    await postJson(
-      `${base}/capture`,
-      { ...ENVELOPE, ch_item_id: "ext_ch_item_002", mystery: "ignored" },
-      TOKEN,
-    );
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set(["ext_ch_item_002"]));
-
-    const lines = splitLines(readText(join(indexDir, "ch-promote-ledger.txt"))).filter(
-      (l) => l.length > 0,
-    );
-
-    expect(lines).toEqual(["ext_ch_item_002"]);
-    const note = readText(join(vault, "inbox", inboxFiles(vault)[0]!));
-    expect(note).not.toContain("mystery:");
-  });
-
-  test("concurrent replays serialize to one capture", async () => {
-    const payload = { ...ENVELOPE, ch_item_id: "ext_race" };
-
-    const [a, b] = await Promise.all([
-      postJson(`${base}/capture`, payload, TOKEN),
-      postJson(`${base}/capture`, payload, TOKEN),
+  test("simultaneous deliveries create one note and return the same identity", async () => {
+    const responses = await Promise.all([
+      postJson(`${base}/capture`, ENVELOPE, TOKEN),
+      postJson(`${base}/capture`, ENVELOPE, TOKEN),
     ]);
 
-    const bodies = [a.body, b.body].sort();
-    expect(bodies[0]!.startsWith("already saved ✓")).toBe(true);
-    expect(bodies[1]!.startsWith("saved ✓")).toBe(true);
-    expect(inboxFiles(vault).length).toBe(1);
-    expect(load(indexDir, CH_PROMOTE_LEDGER)).toEqual(new Set(["ext_race"]));
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    const receipts = responses.map((response) => reply(response.body));
+    expect(receipts.map((receipt) => receipt.state).sort()).toEqual(["confirmed", "duplicate"]);
+    expect(receipts[0]!.note_path).toBe(receipts[1]!.note_path);
+    expect(inboxFiles(vault)).toEqual([basename(receipts[0]!.note_path!)]);
+    const note = loadPost(readText(join(vault, receipts[0]!.note_path!)));
+    expect(note.data.ch_item_id).toBe("ext_ch_item_001");
+    expect(note.data.promotion_delivery_id).toBe("a".repeat(64));
+    expect(note.content).toContain("Reliance on LLMs");
+  });
+
+  test("retry locates a moved note without recreating the inbox capture", async () => {
+    const first = reply((await postJson(`${base}/capture`, ENVELOPE, TOKEN)).body);
+    const moved = join("projects", basename(first.note_path!));
+    renameSync(join(vault, first.note_path!), join(vault, moved));
+    const second = reply((await postJson(`${base}/capture`, ENVELOPE, TOKEN)).body);
+    expect(second.state).toBe("duplicate");
+    expect(second.note_path).toBe(moved);
+    expect(inboxFiles(vault)).toEqual([]);
+  });
+
+  test("a recorded delivery whose note was removed is not falsely confirmed or recreated", async () => {
+    const first = reply((await postJson(`${base}/capture`, ENVELOPE, TOKEN)).body);
+    unlinkSync(join(vault, first.note_path!));
+    const second = reply((await postJson(`${base}/capture`, ENVELOPE, TOKEN)).body);
+    expect(second.state).toBe("failed");
+    expect(inboxFiles(vault)).toEqual([]);
+  });
+
+  test("pre-versioned inbox captures are recovered without making a second note", async () => {
+    const old = writeCapture("Original capture", vault, {
+      source: "content-hoarder",
+      extra: { ch_item_id: "ext_ch_item_001" },
+    });
+
+    const result = reply((await postJson(`${base}/capture`, ENVELOPE, TOKEN)).body);
+    expect(result.state).toBe("duplicate");
+    expect(join(vault, result.note_path!)).toBe(old);
+    expect(inboxFiles(vault)).toEqual([basename(old)]);
+  });
+
+  test("legacy wire envelopes and unsupported versions are rejected without capture", async () => {
+    for (const payload of [
+      { text: "legacy", ch_item_id: "old" },
+      { ...ENVELOPE, version: 2 },
+      { ...ENVELOPE, text: " " },
+    ]) {
+      expect((await postJson(`${base}/capture`, payload, TOKEN)).status).toBe(400);
+    }
+
+    expect(inboxFiles(vault)).toEqual([]);
+  });
+
+  test("ordinary JSON captures keep their existing behavior", async () => {
+    expect((await postJson(`${base}/capture`, { text: "Ordinary capture" }, TOKEN)).status).toBe(
+      200,
+    );
+    const note = loadPost(readText(join(vault, "inbox", inboxFiles(vault)[0]!)));
+    expect(note.content.trim()).toBe("Ordinary capture");
+    expect(note.data.promotion_delivery_id).toBeUndefined();
   });
 });
 

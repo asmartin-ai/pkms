@@ -14,6 +14,7 @@ import {
 } from "../../src/pkms/keep_ingest.ts";
 import type { KeepImage } from "../../src/pkms/keep_transport.ts";
 import { append, load } from "../../src/pkms/ledger.ts";
+import { operationalDir } from "../../src/pkms/operational.ts";
 import { writeCapture } from "../../src/pkms/capture.ts";
 import { mkTmp, rmTmp } from "./helpers.ts";
 import { readText } from "../../src/pkms/textio.ts";
@@ -101,7 +102,7 @@ describe("Keep ingest", () => {
         ["a1", "false", "hold"],
         ["a2", "true", "hold"],
       ]);
-      expect(load(indexDir, LEDGER)).toEqual(new Set(["a1", "a2"]));
+      expect(load(operationalDir(indexDir), LEDGER)).toEqual(new Set(["a1", "a2"]));
       expect(existsSync(join(vault, "inbox"))).toBe(false);
       expect((await ingestKeepSync(vault, indexDir, root, keep)).archived).toBe(0);
     } finally {
@@ -200,12 +201,12 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      mkdirSync(indexDir, { recursive: true });
-      writeFileSync(join(indexDir, LEDGER), "", "utf8");
+      mkdirSync(operationalDir(indexDir), { recursive: true });
+      writeFileSync(join(operationalDir(indexDir), LEDGER), "", "utf8");
       const keep = new FakeKeep([note("a1"), note("a2")]);
       const report = await ingestKeepSync(vault, indexDir, root, keep);
       expect(report.new).toBe(2);
-      expect(load(indexDir, LEDGER)).toEqual(new Set(["a1", "a2"]));
+      expect(load(operationalDir(indexDir), LEDGER)).toEqual(new Set(["a1", "a2"]));
     } finally {
       rmTmp(root);
     }
@@ -222,7 +223,7 @@ describe("Keep ingest", () => {
         ocr_missing: 0,
         media_failed: 0,
       });
-      expect(existsSync(join(indexDir, LEDGER))).toBe(true);
+      expect(existsSync(join(operationalDir(indexDir), LEDGER))).toBe(true);
 
       const report = await ingestKeepSync(
         vault,
@@ -259,7 +260,7 @@ describe("Keep ingest", () => {
       expect(text).toContain("source: keep");
       expect(text).toContain("keep_id: b2");
       expect(text).toContain("fresh thought");
-      expect(load(indexDir, LEDGER).has("b2")).toBe(true);
+      expect(load(operationalDir(indexDir), LEDGER).has("b2")).toBe(true);
       expect(
         (await ingestKeepSync(vault, indexDir, root, new FakeKeep([note("a1"), note("b2")]))).new,
       ).toBe(0);
@@ -272,7 +273,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["a1"]);
+      append(operationalDir(indexDir), LEDGER, ["a1"]);
       recordCompleted(indexDir, "b2", { keepCreatedAt: awareIso() });
       const keep = new FakeKeep([note("a1"), note("b2", { text: "already captured" })]);
       const report = await ingestKeepSync(vault, indexDir, root, keep);
@@ -287,7 +288,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
 
       const keep = new FakeKeep([
         note("t1", { text: "body", title: "Heading" }),
@@ -307,7 +308,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
 
       const keep = new FakeKeep([
         note("live", { text: "active note" }),
@@ -316,8 +317,8 @@ describe("Keep ingest", () => {
 
       const report = await ingestKeepSync(vault, indexDir, root, keep);
       expect(report.new).toBe(1);
-      expect(load(indexDir, LEDGER).has("live")).toBe(true);
-      expect(load(indexDir, LEDGER).has("archived")).toBe(false);
+      expect(load(operationalDir(indexDir), LEDGER).has("live")).toBe(true);
+      expect(load(operationalDir(indexDir), LEDGER).has("archived")).toBe(false);
       const files = inboxFiles(vault);
       expect(files.length).toBe(1);
       expect(readFileSync(files[0]!, "utf8")).toContain("active note");
@@ -330,7 +331,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const media = join(root, "media");
 
       const keep = new FakeKeep([note("i1", { text: "see pic", images: [{ id: "blob1" }] })]);
@@ -357,7 +358,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const media = join(root, "media");
       const keep = new FakeKeep([note("i2", { images: [{ id: "b" }] })]);
 
@@ -378,7 +379,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const media = join(root, "media");
       mkdirSync(media, { recursive: true });
       const data = new Uint8Array([0xff, 0xd8, ...new TextEncoder().encode("full-image-bytes")]);
@@ -408,7 +409,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const media = join(root, "media");
 
       const keep = new FakeKeep([note("i4", { text: "txt", images: [{ id: "b" }] })]);
@@ -424,7 +425,7 @@ describe("Keep ingest", () => {
       expect(report.new).toBe(0);
       expect(inboxFiles(vault).length).toBe(0);
       expect(completedKeepIds(indexDir).has("i4")).toBe(false);
-      expect(load(indexDir, LEDGER).has("i4")).toBe(false);
+      expect(load(operationalDir(indexDir), LEDGER).has("i4")).toBe(false);
     } finally {
       rmTmp(root);
     }
@@ -452,7 +453,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const ts = { created: awareIso(2025, 6, 15, 10, 30, 0) };
       const keep = new FakeKeep([note("dt1", { text: "aware ts note", timestamps: ts })]);
       const report = await ingestKeepSync(vault, indexDir, root, keep);
@@ -469,7 +470,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const ts = { created: 1749983400000000 };
       const keep = new FakeKeep([note("legacy1", { text: "legacy ts note", timestamps: ts })]);
       const report = await ingestKeepSync(vault, indexDir, root, keep);
@@ -486,7 +487,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const ts = { created: "2025-06-15T10:30:00" };
       const keep = new FakeKeep([note("legacy2", { text: "naive iso note", timestamps: ts })]);
       const report = await ingestKeepSync(vault, indexDir, root, keep);
@@ -502,7 +503,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const nowMs = Date.now();
       const oldUpdated = new Date(nowMs - 3_600_000).toISOString();
       const created = new Date(nowMs - 172_800_000).toISOString();
@@ -536,7 +537,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
       const nowMs = Date.now();
       const updated = new Date(nowMs - 3_600_000).toISOString();
       const created = new Date(nowMs - 172_800_000).toISOString();
@@ -566,7 +567,7 @@ describe("Keep ingest", () => {
     const { vault, indexDir, root } = project();
 
     try {
-      append(indexDir, LEDGER, ["seed"]);
+      append(operationalDir(indexDir), LEDGER, ["seed"]);
 
       const keep = new FakeKeep([
         note("bad", {
@@ -601,7 +602,7 @@ test("completed note recoverable from SQLite after mid-batch failure", async () 
   const indexDir = join(root, ".index");
 
   try {
-    append(indexDir, LEDGER, ["seed-existing"]);
+    append(operationalDir(indexDir), LEDGER, ["seed-existing"]);
     const notes = [note("n1", { text: "first note" }), note("n2", { text: "second note" })];
     const keep: KeepClient = { all: () => notes };
 
@@ -631,7 +632,7 @@ test("completed note ledgered even when a later note fails", async () => {
   const indexDir = join(root, ".index");
 
   try {
-    append(indexDir, LEDGER, ["seed-existing"]);
+    append(operationalDir(indexDir), LEDGER, ["seed-existing"]);
     const notes = [note("n1", { text: "first note" }), note("n2", { text: "second note" })];
     const keep: KeepClient = { all: () => notes };
 
@@ -647,7 +648,7 @@ test("completed note ledgered even when a later note fails", async () => {
 
     await ingestKeep(vault, indexDir, root, { keep, writeCaptureFn: flakyWrite }).catch(() => {});
 
-    const ledger = load(indexDir, LEDGER);
+    const ledger = load(operationalDir(indexDir), LEDGER);
     expect(ledger.has("n1")).toBe(true);
     expect(ledger.has("n2")).toBe(false);
   } finally {
