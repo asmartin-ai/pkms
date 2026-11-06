@@ -70,9 +70,9 @@ PKMS is local-first, not automatically private from every service: optional inte
 Older checkouts stored operational files and tables inside `.index/`. Do not delete that directory before migration.
 
 1. Stop PKMS servers, bots and import/engagement timers. Back up `vault/`, `.index/`, `.ledger/` and captured media.
-2. Run `./bin/pkms migrate-durable-state` to inspect the move without changing files.
+2. Run `./bin/pkms migrate-durable-state` to inspect the move with read-only database connections and without changing files.
 3. Resolve any reported conflicts. Migration never overwrites conflicting records; there is no force option.
-4. Run `./bin/pkms migrate-durable-state --apply`. It verifies durable copies before removing the index-local originals. Matching copies from an interrupted run are safe to resume.
+4. Run `./bin/pkms migrate-durable-state --apply` to open writable connections. It verifies durable copies before removing the index-local originals. Matching copies from an interrupted run are safe to resume.
 5. Run `./bin/pkms index`, check the briefing and integrations, then restart the stopped processes.
 
 After migration, `.index/` is disposable. Keep the pre-migration backup until the upgrade is accepted. Deploying source code does not authorize running this migration against live data. See [`migrate_operational.ts`](src/pkms/migrate_operational.ts) for the implementation and `pkms migrate-durable-state --dry-run` for the current inspection report.

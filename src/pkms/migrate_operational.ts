@@ -75,10 +75,13 @@ export function migrateOperational(
   const directory = operationalPath(indexDir);
   const sourcePath = join(indexDir, "pkms.db");
   const destinationPath = join(directory, "state.db");
-  const source = existsSync(sourcePath) ? new Database(sourcePath, { readonly: !apply }) : null;
+
+  const source = existsSync(sourcePath)
+    ? new Database(sourcePath, apply ? undefined : { readonly: true })
+    : null;
 
   let destination = existsSync(destinationPath)
-    ? new Database(destinationPath, { readonly: !apply })
+    ? new Database(destinationPath, apply ? undefined : { readonly: true })
     : null;
 
   const report: MigrationReport = { applied: false, files: [], rows: {}, conflicts: [] };
